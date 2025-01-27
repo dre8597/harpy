@@ -152,8 +152,8 @@ class _WillPopCustomTheme extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () => _onWillPop(context),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) => _onWillPop(context),
       child: child,
     );
   }

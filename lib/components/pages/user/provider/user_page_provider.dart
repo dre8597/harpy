@@ -85,7 +85,9 @@ class UserPageNotifier extends _$UserPageNotifier {
     final data = state.value!;
 
     if (data.descriptionTranslationState
-        is! DescriptionTranslationStateUntranslated) return;
+        is! DescriptionTranslationStateUntranslated) {
+      return;
+    }
 
     final translateLanguage =
         _languagePreferences.activeTranslateLanguage(locale);

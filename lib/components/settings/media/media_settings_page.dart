@@ -164,8 +164,7 @@ class _MediaDownloadSettings extends ConsumerStatefulWidget {
   _MediaDownloadSettingsState createState() => _MediaDownloadSettingsState();
 }
 
-class _MediaDownloadSettingsState
-    extends ConsumerState<_MediaDownloadSettings> {
+class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> {
   @override
   void initState() {
     super.initState();
@@ -247,7 +246,7 @@ class _MediaInfoMessage extends StatelessWidget {
             'media is always downloaded in the best quality',
             style: theme.textTheme.titleSmall!.apply(
               fontSizeDelta: -2,
-              color: theme.colorScheme.onSurface.withOpacity(.7),
+              color: theme.colorScheme.onSurface.withAlpha(179),
             ),
           ),
         ),

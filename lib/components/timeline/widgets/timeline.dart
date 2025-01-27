@@ -51,8 +51,8 @@ class _TimelineState extends ConsumerState<Timeline> {
     super.didChangeDependencies();
 
     if (_controller == null) {
-      _controller = PrimaryScrollController.of(context) ?? ScrollController();
-      _disposeController = PrimaryScrollController.of(context) == null;
+      _controller = PrimaryScrollController.of(context);
+      _disposeController = true;
     }
   }
 

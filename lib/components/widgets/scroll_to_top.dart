@@ -40,7 +40,7 @@ class _ScrollToTopState extends ConsumerState<ScrollToTop> {
     super.didChangeDependencies();
 
     _controller ??= (widget.controller ?? PrimaryScrollController.of(context))
-      ?..addListener(_scrollListener);
+      ..addListener(_scrollListener);
   }
 
   @override

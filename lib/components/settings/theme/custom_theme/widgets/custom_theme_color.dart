@@ -40,7 +40,7 @@ class CustomThemeColor extends ConsumerWidget {
   }
 
   Color _onSurface(Color background) {
-    final interpolatedColor = Color.lerp(background, color, color.opacity)!;
+    final interpolatedColor = Color.lerp(background, color, color.a)!;
 
     return ThemeData.estimateBrightnessForColor(interpolatedColor) ==
             Brightness.light

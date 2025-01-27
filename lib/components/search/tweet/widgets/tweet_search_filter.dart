@@ -91,10 +91,10 @@ class _InvalidFilterInfo extends StatelessWidget {
                         'a general / included search query is required',
                         style: theme.textTheme.titleSmall!.apply(
                           fontSizeDelta: -2,
-                          color: theme.colorScheme.onSurface.withOpacity(.7),
+                          color: theme.colorScheme.onSurface.withAlpha(179),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               )
