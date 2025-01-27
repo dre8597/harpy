@@ -137,7 +137,7 @@ class _StateMessage extends StatelessWidget {
             VerticalSpacer.small,
             Text(
               state.additionalInfo!,
-              style: theme.textTheme.bodyText1,
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ],
@@ -155,18 +155,14 @@ class _WillPopDialog extends StatelessWidget {
   final Widget child;
   final PostTweetState state;
 
-  Future<bool> _onWillPop(BuildContext context) async {
-    if (state is! PostTweetInProgress) {
-      Navigator.of(context).pop(state.tweet);
-    }
-
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () => _onWillPop(context),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop && state is! PostTweetSuccess) {
+          Navigator.of(context).pop(state.tweet);
+        }
+      },
       child: child,
     );
   }

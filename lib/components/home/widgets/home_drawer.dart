@@ -127,16 +127,16 @@ class _AuthenticatedUser extends ConsumerWidget {
                   children: [
                     Text(
                       user.name,
-                      style: theme.textTheme.headline5,
+                      style: theme.textTheme.headlineSmall,
                     ),
                     VerticalSpacer.small,
                     Text(
                       '@${user.handle}',
-                      style: theme.textTheme.subtitle1,
+                      style: theme.textTheme.titleMedium,
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),

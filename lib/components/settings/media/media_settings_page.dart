@@ -247,7 +247,7 @@ class _MediaInfoMessage extends StatelessWidget {
             'media is always downloaded in the best quality',
             style: theme.textTheme.titleSmall!.apply(
               fontSizeDelta: -2,
-              color: theme.colorScheme.onBackground.withOpacity(.7),
+              color: theme.colorScheme.onSurface.withOpacity(.7),
             ),
           ),
         ),

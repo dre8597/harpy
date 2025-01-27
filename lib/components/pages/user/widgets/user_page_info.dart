@@ -124,7 +124,7 @@ class _Handle extends ConsumerWidget {
           child: Text(
             handle,
             textDirection: TextDirection.ltr,
-            style: theme.textTheme.subtitle1,
+            style: theme.textTheme.titleMedium,
           ),
         ),
       ),
@@ -148,7 +148,7 @@ class _MutedButton extends StatelessWidget {
     return RbyButton.text(
       icon: Icon(
         CupertinoIcons.volume_off,
-        color: theme.colorScheme.onBackground,
+        color: theme.colorScheme.onSurface,
         size: theme.iconTheme.size! - 2,
       ),
       onTap: () => showDialog<void>(
@@ -203,7 +203,7 @@ class _RelationshipButton extends StatelessWidget {
     if (relationship.blocking) {
       return theme.colorScheme.error;
     } else if (!relationship.following && !relationship.followingRequested) {
-      return theme.colorScheme.onBackground;
+      return theme.colorScheme.onSurface;
     }
 
     return null;

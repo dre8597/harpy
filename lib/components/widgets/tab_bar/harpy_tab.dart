@@ -39,8 +39,7 @@ class HarpyTab extends ConsumerStatefulWidget {
   ConsumerState<HarpyTab> createState() => _HarpyTabState();
 }
 
-class _HarpyTabState extends ConsumerState<HarpyTab>
-    with SingleTickerProviderStateMixin<HarpyTab> {
+class _HarpyTabState extends ConsumerState<HarpyTab> with SingleTickerProviderStateMixin<HarpyTab> {
   /// Controls how much the tab's associated content is in view.
   ///
   /// 1: Tab content is fully in view and tab should appear selected.
@@ -55,8 +54,7 @@ class _HarpyTabState extends ConsumerState<HarpyTab>
   void initState() {
     super.initState();
 
-    _animationController = AnimationController(vsync: this)
-      ..addListener(() => setState(() {}));
+    _animationController = AnimationController(vsync: this)..addListener(() => setState(() {}));
 
     _textOpacityAnimation = Tween<double>(
       begin: 1,
@@ -89,7 +87,7 @@ class _HarpyTabState extends ConsumerState<HarpyTab>
 
     _foregroundColorAnimation = ColorTween(
       begin: widget.selectedForegroundColor ?? theme.colorScheme.primary,
-      end: theme.colorScheme.onBackground,
+      end: theme.colorScheme.onSurface,
     ).animate(_animationController);
   }
 
@@ -134,7 +132,7 @@ class _HarpyTabState extends ConsumerState<HarpyTab>
                 color: _foregroundColorAnimation.value,
               ),
               child: DefaultTextStyle(
-                style: theme.textTheme.subtitle1!.copyWith(
+                style: theme.textTheme.titleMedium!.copyWith(
                   color: _foregroundColorAnimation.value,
                 ),
                 child: SizedBox(

@@ -32,11 +32,11 @@ class TranslatedText extends ConsumerWidget {
         ? TextDirection.rtl
         : TextDirection.ltr;
 
-    final bodyText1 = theme.textTheme.bodyText1!.apply(
+    final bodyText1 = theme.textTheme.bodyLarge!.apply(
       fontSizeDelta: fontSizeDelta,
     );
 
-    final bodyText2 = theme.textTheme.bodyText2!.apply(
+    final bodyMedium = theme.textTheme.bodyMedium!.apply(
       fontSizeDelta: fontSizeDelta,
     );
 
@@ -64,7 +64,7 @@ class TranslatedText extends ConsumerWidget {
             text,
             entities: entities,
             urlToIgnore: urlToIgnore,
-            style: bodyText2,
+            style: bodyMedium,
           ),
         ],
       ),

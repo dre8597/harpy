@@ -20,7 +20,7 @@ class CustomThemeBackgroundColors extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('background colors', style: theme.textTheme.headline4),
+        Text('background colors', style: theme.textTheme.headlineMedium),
         VerticalSpacer.normal,
         _ReorderableBackgroundColors(notifier: notifier),
         _AddBackgroundColor(notifier: notifier),
@@ -45,7 +45,7 @@ class _ReorderableBackgroundColors extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       dragStartBehavior: DragStartBehavior.down,
       itemBuilder: (_, index) {
-        final color = harpyTheme.colors.backgroundColors[index].value;
+        final color = harpyTheme.colors.backgroundColors[index];
 
         final trailing = notifier.canReorderBackgroundColor
             ? HarpyReorderableDragStartListener(
@@ -61,7 +61,7 @@ class _ReorderableBackgroundColors extends ConsumerWidget {
                 padding: theme.spacing.edgeInsets,
                 child: Icon(
                   CupertinoIcons.bars,
-                  color: theme.iconTheme.color!.withOpacity(.5),
+                  color: theme.iconTheme.color!.withAlpha(128),
                 ),
               );
 
@@ -73,7 +73,7 @@ class _ReorderableBackgroundColors extends ConsumerWidget {
           child: ClipRRect(
             borderRadius: theme.shape.borderRadius,
             child: CustomThemeColor(
-              color: Color(color),
+              color: color,
               padding: EdgeInsets.zero,
               leading: RbyButton.transparent(
                 icon: const Icon(CupertinoIcons.xmark, size: 20),

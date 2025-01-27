@@ -145,7 +145,7 @@ class _HarpyTitle extends StatelessWidget {
           // ignore: non_directional
           alignment: Alignment.bottomCenter,
           animation: 'show',
-          color: theme.colorScheme.onBackground,
+          color: theme.colorScheme.onSurface,
         ),
       ),
     );

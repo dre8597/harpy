@@ -57,9 +57,9 @@ class HarpyTheme {
         error: colors.error,
         onError: colors.onError,
         background: colors.averageBackgroundColor,
-        onBackground: colors.onBackground,
+        onSurface: colors.onSurface,
         surface: colors.averageBackgroundColor,
-        onSurface: colors.onBackground,
+        onSurface: colors.onSurface,
       ),
       spacing: RbySpacingTheme(base: _paddingValue),
       shape: shapeTheme,
@@ -70,7 +70,7 @@ class HarpyTheme {
 
       //
       iconTheme: IconThemeData(
-        color: colors.onBackground,
+        color: colors.onSurface,
         opacity: 1,
         size: 20 + _fontSizeDelta,
       ),
@@ -84,7 +84,7 @@ class HarpyTheme {
         backgroundColor: colors.alternateCardColor,
         actionTextColor: colors.primary,
         disabledActionTextColor: colors.primary.withOpacity(.5),
-        contentTextStyle: text.textTheme.subtitle2,
+        contentTextStyle: text.textTheme.titleSmall,
         elevation: 0,
         shape: shapeTheme.shape,
         behavior: SnackBarBehavior.floating,

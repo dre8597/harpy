@@ -29,7 +29,7 @@ class _UserPageAvatar extends State<UserPageAvatar> {
     super.didChangeDependencies();
 
     _controller ??= PrimaryScrollController.of(context)
-      ?..addListener(_scrollListener);
+      ..addListener(_scrollListener);
   }
 
   @override
@@ -70,7 +70,7 @@ class _UserPageAvatar extends State<UserPageAvatar> {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: theme.backgroundColor,
+                  color: theme.colorScheme.surface,
                   shape: BoxShape.circle,
                 ),
               ),
