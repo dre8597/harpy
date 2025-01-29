@@ -44,11 +44,9 @@ void twitterErrorHandler(Ref ref, Object error, [StackTrace? stackTrace]) {
           );
         }
 
-        break;
       default:
         message = 'an unexpected error occurred (${error.statusCode})\n'
             'please try again later';
-        break;
     }
   } else if (error is TimeoutException) {
     message = 'request timed out\n'

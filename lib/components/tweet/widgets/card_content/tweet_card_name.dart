@@ -11,7 +11,7 @@ class TweetCardName extends ConsumerWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onUserTap;
   final TweetCardElementStyle style;
 

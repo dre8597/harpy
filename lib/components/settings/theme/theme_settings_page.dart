@@ -209,7 +209,7 @@ class _CustomThemes extends ConsumerWidget {
                   // edit selected theme
                   ? context.goNamed(
                       CustomThemePage.name,
-                      queryParams: {'themeId': '${i + 10}'},
+                      queryParameters: {'themeId': '${i + 10}'},
                     )
                   // select theme
                   : selectTheme(
@@ -232,7 +232,7 @@ class _CustomThemes extends ConsumerWidget {
               ),
               onEdit: () => context.goNamed(
                 CustomThemePage.name,
-                queryParams: {'themeId': '${i + 10}'},
+                queryParameters: {'themeId': '${i + 10}'},
               ),
               onDelete: () => notifier.removeCustomTheme(
                 themeId: i + 10,

@@ -1,4 +1,3 @@
-import 'package:bluesky/bluesky.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/bluesky/data/models.dart';
 
@@ -25,7 +24,8 @@ class BlueskyUserData with _$BlueskyUserData {
     List<String>? labels,
   }) = _BlueskyUserData;
 
-  factory BlueskyUserData.fromJson(Map<String, dynamic> json) => _$BlueskyUserDataFromJson(json);
+  factory BlueskyUserData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyUserDataFromJson(json);
 
   /// Creates a [BlueskyUserData] from a Bluesky profile.
   factory BlueskyUserData.fromProfile(Profile profile) {
@@ -51,7 +51,8 @@ class BlueskyUserData with _$BlueskyUserData {
 /// Extension methods for [BlueskyUserData].
 extension BlueskyUserDataExtension on BlueskyUserData {
   /// Returns the display name if available, otherwise returns the handle.
-  String get effectiveDisplayName => displayName.isNotEmpty ? displayName : handle;
+  String get effectiveDisplayName =>
+      displayName.isNotEmpty ? displayName : handle;
 
   /// Returns true if the user has a custom avatar.
   bool get hasAvatar => avatar != null && avatar!.isNotEmpty;

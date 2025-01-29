@@ -14,7 +14,7 @@ class TweetCardMedia extends ConsumerWidget {
     this.index,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetDelegates delegates;
   final int? index;
 
@@ -38,7 +38,6 @@ class TweetCardMedia extends ConsumerWidget {
           tweetIndex: index,
           onImageLongPress: (index) => onMediaLongPress(tweet.media[index]),
         );
-        break;
       case MediaType.gif:
         final heroTag = 'tweet${mediaHeroTag(
           context,
@@ -62,7 +61,6 @@ class TweetCardMedia extends ConsumerWidget {
           ),
           onGifLongPress: () => onMediaLongPress(tweet.media.single),
         );
-        break;
       case MediaType.video:
         final heroTag = 'tweet${mediaHeroTag(
           context,
@@ -93,7 +91,6 @@ class TweetCardMedia extends ConsumerWidget {
             child: child,
           ),
         );
-        break;
       case null:
         assert(false);
         return const SizedBox();
@@ -119,7 +116,7 @@ class _MediaConstrainedHeight extends ConsumerWidget {
     required this.child,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final Widget child;
 
   Widget _constrainedAspectRatio(double aspectRatio) {
@@ -157,11 +154,9 @@ class _MediaConstrainedHeight extends ConsumerWidget {
               )
             : _constrainedAspectRatio(16 / 9);
 
-        break;
       case MediaType.gif:
       case MediaType.video:
         child = _constrainedAspectRatio(tweet.media.single.aspectRatioDouble);
-        break;
       case null:
         return const SizedBox();
     }
@@ -180,7 +175,7 @@ class _MediaConstrainedHeight extends ConsumerWidget {
 ///       differentiate based on the tweet as well.
 String mediaHeroTag(
   BuildContext context, {
-  required LegacyTweetData tweet,
+  required BlueskyPostData tweet,
   required MediaData media,
   int? index,
 }) {

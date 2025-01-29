@@ -41,7 +41,8 @@ class BlueskyRelationshipData with _$BlueskyRelationshipData {
 /// Extension methods for [BlueskyRelationshipData].
 extension BlueskyRelationshipDataExtension on BlueskyRelationshipData {
   /// Returns true if there is any relationship between the users.
-  bool get hasRelationship => following || followedBy || blocking || blockedBy || muting;
+  bool get hasRelationship =>
+      following || followedBy || blocking || blockedBy || muting;
 
   /// Returns true if there is a mutual follow relationship.
   bool get isMutualFollow => following && followedBy;

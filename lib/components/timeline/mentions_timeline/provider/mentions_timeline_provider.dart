@@ -34,7 +34,7 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
   }
 
   @override
-  bool? buildCustomData(BuiltList<LegacyTweetData> tweets) {
+  bool? buildCustomData(BuiltList<BlueskyPostData> tweets) {
     final newId = int.tryParse(tweets.first.originalId);
     final lastId =
         ref.read(tweetVisibilityPreferencesProvider).lastViewedMention;

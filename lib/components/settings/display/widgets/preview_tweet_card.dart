@@ -14,7 +14,7 @@ Make sure to follow @harpy_app for news and updates about the app''',
 
   @override
   Widget build(BuildContext context) {
-    final tweet = LegacyTweetData(
+    final tweet = BlueskyPostData(
       user: UserData(
         name: 'harpy',
         handle: 'harpy_app',

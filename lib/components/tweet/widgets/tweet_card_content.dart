@@ -14,7 +14,7 @@ class TweetCardContent extends ConsumerWidget {
     this.index,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetNotifier notifier;
   final TweetDelegates delegates;
   final double outerPadding;

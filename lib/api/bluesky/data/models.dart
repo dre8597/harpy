@@ -1,4 +1,3 @@
-
 import 'package:bluesky/bluesky.dart';
 
 /// Represents a byte slice in a text.

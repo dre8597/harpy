@@ -26,16 +26,12 @@ class WebViewActions extends StatelessWidget {
         switch (action) {
           case WebViewAction.share:
             Share.share(state.currentUrl).ignore();
-            break;
           case WebViewAction.reload:
             notifier.reload().ignore();
-            break;
           case WebViewAction.forward:
             notifier.goForward().ignore();
-            break;
           case WebViewAction.back:
             notifier.goBack().ignore();
-            break;
         }
       },
       itemBuilder: (_) => [

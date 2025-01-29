@@ -21,7 +21,7 @@ class DynamicVideoPlayerOverlay extends StatefulWidget {
   });
 
   final Widget child;
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final VideoPlayerNotifier notifier;
   final VideoPlayerStateData data;
   final bool isFullscreen;

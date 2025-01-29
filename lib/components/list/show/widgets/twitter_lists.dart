@@ -33,8 +33,8 @@ class TwitterLists extends ConsumerWidget {
             ? () => onListSelected!(list)
             : () => context.pushNamed(
                   ListTimelinePage.name,
-                  params: {'listId': list.id},
-                  queryParams: {'name': list.name},
+                  pathParameters: {'listId': list.id},
+                  queryParameters: {'name': list.name},
                 ),
         onLongPress: () => _showListActionBottomSheet(
           context,
@@ -165,8 +165,8 @@ void _showListActionBottomSheet(
           Navigator.of(context).pop();
           context.pushNamed(
             ListMembersPage.name,
-            params: {'listId': list.id},
-            queryParams: {'name': list.name},
+            pathParameters: {'listId': list.id},
+            queryParameters: {'name': list.name},
           );
         },
       ),

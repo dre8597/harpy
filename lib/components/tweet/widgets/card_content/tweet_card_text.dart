@@ -8,7 +8,7 @@ class TweetCardText extends StatelessWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetCardElementStyle style;
 
   @override

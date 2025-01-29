@@ -36,7 +36,7 @@ class UserPageInfo extends StatelessWidget {
                 ),
               _RelationshipButton(
                 user: data.user,
-                relationship: data.relationship!,
+                relationship: data.relationship,
                 notifier: notifier,
               ),
             ],

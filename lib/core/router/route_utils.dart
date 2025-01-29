@@ -1,103 +1,45 @@
 import 'package:go_router/go_router.dart';
-// ignore: implementation_imports
-import 'package:go_router/src/go_route_match.dart';
 
 /// Whether a given location has a matching route.
 bool locationHasRouteMatch({
   required String location,
-  required List<GoRoute> routes,
+  required List<RouteBase> routes,
 }) {
   final uri = Uri.parse(location);
-
-  final result = _getLocationRoutes(
-    loc: uri.path,
-    restLoc: uri.path,
-    routes: routes,
-    parentFullpath: '',
-    parentSubloc: '',
-    queryParams: uri.queryParameters,
-    extra: null,
-  );
-
-  return result.isNotEmpty;
+  return _hasMatchingRoute(uri.path, routes);
 }
 
-List<GoRouteMatch> _getLocationRoutes({
-  required String loc,
-  required String restLoc,
-  required String parentSubloc,
-  required List<GoRoute> routes,
-  required String parentFullpath,
-  required Map<String, String> queryParams,
-  required Object? extra,
-}) {
-  final result = <List<GoRouteMatch>>[];
-
-  // find the set of matches at this level of the tree
+bool _hasMatchingRoute(String path, List<RouteBase> routes) {
   for (final route in routes) {
-    final fullpath = _concatenatePaths(parentFullpath, route.path);
-
-    final match = GoRouteMatch.match(
-      route: route,
-      restLoc: restLoc,
-      parentSubloc: parentSubloc,
-      fullpath: fullpath,
-      queryParams: queryParams,
-      extra: extra,
-    );
-
-    if (match == null) {
-      continue;
+    if (route is! GoRoute) continue;
+    if (_pathMatches(route.path, path)) {
+      return true;
     }
-
-    if (match.subloc.toLowerCase() == loc.toLowerCase()) {
-      // If it is a complete match, then return the matched route
-      // NOTE: need a lower case match because subloc is canonicalized to match
-      // the path case whereas the location can be of any case and still match
-      result.add([match]);
-    } else if (route.routes.isEmpty) {
-      // If it is partial match but no sub-routes, bail.
-      continue;
-    } else {
-      // otherwise recurse
-      final childRestLoc = loc.substring(
-        match.subloc.length + (match.subloc == '/' ? 0 : 1),
-      );
-
-      final subRouteMatch = _getLocationRoutes(
-        loc: loc,
-        restLoc: childRestLoc,
-        parentSubloc: match.subloc,
-        routes: route.routes,
-        parentFullpath: fullpath,
-        queryParams: queryParams,
-        extra: extra,
-      );
-
-      // if there's no sub-route matches, there is no match for this
-      // location
-      if (subRouteMatch.isEmpty) {
-        continue;
+    if (route.routes.isNotEmpty) {
+      final subPath = _getSubPath(path, route.path);
+      if (subPath != null && _hasMatchingRoute(subPath, route.routes)) {
+        return true;
       }
-      result.add(<GoRouteMatch>[match, ...subRouteMatch]);
     }
-
-    break;
   }
-
-  if (result.isEmpty) {
-    return <GoRouteMatch>[];
-  }
-
-  // If there are multiple routes that match the location, returning the first
-  // one.
-  // To make predefined routes to take precedence over dynamic routes eg. '/:id'
-  // consider adding the dynamic route at the end of the routes
-  return result.first;
+  return false;
 }
 
-String _concatenatePaths(String parentPath, String childPath) {
-  return parentPath.isEmpty
-      ? childPath
-      : '${parentPath == '/' ? '' : parentPath}/$childPath';
+bool _pathMatches(String routePath, String path) {
+  final routeParts = routePath.split('/');
+  final pathParts = path.split('/');
+
+  if (routeParts.length > pathParts.length) return false;
+
+  for (var i = 0; i < routeParts.length; i++) {
+    if (routeParts[i].startsWith(':')) continue; // Parameter matches anything
+    if (routeParts[i] != pathParts[i]) return false;
+  }
+  return true;
+}
+
+String? _getSubPath(String path, String parentPath) {
+  if (!path.startsWith(parentPath)) return null;
+  if (path.length == parentPath.length) return null;
+  return path.substring(parentPath.length);
 }

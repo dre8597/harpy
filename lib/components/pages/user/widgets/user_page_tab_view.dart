@@ -67,7 +67,7 @@ class UserPageTabView extends ConsumerWidget {
           headerSliverBuilder: (_, __) => [
             ...headerSlivers,
             if (data.pinnedTweet != null)
-              _PinnedTweetCard(tweet: data.pinnedTweet!),
+              _PinnedTweetCard(tweet: data.pinnedTweet),
             SliverToBoxAdapter(
               child: Center(
                 child: HarpyTabBar(
@@ -95,7 +95,7 @@ class _PinnedTweetCard extends StatelessWidget {
     required this.tweet,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
 
   @override
   Widget build(BuildContext context) {

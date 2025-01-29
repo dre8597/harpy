@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/compose/post_tweet/preferences/post_tweet_preferences.dart';
 import 'package:harpy/core/core.dart';
 import 'package:http/http.dart';
@@ -213,7 +214,7 @@ class PostTweetState with _$PostTweetState {
   }) = PostTweetInProgress;
 
   const factory PostTweetState.success({
-    required LegacyTweetData tweet,
+    required BlueskyPostData tweet,
     String? message,
     String? additionalInfo,
   }) = PostTweetSuccess;
@@ -225,7 +226,7 @@ class PostTweetState with _$PostTweetState {
 }
 
 extension PostTweetStateExtension on PostTweetState {
-  LegacyTweetData? get tweet => maybeMap(
+  BlueskyPostData? get tweet => maybeMap(
         success: (value) => value.tweet,
         orElse: () => null,
       );

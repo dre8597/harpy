@@ -11,7 +11,7 @@ class TweetCardQuote extends ConsumerStatefulWidget {
     this.index,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final int? index;
 
   @override
@@ -26,7 +26,7 @@ class _TweetCardQuoteState extends ConsumerState<TweetCardQuote> {
     final provider = tweetProvider(widget.tweet.quote!.originalId);
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(provider.notifier).initialize(widget.tweet.quote!);
+      if (mounted) ref.read(provider.notifier).initialize(widget.tweet.quote);
     });
   }
 

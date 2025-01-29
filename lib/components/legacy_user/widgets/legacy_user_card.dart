@@ -22,7 +22,7 @@ class LegacyUserCard extends StatelessWidget {
         borderRadius: theme.shape.borderRadius,
         onTap: () => context.pushNamed(
           UserPage.name,
-          params: {'handle': user.handle},
+          pathParameters: {'handle': user.handle},
         ),
         child: Column(
           children: [

@@ -62,7 +62,7 @@ dependencies:
     # photo_view fork with better gesture recognition
     git: https://github.com/robertodoering/photo_view.git
   rby:
-    git: https://github.com/robertodoering/rby.dart
+    git: git@github.com:dre8597/rby.dart.git
     # path: ../rby.dart
   riverpod_annotation: ^2.6.1
   scroll_to_index: ^3.0.0
@@ -78,15 +78,12 @@ dependencies:
       ref: 196abe17bae1803435d3112fd11c58ef4c2d577e
   timeago: ^3.0.2
   tuple: ^2.0.0
-  #  twitter_api_v2:
-  #    # TODO: use pub when version 4.5.1+ is published
-  #    git: https://github.com/robertodoering/twitter-api-v2
-
   twitter_webview_auth: ^0.2.0
   url_launcher: ^6.0.10
   uuid: ^4.5.1
   video_player: ^2.1.15
   visibility_detector: ^0.4.0+2
+  wakelock_plus: ^1.2.10
   waterfall_flow: ^3.0.1
   webview_flutter: ^4.10.0
 

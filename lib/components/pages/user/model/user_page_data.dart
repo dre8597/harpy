@@ -10,7 +10,7 @@ class UserPageData with _$UserPageData {
     String? bannerUrl,
     @Default(DescriptionTranslationState.untranslated())
     DescriptionTranslationState descriptionTranslationState,
-    LegacyTweetData? pinnedTweet,
+    BlueskyPostData? pinnedTweet,
     RelationshipData? relationship,
   }) = _UserPageData;
 }

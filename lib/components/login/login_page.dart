@@ -105,10 +105,8 @@ class _AboutButton extends ConsumerWidget {
           switch (value) {
             case 0:
               context.pushNamed(AboutPage.name);
-              break;
             case 1:
               context.pushNamed(CustomApiPage.name);
-              break;
           }
         },
         itemBuilder: (_) => const [

@@ -1,11 +1,10 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
 final mediaTimelineProvider = Provider.autoDispose
-    .family<BuiltList<MediaTimelineEntry>, BuiltList<LegacyTweetData>>(
+    .family<BuiltList<MediaTimelineEntry>, BuiltList<BlueskyPostData>>(
   (ref, tweets) {
     ref.cacheFor(const Duration(minutes: 15));
 

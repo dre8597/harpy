@@ -29,7 +29,7 @@ class TrendCard extends StatelessWidget {
           : null,
       onTap: () => context.pushNamed(
         TweetSearchPage.name,
-        queryParams: {'query': trend.name ?? ''},
+        queryParameters: {'query': trend.name ?? ''},
       ),
     );
   }

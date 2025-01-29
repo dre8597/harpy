@@ -11,7 +11,7 @@ class MoreActionsButton extends ConsumerWidget {
     this.foregroundColor,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onViewMoreActions;
   final double sizeDelta;
   final Color? foregroundColor;

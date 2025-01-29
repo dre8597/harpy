@@ -13,7 +13,7 @@ class TweetCardTranslation extends StatelessWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final double outerPadding;
   final double innerPadding;
   final bool requireBottomInnerPadding;

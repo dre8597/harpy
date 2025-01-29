@@ -12,7 +12,7 @@ class TweetCardRetweeter extends ConsumerWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onRetweeterTap;
   final TweetCardElementStyle style;
 

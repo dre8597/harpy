@@ -73,7 +73,7 @@ class UserPageNotifier extends _$UserPageNotifier {
       user: UserData.fromV2(response.data),
       bannerUrl: banner?.sizes?.size1500x500?.url,
       pinnedTweet: pinnedTweet != null
-          ? LegacyTweetData.fromV2(pinnedTweet, response.data)
+          ? BlueskyPostData.fromV2(pinnedTweet, response.data)
           : null,
       relationship:
           relationship != null ? RelationshipData.fromV1(relationship) : null,
@@ -148,7 +148,7 @@ class UserPageNotifier extends _$UserPageNotifier {
     if (data == null) return;
     if (data.relationship == null) return;
 
-    final oldRelationship = data.relationship!;
+    final oldRelationship = data.relationship;
 
     state = state.copyWithRelationshipField(
       following: false,
@@ -176,7 +176,7 @@ class UserPageNotifier extends _$UserPageNotifier {
     if (data == null) return;
     if (data.relationship == null) return;
 
-    final oldRelationship = data.relationship!;
+    final oldRelationship = data.relationship;
 
     state = state.copyWithRelationshipField(
       blocking: true,
@@ -205,7 +205,7 @@ class UserPageNotifier extends _$UserPageNotifier {
     if (data == null) return;
     if (data.relationship == null) return;
 
-    final oldRelationship = data.relationship!;
+    final oldRelationship = data.relationship;
 
     state = state.copyWithRelationshipField(
       blocking: false,
@@ -275,7 +275,7 @@ extension on AsyncValue<UserPageData> {
     bool? muting,
     bool? blocking,
   }) {
-    final relationship = asData!.value.relationship!;
+    final relationship = asData!.value.relationship;
 
     return AsyncData(
       asData!.value.copyWith(

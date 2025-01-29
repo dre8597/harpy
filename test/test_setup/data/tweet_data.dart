@@ -3,7 +3,7 @@ import 'package:harpy/api/api.dart';
 
 import 'user_data.dart';
 
-final exampleTweet = LegacyTweetData(
+final exampleTweet = BlueskyPostData(
   createdAt: DateTime(2021, 07, 29),
   user: userDataHarpy,
   media: [

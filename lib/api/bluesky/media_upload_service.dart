@@ -24,7 +24,8 @@ class BlueskyMediaUploadService {
       }
 
       if (!isMediaSupported(file)) {
-        throw Exception('File size exceeds limit or format not supported: ${file.path}');
+        throw Exception(
+            'File size exceeds limit or format not supported: ${file.path}');
       }
 
       final bytes = await file.readAsBytes();

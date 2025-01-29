@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart' hide ModalBottomSheetRoute;
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 final videoAutopauseObserver = Provider(
   (ref) => VideoAutopauseObserver(

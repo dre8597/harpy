@@ -9,6 +9,7 @@ import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
+
 import 'package:rby/rby.dart';
 import 'package:twitter_webview_auth/twitter_webview_auth.dart';
 
@@ -81,7 +82,7 @@ class _Login with LoggerMixin {
           if (_ref.read(setupPreferencesProvider).performedSetup) {
             _ref.read(routerProvider).goNamed(
               HomePage.name,
-              queryParams: {'transition': 'fade'},
+              queryParameters: {'transition': 'fade'},
             );
           } else {
             _ref.read(routerProvider).goNamed(SetupPage.name);
@@ -123,11 +124,14 @@ class _Login with LoggerMixin {
 
   /// Used by [TwitterAuth] to navigate to the login webview page.
   Future<Uri?> _webviewNavigation(TwitterLoginWebview webview) async {
-    return _ref.read(routerProvider).navigator?.push<Uri?>(
-          SlidePageRoute(
-            builder: (_) => LoginWebview(webview: webview),
-          ),
-        );
+    final context = _ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
+    if (context == null) return null;
+
+    return Navigator.of(context).push<Uri?>(
+      MaterialPageRoute<Uri?>(
+        builder: (_) => LoginWebview(webview: webview),
+      ),
+    );
   }
 
   /// Initializes a Bluesky authentication.
@@ -172,7 +176,7 @@ class _Login with LoggerMixin {
       // Get user profile
       final profile = await bluesky.actor.getProfile(actor: identifier);
 
-      final userData = UserData.fromBlueskyProfile(profile.data);
+      final userData = UserData.fromBlueskyActorProfile(profile.data);
       _ref.read(authenticationStateProvider.notifier).state =
           AuthenticationState.authenticated(user: userData);
 

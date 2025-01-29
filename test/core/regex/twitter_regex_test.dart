@@ -138,16 +138,16 @@ void main() {
       expect(
         statusPathRegex.firstMatch('/harpy_app/status/1463545080837509120'),
         isA<RegExpMatch>()
-          .having(
-            (match) => match.group(1),
-            'user handle',
-            equals('harpy_app'),
-          )
-          .having(
-            (match) => match.group(2),
-            'status id',
-            equals('1463545080837509120'),
-          ),
+            .having(
+              (match) => match.group(1),
+              'user handle',
+              equals('harpy_app'),
+            )
+            .having(
+              (match) => match.group(2),
+              'status id',
+              equals('1463545080837509120'),
+            ),
       );
       expect(
         statusPathRegex.hasMatch('/harpy_app/status/1463545080837509120/asdf'),
@@ -163,16 +163,16 @@ void main() {
           '/harpy_app/status/1463545080837509120/retweets',
         ),
         isA<RegExpMatch>()
-          .having(
-            (match) => match.group(1),
-            'user handle',
-            equals('harpy_app'),
-          )
-          .having(
-            (match) => match.group(2),
-            'status id',
-            equals('1463545080837509120'),
-          ),
+            .having(
+              (match) => match.group(1),
+              'user handle',
+              equals('harpy_app'),
+            )
+            .having(
+              (match) => match.group(2),
+              'status id',
+              equals('1463545080837509120'),
+            ),
       );
       expect(
         statusRetweetsPathRegex.hasMatch(

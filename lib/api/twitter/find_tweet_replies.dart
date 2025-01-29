@@ -21,7 +21,7 @@
 //   ///
 //   /// Throws an exception when the [searchTweets] did not return a 200 response.
 //   Future<RepliesResult> findReplies(
-//     LegacyTweetData tweet, [
+//     BlueskyPostData tweet, [
 //     RepliesResult? lastResult,
 //   ]) async {
 //     final screenName = tweet.user.handle;
@@ -52,12 +52,12 @@
 //       }
 //     }
 
-//     final replies = <LegacyTweetData>[];
+//     final replies = <BlueskyPostData>[];
 
 //     // filter found tweets by replies
 //     for (final reply in result.statuses!) {
 //       if (reply.inReplyToStatusIdStr == tweet.id) {
-//         replies.add(LegacyTweetData.fromTweet(reply));
+//         replies.add(BlueskyPostData.fromTweet(reply));
 //       }
 //     }
 
@@ -85,7 +85,7 @@
 //   });
 
 //   /// The list of replies to a tweet.
-//   final List<LegacyTweetData> replies;
+//   final List<BlueskyPostData> replies;
 
 //   /// The id of the last reply.
 //   final String? maxId;

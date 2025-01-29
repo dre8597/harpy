@@ -10,7 +10,7 @@ class Replybutton extends ConsumerWidget {
     this.sizeDelta = 0,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onComposeReply;
   final double sizeDelta;
 

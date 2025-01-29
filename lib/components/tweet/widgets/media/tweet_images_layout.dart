@@ -28,7 +28,6 @@ class TweetImagesLayout extends StatelessWidget {
           onImageLongPress: onImageLongPress,
           child: children.single,
         );
-        break;
       case 2:
         child = _TwoImagesLayout(
           betweenPadding: betweenPadding,
@@ -36,7 +35,6 @@ class TweetImagesLayout extends StatelessWidget {
           onImageLongPress: onImageLongPress,
           children: children,
         );
-        break;
       case 3:
         child = _ThreeImagesLayout(
           betweenPadding: betweenPadding,
@@ -44,7 +42,6 @@ class TweetImagesLayout extends StatelessWidget {
           onImageLongPress: onImageLongPress,
           children: children,
         );
-        break;
       case 4:
         child = _FourImagesLayout(
           betweenPadding: betweenPadding,
@@ -52,7 +49,6 @@ class TweetImagesLayout extends StatelessWidget {
           onImageLongPress: onImageLongPress,
           children: children,
         );
-        break;
       default:
         assert(false);
         return const SizedBox();

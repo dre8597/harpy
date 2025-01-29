@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
 
@@ -23,8 +24,8 @@ class ComposeNotifier extends StateNotifier<ComposeState> {
   final Ref _ref;
 
   void initialize({
-    LegacyTweetData? parentTweet,
-    LegacyTweetData? quotedTweet,
+    BlueskyPostData? parentTweet,
+    BlueskyPostData? quotedTweet,
   }) {
     state = ComposeState(
       parentTweet: parentTweet,
@@ -114,8 +115,8 @@ class ComposeNotifier extends StateNotifier<ComposeState> {
 @freezed
 class ComposeState with _$ComposeState {
   factory ComposeState({
-    LegacyTweetData? parentTweet,
-    LegacyTweetData? quotedTweet,
+    BlueskyPostData? parentTweet,
+    BlueskyPostData? quotedTweet,
     BuiltList<PlatformFile>? media,
     MediaType? type,
   }) = _ComposeState;

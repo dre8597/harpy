@@ -107,7 +107,7 @@ class _AuthenticatedUser extends ConsumerWidget {
       borderRadius: theme.shape.borderRadius,
       onTap: () => context.pushNamed(
         UserPage.name,
-        params: {'handle': user.handle},
+        pathParameters: {'handle': user.handle},
       ),
       child: Card(
         child: Padding(
@@ -165,7 +165,7 @@ class _ConnectionsCount extends ConsumerWidget {
               title: FittedBox(child: Text('$count  following')),
               onTap: () => context.pushNamed(
                 FollowingPage.name,
-                params: {'handle': user.handle},
+                pathParameters: {'handle': user.handle},
               ),
             ),
           ),
@@ -178,7 +178,7 @@ class _ConnectionsCount extends ConsumerWidget {
               title: FittedBox(child: Text('$count  followers')),
               onTap: () => context.pushNamed(
                 FollowersPage.name,
-                params: {'handle': user.handle},
+                pathParameters: {'handle': user.handle},
               ),
             ),
           ),
@@ -243,7 +243,7 @@ class _Entries extends ConsumerWidget {
         title: const Text('profile'),
         onTap: () => context.pushNamed(
           UserPage.name,
-          params: {'handle': user.handle},
+          pathParameters: {'handle': user.handle},
         ),
       ),
       VerticalSpacer.normal,
@@ -258,7 +258,7 @@ class _Entries extends ConsumerWidget {
         title: const Text('lists'),
         onTap: () => context.pushNamed(
           ListShowPage.name,
-          params: {'handle': user.handle},
+          pathParameters: {'handle': user.handle},
         ),
       ),
       VerticalSpacer.normal,

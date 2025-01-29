@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -11,10 +12,10 @@ class ComposePage extends ConsumerStatefulWidget {
   }) : assert(parentTweet == null || quotedTweet == null);
 
   /// The tweet that the user is replying to.
-  final LegacyTweetData? parentTweet;
+  final BlueskyPostData? parentTweet;
 
   /// The tweet that the user is quoting (aka retweeting with quote).
-  final LegacyTweetData? quotedTweet;
+  final BlueskyPostData? quotedTweet;
 
   static const name = 'compose';
 

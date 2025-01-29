@@ -13,7 +13,7 @@ class TweetDetailPage extends ConsumerStatefulWidget {
   });
 
   final String id;
-  final LegacyTweetData? tweet;
+  final BlueskyPostData? tweet;
 
   static const name = 'detail';
 
@@ -40,7 +40,7 @@ class _TweetDetailPageState extends ConsumerState<TweetDetailPage> {
 
     return HarpyScaffold(
       child: widget.tweet != null
-          ? _TweetDetailContent(tweet: widget.tweet!)
+          ? _TweetDetailContent(tweet: widget.tweet)
           : RbyAnimatedSwitcher(
               child: tweetDetailState.when(
                 data: (tweet) => _TweetDetailContent(tweet: tweet),
@@ -57,7 +57,7 @@ class _TweetDetailContent extends ConsumerWidget {
     required this.tweet,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -3,14 +3,14 @@
 // import 'package:harpy/components/components.dart';
 // import 'package:harpy/core/misc/environment.dart';
 // import 'package:twitter_api_v2/twitter_api_v2.dart' as v2;
-
+//
 // final twitterApiV1Provider = Provider(
 //   name: 'twitterApiV1Provider',
 //   (ref) {
 //     final authPreferences = ref.watch(authPreferencesProvider);
 //     final key = ref.watch(consumerKeyProvider);
 //     final secret = ref.watch(consumerSecretProvider);
-
+//
 //     return TwitterApi(
 //       client: TwitterClient(
 //         consumerKey: key,
@@ -21,14 +21,14 @@
 //     );
 //   },
 // );
-
+//
 // final twitterApiV2Provider = Provider(
 //   name: 'twitterApiV2Provider',
 //   (ref) {
 //     final authPreferences = ref.watch(authPreferencesProvider);
 //     final key = ref.watch(consumerKeyProvider);
 //     final secret = ref.watch(consumerSecretProvider);
-
+//
 //     return v2.TwitterApi(
 //       bearerToken: '',
 //       oauthTokens: v2.OAuthTokens(
@@ -40,27 +40,32 @@
 //     );
 //   },
 // );
+//
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:harpy/components/custom_api/preferences/custom_api_preferences.dart';
 
-// final consumerKeyProvider = Provider(
-//   name: 'consumerKeyProvider',
-//   (ref) {
-//     final environment = ref.watch(environmentProvider);
-//     final customApiPreferences = ref.watch(customApiPreferencesProvider);
+import '../../core/misc/environment.dart';
 
-//     return customApiPreferences.hasCustomApiKeyAndSecret
-//         ? customApiPreferences.customKey
-//         : environment.twitterConsumerKey;
-//   },
-// );
+final consumerKeyProvider = Provider(
+  name: 'consumerKeyProvider',
+  (ref) {
+    final environment = ref.watch(environmentProvider);
+    final customApiPreferences = ref.watch(customApiPreferencesProvider);
 
-// final consumerSecretProvider = Provider(
-//   name: 'consumerSecretProvider',
-//   (ref) {
-//     final environment = ref.watch(environmentProvider);
-//     final customApiPreferences = ref.watch(customApiPreferencesProvider);
+    return customApiPreferences.hasCustomApiKeyAndSecret
+        ? customApiPreferences.customKey
+        : environment.twitterConsumerKey;
+  },
+);
 
-//     return customApiPreferences.hasCustomApiKeyAndSecret
-//         ? customApiPreferences.customSecret
-//         : environment.twitterConsumerSecret;
-//   },
-// );
+final consumerSecretProvider = Provider(
+  name: 'consumerSecretProvider',
+  (ref) {
+    final environment = ref.watch(environmentProvider);
+    final customApiPreferences = ref.watch(customApiPreferencesProvider);
+
+    return customApiPreferences.hasCustomApiKeyAndSecret
+        ? customApiPreferences.customSecret
+        : environment.twitterConsumerSecret;
+  },
+);

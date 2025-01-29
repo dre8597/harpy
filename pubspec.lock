@@ -1163,10 +1163,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "632593669b6b2f44626dd4e299bf834d069c2a54"
-      url: "https://github.com/robertodoering/rby.dart"
+      resolved-ref: d052023f32aa6a4366e95c6f04e14b7e795b51bb
+      url: "git@github.com:dre8597/rby.dart.git"
     source: git
-    version: "0.0.1"
+    version: "0.0.8"
   riverpod:
     dependency: transitive
     description:
@@ -1653,6 +1653,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "14.3.0"
+  wakelock_plus:
+    dependency: "direct main"
+    description:
+      name: wakelock_plus
+      sha256: "36c88af0b930121941345306d259ec4cc4ecca3b151c02e3a9e71aede83c615e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.10"
+  wakelock_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: wakelock_plus_platform_interface
+      sha256: "70e780bc99796e1db82fe764b1e7dcb89a86f1e5b3afb1db354de50f2e41eb7a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.2"
   watcher:
     dependency: transitive
     description:

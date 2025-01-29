@@ -22,8 +22,7 @@ class _UserPageBannerState extends State<UserPageBanner> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _controller ??= PrimaryScrollController.of(context)
-      ..addListener(_listener);
+    _controller ??= PrimaryScrollController.of(context)..addListener(_listener);
   }
 
   @override

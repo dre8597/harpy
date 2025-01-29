@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 
 final tweetDetailProvider = StateNotifierProvider.family
-    .autoDispose<TweetDetailNotifier, AsyncValue<LegacyTweetData>, String>(
+    .autoDispose<TweetDetailNotifier, AsyncValue<BlueskyPostData>, String>(
   name: 'TweetDetailProvider',
   (ref, id) => TweetDetailNotifier(
     id: id,
@@ -11,7 +11,7 @@ final tweetDetailProvider = StateNotifierProvider.family
   ),
 );
 
-class TweetDetailNotifier extends StateNotifier<AsyncValue<LegacyTweetData>> {
+class TweetDetailNotifier extends StateNotifier<AsyncValue<BlueskyPostData>> {
   TweetDetailNotifier({
     required String id,
     required TwitterApi twitterApi,
@@ -22,14 +22,14 @@ class TweetDetailNotifier extends StateNotifier<AsyncValue<LegacyTweetData>> {
   final String _id;
   final TwitterApi _twitterApi;
 
-  Future<void> load([LegacyTweetData? tweet]) async {
+  Future<void> load([BlueskyPostData? tweet]) async {
     if (tweet != null) {
       state = AsyncData(tweet);
     } else {
       state = await AsyncValue.guard(
         () => _twitterApi.tweetService
             .show(id: _id)
-            .then(LegacyTweetData.fromTweet),
+            .then(BlueskyPostData.fromTweet),
       );
     }
   }

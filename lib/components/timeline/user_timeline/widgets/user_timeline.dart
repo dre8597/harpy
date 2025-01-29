@@ -18,7 +18,7 @@ class UserTimeline extends StatelessWidget {
       beginSlivers: [UserTimelineTopActions(user: user)],
       onChangeFilter: () => context.pushNamed(
         UserTimelineFilter.name,
-        params: {'handle': user.handle},
+        pathParameters: {'handle': user.handle},
         extra: user,
       ),
     );

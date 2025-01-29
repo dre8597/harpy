@@ -1,4 +1,3 @@
-import 'package:bluesky/bluesky.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/core/core.dart';
@@ -7,7 +6,8 @@ import 'package:rby/rby.dart';
 part 'auth_preferences.freezed.dart';
 
 /// Handles storing and updating the authentication data for sessions.
-final authPreferencesProvider = StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
+final authPreferencesProvider =
+    StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
   (ref) => AuthPreferencesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
   ),
@@ -93,7 +93,9 @@ class AuthPreferences with _$AuthPreferences {
 
   AuthPreferences._();
 
-  late final bool isValid = userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
+  late final bool isValid =
+      userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
 
-  late final bool hasBlueskyCredentials = blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
+  late final bool hasBlueskyCredentials =
+      blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
 }

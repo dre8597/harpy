@@ -85,7 +85,7 @@ class _FilterButton extends ConsumerWidget {
       onTap: enable
           ? () => context.pushNamed(
                 UserTimelineFilter.name,
-                params: {'handle': user.handle},
+                pathParameters: {'handle': user.handle},
                 extra: user,
               )
           : null,

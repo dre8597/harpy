@@ -153,7 +153,8 @@ class BlueskyLinkData with _$BlueskyLinkData {
     required int end,
   }) = _BlueskyLinkData;
 
-  factory BlueskyLinkData.fromJson(Map<String, dynamic> json) => _$BlueskyLinkDataFromJson(json);
+  factory BlueskyLinkData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyLinkDataFromJson(json);
 }
 
 /// Data class representing a tag entity in a Bluesky post.
@@ -165,5 +166,6 @@ class BlueskyTagData with _$BlueskyTagData {
     required int end,
   }) = _BlueskyTagData;
 
-  factory BlueskyTagData.fromJson(Map<String, dynamic> json) => _$BlueskyTagDataFromJson(json);
+  factory BlueskyTagData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyTagDataFromJson(json);
 }

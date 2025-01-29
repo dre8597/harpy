@@ -7,25 +7,25 @@
 
 // /// Handles a tweet list response in an isolate.
 // ///
-// /// Only the parent [LegacyTweetData] of a reply chain will be in the returned
+// /// Only the parent [BlueskyPostData] of a reply chain will be in the returned
 // /// list and will include all of its replies.
-// Future<BuiltList<LegacyTweetData>> handleTweets(
+// Future<BuiltList<BlueskyPostData>> handleTweets(
 //   List<Tweet> tweets, [
 //   TimelineFilter? filter,
 // ]) {
-//   return compute<List<dynamic>, BuiltList<LegacyTweetData>>(
+//   return compute<List<dynamic>, BuiltList<BlueskyPostData>>(
 //     _isolateHandleTweets,
 //     <dynamic>[tweets, filter],
 //   );
 // }
 
-// BuiltList<LegacyTweetData> _isolateHandleTweets(List<dynamic> arguments) {
+// BuiltList<BlueskyPostData> _isolateHandleTweets(List<dynamic> arguments) {
 //   final tweets = arguments[0] as List<Tweet>;
 //   final filter = arguments[1] as TimelineFilter?;
 
 //   final tweetDataList = tweets
 //       .where((tweet) => !_filterTweet(tweet, filter))
-//       .map(LegacyTweetData.fromTweet)
+//       .map(BlueskyPostData.fromTweet)
 //       .toList();
 
 //   for (var i = 0; i < tweetDataList.length; i++) {

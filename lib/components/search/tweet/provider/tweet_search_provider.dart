@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
+
 import 'package:rby/rby.dart';
 
 part 'tweet_search_provider.freezed.dart';
@@ -53,7 +54,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
         )
         .then(
           (result) =>
-              result.statuses?.map(LegacyTweetData.fromTweet).toBuiltList(),
+              result.statuses?.map(BlueskyPostData.fromTweet).toBuiltList(),
         )
         .handleError((e, st) => twitterErrorHandler(_ref, e, st));
 
@@ -96,7 +97,7 @@ class TweetSearchState with _$TweetSearchState {
   }) = _Loading;
 
   const factory TweetSearchState.data({
-    required BuiltList<LegacyTweetData> tweets,
+    required BuiltList<BlueskyPostData> tweets,
     required String query,
     required TweetSearchFilterData? filter,
   }) = _Data;
@@ -113,7 +114,7 @@ class TweetSearchState with _$TweetSearchState {
 }
 
 extension TweetSearchStateExtension on TweetSearchState {
-  BuiltList<LegacyTweetData> get tweets => maybeMap(
+  BuiltList<BlueskyPostData> get tweets => maybeMap(
         data: (value) => value.tweets,
         orElse: BuiltList.new,
       );

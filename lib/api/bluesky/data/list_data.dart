@@ -26,12 +26,13 @@ class BlueskyListData with _$BlueskyListData {
     DateTime? updatedAt,
   }) = _BlueskyListData;
 
-  factory BlueskyListData.fromJson(Map<String, dynamic> json) => _$BlueskyListDataFromJson(json);
+  factory BlueskyListData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyListDataFromJson(json);
 
   /// Creates a [BlueskyListData] from a Bluesky list.
   /// NOTE: This is a placeholder implementation. List functionality for Bluesky
   /// is not yet available. This factory will be updated once the API supports lists.
-  factory BlueskyListData.fromList(list) {
+  factory BlueskyListData.fromList() {
     throw UnimplementedError(
       'List functionality for Bluesky is not yet available. '
       'This feature will be implemented once the API supports lists.',
@@ -51,5 +52,6 @@ extension BlueskyListDataExtension on BlueskyListData {
   bool get hasMembers => members != null && members!.isNotEmpty;
 
   /// Returns true if the list has been updated since creation.
-  bool get hasBeenUpdated => updatedAt != null && createdAt != null && updatedAt != createdAt;
+  bool get hasBeenUpdated =>
+      updatedAt != null && createdAt != null && updatedAt != createdAt;
 }

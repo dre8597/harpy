@@ -40,13 +40,13 @@ class TweetDelegates with _$TweetDelegates {
 }
 
 TweetDelegates defaultTweetDelegates(
-  LegacyTweetData tweet,
+  BlueskyPostData tweet,
   TweetNotifier notifier,
 ) {
   return TweetDelegates(
     onShowTweet: (ref) => ref.read(routerProvider).pushNamed(
           TweetDetailPage.name,
-          params: {'handle': tweet.user.handle, 'id': tweet.id},
+          pathParameters: {'handle': tweet.user.handle, 'id': tweet.id},
           extra: tweet,
         ),
     onShowUser: (ref) {
@@ -55,7 +55,7 @@ TweetDelegates defaultTweetDelegates(
       if (!router.location.endsWith(tweet.user.handle)) {
         router.pushNamed(
           UserPage.name,
-          params: {'handle': tweet.user.handle},
+          pathParameters: {'handle': tweet.user.handle},
         );
       }
     },
@@ -65,7 +65,7 @@ TweetDelegates defaultTweetDelegates(
       if (!router.location.endsWith(tweet.retweeter!.handle)) {
         router.pushNamed(
           UserPage.name,
-          params: {'handle': tweet.retweeter!.handle},
+          pathParameters: {'handle': tweet.retweeter!.handle},
         );
       }
     },
@@ -92,7 +92,7 @@ TweetDelegates defaultTweetDelegates(
     onShowRetweeters: tweet.retweetCount > 0
         ? (ref) => ref.read(routerProvider).pushNamed(
               RetweetersPage.name,
-              params: {'handle': tweet.user.handle, 'id': tweet.id},
+              pathParameters: {'handle': tweet.user.handle, 'id': tweet.id},
             )
         : null,
     onComposeQuote: (ref) => ref.read(routerProvider).pushNamed(

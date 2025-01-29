@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
+
 import 'package:rby/rby.dart';
 
 final tweetVisibilityPreferencesProvider = Provider(
@@ -32,7 +33,7 @@ class TweetVisibilityPreferences with LoggerMixin {
 
   /// Updates tweet visibility based on the home timeline position behavior
   /// setting.
-  void updateVisibleTweet(LegacyTweetData tweet) {
+  void updateVisibleTweet(BlueskyPostData tweet) {
     if (_generalPreferences.keepLastHomeTimelinePosition) {
       final id = int.tryParse(tweet.originalId);
 

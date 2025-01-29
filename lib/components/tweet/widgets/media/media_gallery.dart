@@ -13,7 +13,7 @@ class MediaGalleryEntry {
     required this.builder,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetDelegates delegates;
   final MediaData media;
   final WidgetBuilder builder;

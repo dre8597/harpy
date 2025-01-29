@@ -34,7 +34,7 @@ class UserPageMetadata extends StatelessWidget {
             'joined ${l10n.formatMonthYear(data.user.createdAt!.toLocal())}',
           ),
         ),
-      if (data.user.url != null) _UrlEntry(url: data.user.url!),
+      if (data.user.url != null) _UrlEntry(url: data.user.url),
       if (data.relationship?.followedBy ?? false)
         _Entry(
           icon: Icon(Icons.reply_rounded, color: theme.colorScheme.primary),

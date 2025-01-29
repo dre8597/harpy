@@ -52,7 +52,7 @@ class HomeTimelineNotifier extends TimelineNotifier {
   int get restoredTweetId =>
       ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
 
-  void addTweet(LegacyTweetData tweet) {
+  void addTweet(BlueskyPostData tweet) {
     final currentState = state;
 
     if (currentState is TimelineStateData) {
@@ -72,7 +72,7 @@ class HomeTimelineNotifier extends TimelineNotifier {
     }
   }
 
-  void removeTweet(LegacyTweetData tweet) {
+  void removeTweet(BlueskyPostData tweet) {
     final currentState = state;
 
     if (currentState is TimelineStateData) {

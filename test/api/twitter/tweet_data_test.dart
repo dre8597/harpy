@@ -5,7 +5,7 @@ import 'package:harpy/api/api.dart';
 void main() {
   group('replyAuthors', () {
     test('returns an empty string when no replies exist', () {
-      final tweetData = LegacyTweetData.fromTweet(Tweet());
+      final tweetData = BlueskyPostData.fromTweet(Tweet());
 
       expect(tweetData.replyAuthors, '');
     });
@@ -14,10 +14,10 @@ void main() {
       final firstUser = User()..name = 'First replier';
       final secondUser = User()..name = 'Second replier';
 
-      final tweetData = LegacyTweetData.fromTweet(Tweet()).copyWith(
+      final tweetData = BlueskyPostData.fromTweet(Tweet()).copyWith(
         replies: [
-          LegacyTweetData.fromTweet(Tweet()..user = firstUser),
-          LegacyTweetData.fromTweet(Tweet()..user = secondUser),
+          BlueskyPostData.fromTweet(Tweet()..user = firstUser),
+          BlueskyPostData.fromTweet(Tweet()..user = secondUser),
         ],
       );
 
@@ -28,11 +28,11 @@ void main() {
       final firstUser = User()..name = 'First replier';
       final secondUser = User()..name = 'Second replier';
 
-      final tweetData = LegacyTweetData.fromTweet(Tweet()).copyWith(
+      final tweetData = BlueskyPostData.fromTweet(Tweet()).copyWith(
         replies: [
-          LegacyTweetData.fromTweet(Tweet()..user = firstUser),
-          LegacyTweetData.fromTweet(Tweet()..user = secondUser),
-          LegacyTweetData.fromTweet(Tweet()..user = firstUser),
+          BlueskyPostData.fromTweet(Tweet()..user = firstUser),
+          BlueskyPostData.fromTweet(Tweet()..user = secondUser),
+          BlueskyPostData.fromTweet(Tweet()..user = firstUser),
         ],
       );
 
@@ -44,11 +44,11 @@ void main() {
         'replier', () {
       final originalUser = User()..name = 'Original author';
 
-      final tweetData = LegacyTweetData.fromTweet(
+      final tweetData = BlueskyPostData.fromTweet(
         Tweet()..user = originalUser,
       ).copyWith(
         replies: [
-          LegacyTweetData.fromTweet(Tweet()..user = originalUser),
+          BlueskyPostData.fromTweet(Tweet()..user = originalUser),
         ],
       );
 
@@ -61,13 +61,13 @@ void main() {
       final firstUser = User()..name = 'First replier';
       final secondUser = User()..name = 'Second replier';
 
-      final tweetData = LegacyTweetData.fromTweet(
+      final tweetData = BlueskyPostData.fromTweet(
         Tweet()..user = originalUser,
       ).copyWith(
         replies: [
-          LegacyTweetData.fromTweet(Tweet()..user = originalUser),
-          LegacyTweetData.fromTweet(Tweet()..user = firstUser),
-          LegacyTweetData.fromTweet(Tweet()..user = secondUser),
+          BlueskyPostData.fromTweet(Tweet()..user = originalUser),
+          BlueskyPostData.fromTweet(Tweet()..user = firstUser),
+          BlueskyPostData.fromTweet(Tweet()..user = secondUser),
         ],
       );
 
@@ -81,11 +81,11 @@ void main() {
       final firstUser = User()..name = 'First replier';
       final secondUser = User()..name = 'Second replier';
 
-      final tweetData = LegacyTweetData.fromTweet(Tweet()).copyWith(
+      final tweetData = BlueskyPostData.fromTweet(Tweet()).copyWith(
         replies: [
-          LegacyTweetData.fromTweet(Tweet()..user = firstUser),
-          LegacyTweetData.fromTweet(Tweet()..user = firstUser),
-          LegacyTweetData.fromTweet(Tweet()..user = secondUser),
+          BlueskyPostData.fromTweet(Tweet()..user = firstUser),
+          BlueskyPostData.fromTweet(Tweet()..user = firstUser),
+          BlueskyPostData.fromTweet(Tweet()..user = secondUser),
         ],
       );
 
@@ -104,15 +104,15 @@ void main() {
       final sixthUser = User()..name = 'Sixth replier';
       final seventhUser = User()..name = 'Seventh replier';
 
-      final tweetData = LegacyTweetData.fromTweet(Tweet()).copyWith(
+      final tweetData = BlueskyPostData.fromTweet(Tweet()).copyWith(
         replies: [
-          LegacyTweetData.fromTweet(Tweet()..user = firstUser),
-          LegacyTweetData.fromTweet(Tweet()..user = secondUser),
-          LegacyTweetData.fromTweet(Tweet()..user = thirdUser),
-          LegacyTweetData.fromTweet(Tweet()..user = fourthUser),
-          LegacyTweetData.fromTweet(Tweet()..user = fifthUser),
-          LegacyTweetData.fromTweet(Tweet()..user = sixthUser),
-          LegacyTweetData.fromTweet(Tweet()..user = seventhUser),
+          BlueskyPostData.fromTweet(Tweet()..user = firstUser),
+          BlueskyPostData.fromTweet(Tweet()..user = secondUser),
+          BlueskyPostData.fromTweet(Tweet()..user = thirdUser),
+          BlueskyPostData.fromTweet(Tweet()..user = fourthUser),
+          BlueskyPostData.fromTweet(Tweet()..user = fifthUser),
+          BlueskyPostData.fromTweet(Tweet()..user = sixthUser),
+          BlueskyPostData.fromTweet(Tweet()..user = seventhUser),
         ],
       );
 

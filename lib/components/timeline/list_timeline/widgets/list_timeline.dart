@@ -36,8 +36,8 @@ class ListTimeline extends StatelessWidget {
       scrollToTopOffset: scrollToTopOffset,
       onChangeFilter: () => context.pushNamed(
         ListTimelineFilter.name,
-        params: {'listId': listId},
-        queryParams: {'name': listName},
+        pathParameters: {'listId': listId},
+        queryParameters: {'name': listName},
       ),
     );
   }

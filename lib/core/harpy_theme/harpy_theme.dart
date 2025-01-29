@@ -59,8 +59,9 @@ class HarpyTheme {
         onSurface: colors.onSurface,
         surface: colors.averageBackgroundColor,
       ),
-      spacing: RbySpacingTheme(base: _paddingValue),
-      shape: shapeTheme,
+      // spacingScheme: ,
+      // spacing: RbySpacingTheme(base: _paddingValue),
+      // shape: shapeTheme,
     );
 
     themeData = theme.data.copyWith(

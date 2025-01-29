@@ -69,7 +69,7 @@ class UserPageAppBarButtons extends StatelessWidget {
             const _BackButton(),
             const Spacer(),
             if (!isAuthenticatedUser && data.relationship != null)
-              _MoreButton(relationship: data.relationship!, notifier: notifier),
+              _MoreButton(relationship: data.relationship, notifier: notifier),
           ],
         ),
       ),

@@ -8,10 +8,11 @@ import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:http/http.dart';
+
 import 'package:rby/rby.dart';
 
 final tweetProvider = StateNotifierProvider.autoDispose
-    .family<TweetNotifier, LegacyTweetData?, String>(
+    .family<TweetNotifier, BlueskyPostData?, String>(
   (ref, id) {
     ref.cacheFor(const Duration(minutes: 5));
 
@@ -25,7 +26,7 @@ final tweetProvider = StateNotifierProvider.autoDispose
   },
 );
 
-class TweetNotifier extends StateNotifier<LegacyTweetData?> with LoggerMixin {
+class TweetNotifier extends StateNotifier<BlueskyPostData?> with LoggerMixin {
   TweetNotifier({
     required Ref ref,
     required TwitterApi twitterApi,
@@ -45,7 +46,7 @@ class TweetNotifier extends StateNotifier<LegacyTweetData?> with LoggerMixin {
   final MessageService _messageService;
   final LanguagePreferences _languagePreferences;
 
-  void initialize(LegacyTweetData tweet) {
+  void initialize(BlueskyPostData tweet) {
     if (mounted && state == null) state = tweet;
   }
 

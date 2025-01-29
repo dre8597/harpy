@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -100,7 +99,7 @@ class _TopRow extends ConsumerWidget {
     final authentication = ref.watch(authenticationStateProvider);
 
     return TweetCardTopRow(
-      tweet: LegacyTweetData(
+      tweet: BlueskyPostData(
         createdAt: DateTime.now(),
         user: authentication.user!,
       ),

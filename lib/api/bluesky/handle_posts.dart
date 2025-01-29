@@ -1,7 +1,6 @@
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:bluesky/bluesky.dart' as bsky;
-import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
@@ -108,14 +107,17 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
   // Handle tags and mentions through facets
   final postTags = post.record.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
-          .map((f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag) as bsky.FacetTag).tag)
+          .map((f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag)
+                  as bsky.FacetTag)
+              .tag)
           .toList() ??
       [];
 
   final postMentions = post.record.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetMention))
           .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention) as bsky.FacetMention)
+            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention)
+                    as bsky.FacetMention)
                 .did,
           )
           .toList() ??
@@ -125,13 +127,17 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
 
   // Filter included hashtags
   if (filter.includes.hashtags.isNotEmpty &&
-      filter.includes.hashtags.map(_prepareHashtag).every(postTags.containsNot)) {
+      filter.includes.hashtags
+          .map(_prepareHashtag)
+          .every(postTags.containsNot)) {
     return true;
   }
 
   // Filter included mentions
   if (filter.includes.mentions.isNotEmpty &&
-      filter.includes.mentions.map(_prepareMention).every(postMentions.containsNot)) {
+      filter.includes.mentions
+          .map(_prepareMention)
+          .every(postMentions.containsNot)) {
     return true;
   }
 
@@ -151,13 +157,17 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
 
   // Filter excluded mentions
   if (filter.excludes.mentions.isNotEmpty &&
-      filter.excludes.mentions.map(_prepareMention).any(postMentions.contains)) {
+      filter.excludes.mentions
+          .map(_prepareMention)
+          .any(postMentions.contains)) {
     return true;
   }
 
   // Filter excluded phrases
   if (filter.excludes.phrases.isNotEmpty &&
-      filter.excludes.phrases.map((phrase) => phrase.toLowerCase()).any(postText.contains)) {
+      filter.excludes.phrases
+          .map((phrase) => phrase.toLowerCase())
+          .any(postText.contains)) {
     return true;
   }
 

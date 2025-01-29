@@ -29,7 +29,8 @@ class BlueskyPostData with _$BlueskyPostData {
     bool? isLiked,
   }) = _BlueskyPostData;
 
-  factory BlueskyPostData.fromJson(Map<String, dynamic> json) => _$BlueskyPostDataFromJson(json);
+  factory BlueskyPostData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyPostDataFromJson(json);
 
   /// Creates a [BlueskyPostData] from a Bluesky FeedView.
   factory BlueskyPostData.fromFeedView(bsky.FeedView feedView) {
@@ -84,12 +85,15 @@ class BlueskyPostData with _$BlueskyPostData {
       rootPostId: post.record.reply?.root.uri.toString(),
       tags: post.record.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
-          .map((f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag) as bsky.FacetTag).tag)
+          .map((f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag)
+                  as bsky.FacetTag)
+              .tag)
           .toList(),
       mentions: post.record.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetMention))
           .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention) as bsky.FacetMention)
+            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention)
+                    as bsky.FacetMention)
                 .did,
           )
           .toList(),
@@ -112,5 +116,6 @@ class BlueskyMediaData with _$BlueskyMediaData {
     String? alt,
   }) = _BlueskyMediaData;
 
-  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) => _$BlueskyMediaDataFromJson(json);
+  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyMediaDataFromJson(json);
 }

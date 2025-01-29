@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
@@ -122,17 +121,20 @@ final routesProvider = Provider(
         GoRoute(
           name: UserPage.name,
           path: 'user/:handle',
-          builder: (context, state) => UserPage(handle: state.pathParameters['handle']!),
+          builder: (context, state) =>
+              UserPage(handle: state.pathParameters['handle']!),
           routes: [
             GoRoute(
               name: FollowingPage.name,
               path: 'following',
-              builder: (context, state) => FollowingPage(handle: state.pathParameters['handle']!),
+              builder: (context, state) =>
+                  FollowingPage(handle: state.pathParameters['handle']!),
             ),
             GoRoute(
               name: FollowersPage.name,
               path: 'followers',
-              builder: (context, state) => FollowersPage(userId: state.pathParameters['handle']!),
+              builder: (context, state) =>
+                  FollowersPage(userId: state.pathParameters['handle']!),
             ),
             GoRoute(
               name: ListShowPage.name,
@@ -145,20 +147,22 @@ final routesProvider = Provider(
             GoRoute(
               name: UserTimelineFilter.name,
               path: 'filter',
-              builder: (context, state) => UserTimelineFilter(user: state.extra! as UserData),
+              builder: (context, state) =>
+                  UserTimelineFilter(user: state.extra! as UserData),
             ),
             GoRoute(
               name: TweetDetailPage.name,
               path: 'status/:id',
               builder: (context, state) => TweetDetailPage(
                 id: state.pathParameters['id']!,
-                tweet: state.extra as LegacyTweetData?,
+                tweet: state.extra as BlueskyPostData?,
               ),
               routes: [
                 GoRoute(
                   name: RetweetersPage.name,
                   path: 'retweets',
-                  builder: (context, state) => RetweetersPage(tweetId: state.pathParameters['id']!),
+                  builder: (context, state) =>
+                      RetweetersPage(tweetId: state.pathParameters['id']!),
                 ),
               ],
             ),
@@ -173,9 +177,10 @@ final routesProvider = Provider(
               name: TimelineFilterCreation.name,
               path: 'create',
               builder: (context, state) => TimelineFilterCreation(
-                initialTimelineFilter:
-                    (state.extra as Map?)?['initialTimelineFilter'] as TimelineFilter?,
-                onSaved: (state.extra as Map?)?['onSaved'] as ValueChanged<TimelineFilter>?,
+                initialTimelineFilter: (state.extra
+                    as Map?)?['initialTimelineFilter'] as TimelineFilter?,
+                onSaved: (state.extra as Map?)?['onSaved']
+                    as ValueChanged<TimelineFilter>?,
               ),
             ),
           ],
@@ -201,10 +206,10 @@ final routesProvider = Provider(
                   name: TweetSearchFilter.name,
                   path: 'filter',
                   builder: (context, state) => TweetSearchFilter(
-                    initialFilter:
-                        (state.extra as Map?)?['initialFilter'] as TweetSearchFilterData?,
-                    onSaved:
-                        (state.extra as Map?)?['onSaved'] as ValueChanged<TweetSearchFilterData>?,
+                    initialFilter: (state.extra as Map?)?['initialFilter']
+                        as TweetSearchFilterData?,
+                    onSaved: (state.extra as Map?)?['onSaved']
+                        as ValueChanged<TweetSearchFilterData>?,
                   ),
                 ),
               ],
@@ -241,8 +246,10 @@ final routesProvider = Provider(
           name: ComposePage.name,
           path: 'compose/tweet',
           builder: (context, state) => ComposePage(
-            parentTweet: (state.extra as Map?)?['parentTweet'] as LegacyTweetData?,
-            quotedTweet: (state.extra as Map?)?['quotedTweet'] as LegacyTweetData?,
+            parentTweet:
+                (state.extra as Map?)?['parentTweet'] as BlueskyPostData?,
+            quotedTweet:
+                (state.extra as Map?)?['quotedTweet'] as BlueskyPostData?,
           ),
         ),
         GoRoute(
@@ -264,7 +271,8 @@ final routesProvider = Provider(
                   name: CustomThemePage.name,
                   path: 'custom',
                   builder: (context, state) => CustomThemePage(
-                    themeId: int.tryParse(state.uri.queryParameters['themeId'] ?? ''),
+                    themeId: int.tryParse(
+                        state.uri.queryParameters['themeId'] ?? ''),
                   ),
                 ),
               ],
@@ -279,8 +287,10 @@ final routesProvider = Provider(
                   path: 'font',
                   builder: (context, state) => FontSelectionPage(
                     title: (state.extra as Map?)?['title'] as String,
-                    selectedFont: (state.extra as Map?)?['selectedFont'] as String,
-                    onChanged: (state.extra as Map?)?['onChanged'] as ValueChanged<String>,
+                    selectedFont:
+                        (state.extra as Map?)?['selectedFont'] as String,
+                    onChanged: (state.extra as Map?)?['onChanged']
+                        as ValueChanged<String>,
                   ),
                 ),
               ],

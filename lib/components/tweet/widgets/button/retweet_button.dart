@@ -16,7 +16,7 @@ class RetweetButton extends ConsumerStatefulWidget {
     this.foregroundColor,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onRetweet;
   final TweetActionCallback? onUnretweet;
   final TweetActionCallback? onShowRetweeters;

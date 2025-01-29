@@ -12,7 +12,7 @@ class TweetCardReplies extends ConsumerWidget {
     required this.color,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
 
   /// The color alternated depending on the parent cards color.
   final Color? color;

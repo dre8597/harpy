@@ -5,7 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 import 'package:video_player/video_player.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 part 'video_player_provider.freezed.dart';
 
@@ -46,8 +46,8 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         super(const VideoPlayerState.uninitialized()) {
     _quality = urls.keys.first;
 
-    _controller = VideoPlayerController.network(
-      urls[_quality]!,
+    _controller = VideoPlayerController.networkUrl(
+      Uri.dataFromString(urls[_quality]!),
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
   }
@@ -64,7 +64,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   void _controllerListener() {
     if (!mounted) return;
-    Wakelock.toggle(enable: _controller.value.isPlaying);
+    WakelockPlus.toggle(enable: _controller.value.isPlaying);
 
     if (!_controller.value.isInitialized) {
       state = const VideoPlayerState.uninitialized();
@@ -176,7 +176,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   @override
   void dispose() {
-    Wakelock.disable();
+    WakelockPlus.disable();
     _controller.dispose();
     super.dispose();
   }

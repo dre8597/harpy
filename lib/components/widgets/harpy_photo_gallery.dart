@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+
 //TODO: Make a forked version with all code updated to latest version
 class HarpyPhotoGallery extends StatelessWidget {
   const HarpyPhotoGallery({

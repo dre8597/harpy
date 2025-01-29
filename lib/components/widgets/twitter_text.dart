@@ -20,7 +20,7 @@ void defaultOnUserMentionTap(WidgetRef ref, UserMentionData mention) {
   if (!router.location.endsWith(mention.handle)) {
     router.pushNamed(
       UserPage.name,
-      params: {'handle': mention.handle},
+      pathParameters: {'handle': mention.handle},
     );
   }
 }
@@ -78,7 +78,7 @@ void defaultOnHashtagTap(WidgetRef ref, TagData hashtag) {
   } else {
     ref.read(routerProvider).pushNamed(
       TweetSearchPage.name,
-      queryParams: {'query': searchQuery},
+      queryParameters: {'query': searchQuery},
     );
   }
 }
@@ -144,7 +144,7 @@ class _TwitterTextState extends ConsumerState<TwitterText> {
     super.initState();
 
     final twitterTextEntities = widget.entities != null
-        ? _initializeEntities(widget.text, widget.entities!)
+        ? _initializeEntities(widget.text, widget.entities)
         : <_TwitterTextEntity>[];
 
     var textStart = 0;

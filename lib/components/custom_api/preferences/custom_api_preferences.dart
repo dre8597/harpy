@@ -21,7 +21,8 @@ class CustomApiPreferencesNotifier extends StateNotifier<CustomApiPreferences> {
           CustomApiPreferences(
             customKey: preferences.getString('customKey', ''),
             customSecret: preferences.getString('customSecret', ''),
-            customBlueskyService: preferences.getString('customBlueskyService', ''),
+            customBlueskyService:
+                preferences.getString('customBlueskyService', ''),
           ),
         );
 
@@ -56,5 +57,6 @@ class CustomApiPreferences with _$CustomApiPreferences {
 
   CustomApiPreferences._();
 
-  late final bool hasCustomApiKeyAndSecret = customKey.isNotEmpty && customSecret.isNotEmpty;
+  late final bool hasCustomApiKeyAndSecret =
+      customKey.isNotEmpty && customSecret.isNotEmpty;
 }

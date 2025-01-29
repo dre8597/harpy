@@ -11,7 +11,7 @@ class SensitiveMediaOverlay extends ConsumerStatefulWidget {
     required this.child,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final Widget child;
 
   @override

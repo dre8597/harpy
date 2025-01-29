@@ -8,8 +8,8 @@
 // part 'legacy_tweet_data.freezed.dart';
 
 // @freezed
-// class LegacyTweetData with _$LegacyTweetData {
-//   factory LegacyTweetData({
+// class BlueskyPostData with _$BlueskyPostData {
+//   factory BlueskyPostData({
 //     required DateTime createdAt,
 //     required UserData user,
 
@@ -42,12 +42,12 @@
 //     ///
 //     /// `null` when this tweet is not a retweet.
 //     UserData? retweeter,
-//     LegacyTweetData? quote,
+//     BlueskyPostData? quote,
 //     String? quoteUrl,
 
 //     // custom fields
 
-//     @Default(<LegacyTweetData>[]) List<LegacyTweetData> replies,
+//     @Default(<BlueskyPostData>[]) List<BlueskyPostData> replies,
 
 //     /// The text of this tweet that the user can see.
 //     ///
@@ -64,7 +64,7 @@
 //     @Default(false) bool isTranslating,
 //   }) = _TweetData;
 
-//   factory LegacyTweetData.fromTweet(Tweet tweet) {
+//   factory BlueskyPostData.fromTweet(Tweet tweet) {
 //     final originalId = tweet.idStr ?? '';
 
 //     UserData? retweeter;
@@ -74,11 +74,11 @@
 //       tweet = tweet.retweetedStatus!;
 //     }
 
-//     LegacyTweetData? quote;
+//     BlueskyPostData? quote;
 //     String? quoteUrl;
 
 //     if (tweet.quotedStatus != null) {
-//       quote = LegacyTweetData.fromTweet(tweet.quotedStatus!);
+//       quote = BlueskyPostData.fromTweet(tweet.quotedStatus!);
 //       quoteUrl = tweet.quotedStatusPermalink?.url;
 //     }
 
@@ -116,7 +116,7 @@
 //       }
 //     }
 
-//     return LegacyTweetData(
+//     return BlueskyPostData(
 //       // required
 //       originalId: originalId,
 //       id: tweet.idStr ?? '',
@@ -145,8 +145,8 @@
 //     );
 //   }
 
-//   factory LegacyTweetData.fromV2(v2.TweetData tweet, v2.UserData user) {
-//     var tweetData = LegacyTweetData.fromTweet(
+//   factory BlueskyPostData.fromV2(v2.TweetData tweet, v2.UserData user) {
+//     var tweetData = BlueskyPostData.fromTweet(
 //       Tweet()
 //         ..createdAt = tweet.createdAt
 //         ..idStr = tweet.id
@@ -174,7 +174,7 @@
 //     return tweetData;
 //   }
 
-//   LegacyTweetData._();
+//   BlueskyPostData._();
 
 //   /// The [MediaType] for the media of this tweet or `null` if this tweet has no
 //   /// media.

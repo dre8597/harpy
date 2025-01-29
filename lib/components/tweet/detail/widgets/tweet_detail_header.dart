@@ -14,10 +14,10 @@ class TweetDetailHeader extends StatelessWidget {
   });
 
   /// The original tweet that is a reply to [parent].
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
 
   /// The parent of [tweet] which is displayed in a [TweetCard].
-  final LegacyTweetData? parent;
+  final BlueskyPostData? parent;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class TweetDetailHeader extends StatelessWidget {
                 children: [
                   Padding(
                     padding: theme.spacing.edgeInsets.copyWith(bottom: 0),
-                    child: TweetCard(tweet: parent!),
+                    child: TweetCard(tweet: parent),
                   ),
                   VerticalSpacer.normal,
                   TweetListInfoMessage(

@@ -51,7 +51,7 @@ class Application with LoggerMixin {
       } else {
         _ref.read(routerProvider).goNamed(
           HomePage.name,
-          queryParams: {'transition': 'fade'},
+          queryParameters: {'transition': 'fade'},
         );
       }
     } else {
@@ -59,7 +59,7 @@ class Application with LoggerMixin {
 
       _ref.read(routerProvider).goNamed(
         LoginPage.name,
-        queryParams: {'transition': 'fade'},
+        queryParameters: {'transition': 'fade'},
       );
     }
   }

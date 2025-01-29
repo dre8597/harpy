@@ -8,7 +8,7 @@ import 'package:rby/rby.dart';
 
 void showTweetActionsBottomSheet(
   WidgetRef ref, {
-  required LegacyTweetData tweet,
+  required BlueskyPostData tweet,
   required TweetDelegates delegates,
 }) {
   final theme = Theme.of(ref.context);

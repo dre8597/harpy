@@ -76,7 +76,7 @@ abstract class TimelineNotifier<T extends Object>
   int get restoredTweetId => 0;
 
   @protected
-  T? buildCustomData(BuiltList<LegacyTweetData> tweets) => null;
+  T? buildCustomData(BuiltList<BlueskyPostData> tweets) => null;
 
   Future<void> loadInitial() async {
     if (state is! TimelineStateInitial) return;
@@ -186,7 +186,7 @@ abstract class TimelineNotifier<T extends Object>
 
       final maxId = tweets.last.originalId;
 
-      LegacyTweetData? restoredTweet;
+      BlueskyPostData? restoredTweet;
       int? restoredTweetIndex;
 
       // find the tweet with `tweetId`, or the the next tweet that is newer that
@@ -243,8 +243,8 @@ abstract class TimelineNotifier<T extends Object>
     }
   }
 
-  Future<BuiltList<LegacyTweetData>> _loadTweetsSince(int tweetId) async {
-    final timeLineTweets = <LegacyTweetData>[];
+  Future<BuiltList<BlueskyPostData>> _loadTweetsSince(int tweetId) async {
+    final timeLineTweets = <BlueskyPostData>[];
     int? lastId;
     String? maxId;
 
@@ -277,7 +277,7 @@ class TimelineState<T extends Object> with _$TimelineState {
   const factory TimelineState.loading() = TimelineStateLoading;
 
   const factory TimelineState.data({
-    required BuiltList<LegacyTweetData> tweets,
+    required BuiltList<BlueskyPostData> tweets,
 
     /// The max id used to request older tweets.
     ///
@@ -313,7 +313,7 @@ extension TimelineStateExtension on TimelineState {
         orElse: () => false,
       );
 
-  BuiltList<LegacyTweetData> get tweets => maybeMap(
+  BuiltList<BlueskyPostData> get tweets => maybeMap(
         data: (value) => value.tweets,
         loadingMore: (value) => value.data.tweets,
         orElse: BuiltList.new,

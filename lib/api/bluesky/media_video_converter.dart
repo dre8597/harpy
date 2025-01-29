@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/core/core.dart';
 
 /// A service to handle video conversion for Bluesky uploads.
 ///

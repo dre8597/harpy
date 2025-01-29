@@ -137,7 +137,7 @@ class _SummaryCard extends ConsumerWidget {
             onTap: isAuthenticated
                 ? () => context.pushNamed(
                       UserPage.name,
-                      params: {'handle': 'harpy_app'},
+                      pathParameters: {'handle': 'harpy_app'},
                     )
                 : () => launcher('https://twitter.com/harpy_app'),
           ),
