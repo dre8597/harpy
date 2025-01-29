@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bluesky/bluesky.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,17 +28,21 @@ class TrendsNotifier extends StateNotifier<AsyncValue<BuiltList<Trend>>>
     with LoggerMixin {
   TrendsNotifier({
     required Ref ref,
-    required TwitterApi twitterApi,
+    // required TwitterApi twitterApi,
+    required Bluesky blueskyApi,
     required TrendsLocationData userLocation,
   })  : _ref = ref,
-        _twitterApi = twitterApi,
+        // _twitterApi = twitterApi,
+        _blueskyApi = blueskyApi,
         _trendsLocationData = userLocation,
         super(const AsyncValue.loading()) {
     load();
   }
 
   final Ref _ref;
-  final TwitterApi _twitterApi;
+
+  // final TwitterApi _twitterApi;
+  final Bluesky _blueskyApi;
   final TrendsLocationData _trendsLocationData;
 
   Future<void> load() async {

@@ -1,3 +1,4 @@
+import 'package:bluesky/bluesky.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,11 +22,15 @@ final findTrendsLocationProvider = StateNotifierProvider.autoDispose<
 class FindTrendsLocationNotifier extends StateNotifier<FindTrendsLocationState>
     with LoggerMixin {
   FindTrendsLocationNotifier({
-    required TwitterApi twitterApi,
-  })  : _twitterApi = twitterApi,
+    // required TwitterApi twitterApi,
+    required Bluesky blueskyApi,
+  })  :
+        // _twitterApi = twitterApi,
+        _blueskyApi = blueskyApi,
         super(const FindTrendsLocationState.initial());
 
-  final TwitterApi _twitterApi;
+  // final TwitterApi _twitterApi;
+  final Bluesky _blueskyApi;
 
   Future<void> search({
     required String latitude,
@@ -141,6 +146,7 @@ class FindTrendsLocationNotifier extends StateNotifier<FindTrendsLocationState>
 @freezed
 class FindTrendsLocationState with _$FindTrendsLocationState {
   const factory FindTrendsLocationState.initial() = _Initial;
+
   const factory FindTrendsLocationState.loading() = _Loading;
 
   const factory FindTrendsLocationState.data({
@@ -148,6 +154,8 @@ class FindTrendsLocationState with _$FindTrendsLocationState {
   }) = _Data;
 
   const factory FindTrendsLocationState.error() = _Error;
+
   const factory FindTrendsLocationState.serviceDisabled() = _ServiceDisabled;
+
   const factory FindTrendsLocationState.permissionDenied() = _PermissionDenied;
 }

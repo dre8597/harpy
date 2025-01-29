@@ -24,6 +24,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
   TweetSearchNotifier({
     required Ref ref,
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
   })  : _ref = ref,
         _twitterApi = twitterApi,
         super(const TweetSearchState.initial());

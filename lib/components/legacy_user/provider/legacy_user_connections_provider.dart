@@ -29,6 +29,7 @@ class LegacyUserConnectionsNotifier
     required Ref ref,
     required BuiltList<String> handles,
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
   })  : assert(handles.isNotEmpty),
         _ref = ref,
         _handles = handles,

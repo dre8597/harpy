@@ -24,6 +24,7 @@ class TrendsLocationsNotifier
     with LoggerMixin {
   TrendsLocationsNotifier({
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
   })  : _twitterApi = twitterApi,
         super(const AsyncValue.loading()) {
     load();

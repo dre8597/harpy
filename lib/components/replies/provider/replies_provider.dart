@@ -3,6 +3,7 @@ import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/core/core.dart';
 
 import 'package:rby/rby.dart';
@@ -23,6 +24,7 @@ class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
   RepliesNotifier({
     required Ref ref,
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
     required BlueskyPostData tweet,
   })  : _ref = ref,
         _twitterApi = twitterApi,

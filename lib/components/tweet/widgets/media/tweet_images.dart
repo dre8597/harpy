@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -29,23 +30,23 @@ class TweetImages extends ConsumerWidget {
       HeroDialogRoute(
         builder: (_) => MediaGallery(
           initialIndex: index,
-          itemCount: tweet.media.length,
+          itemCount: tweet.media?.length ?? 0,,
           builder: (index) => MediaGalleryEntry(
             tweet: tweet,
             delegates: delegates,
-            media: tweet.media[index],
+            media: tweet.media?[index],
             builder: (_) => TweetGalleryImage(
-              media: tweet.media[index],
+              media: tweet.media?[index],
               heroTag: 'tweet${mediaHeroTag(
                 context,
                 tweet: tweet,
-                media: tweet.media[index],
+                media: tweet.media?[index],
                 index: tweetIndex,
               )}',
               borderRadius: _borderRadiusForImage(
                 theme.shape.radius,
                 index,
-                tweet.media.length,
+                tweet.media?.length ?? 0,
               ),
             ),
           ),

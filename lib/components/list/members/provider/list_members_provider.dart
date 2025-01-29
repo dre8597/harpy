@@ -19,6 +19,7 @@ class ListsMembersNotifier extends PaginatedUsersNotifier {
   ListsMembersNotifier({
     required Ref ref,
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
     required String listId,
   })  : _ref = ref,
         _twitterApi = twitterApi,

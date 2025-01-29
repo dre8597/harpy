@@ -24,6 +24,7 @@ class UserSearchNotifier extends StateNotifier<PaginatedState<UsersSearchData>>
   UserSearchNotifier({
     required Ref ref,
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
   })  : _ref = ref,
         _twitterApi = twitterApi,
         super(const PaginatedState.initial());

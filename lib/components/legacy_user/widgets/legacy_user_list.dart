@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:harpy/api/twitter/data/user_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';

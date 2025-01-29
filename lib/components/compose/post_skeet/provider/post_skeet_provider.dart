@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:bluesky/bluesky.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:file_picker/file_picker.dart';
@@ -8,33 +9,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/media_upload_service.dart';
 import 'package:harpy/components/compose/post_tweet/preferences/post_tweet_preferences.dart';
 import 'package:harpy/core/core.dart';
 import 'package:http/http.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:rby/rby.dart';
 
-part 'post_tweet_provider.freezed.dart';
+part 'post_skeet_provider.freezed.dart';
 
 final postTweetProvider =
-    StateNotifierProvider<PostTweetNotifier, PostTweetState>(
-  (ref) => PostTweetNotifier(
+    StateNotifierProvider<PostSkeetNotifier, PostTweetState>(
+  (ref) => PostSkeetNotifier(
     ref: ref,
     twitterApi: ref.watch(twitterApiV1Provider),
   ),
   name: 'PostTweetProvider',
 );
 
-class PostTweetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
-  PostTweetNotifier({
+class PostSkeetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
+  PostSkeetNotifier({
     required Ref ref,
-    required TwitterApi twitterApi,
+    // required TwitterApi twitterApi,
+    required Bluesky blueskyApi,
   })  : _ref = ref,
-        _twitterApi = twitterApi,
+        // _twitterApi = twitterApi,
+        _blueskyApi = blueskyApi,
         super(const PostTweetState.inProgress());
 
   final Ref _ref;
-  final TwitterApi _twitterApi;
+  final Bluesky _blueskyApi;
 
   Future<void> post(
     String text, {
@@ -186,12 +190,11 @@ class PostTweetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
           additionalInfo: 'this may take a moment',
         );
 
-        final mediaId = await _ref.read(mediaUploadService).upload(
-              mediaFiles[i],
-              type: type,
-            );
+        final uploadResponse = await _ref
+            .read(blueskyMediaUploadServiceProvider)
+            .uploadSingleMedia(mediaFiles[i]);
 
-        if (mediaId != null) mediaIds.add(mediaId);
+        if (uploadResponse.isNotEmpty) mediaIds.addAll(uploadResponse.keys);
       }
 
       log.fine('${mediaIds.length} media uploaded');

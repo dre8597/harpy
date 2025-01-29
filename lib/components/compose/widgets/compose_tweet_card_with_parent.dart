@@ -23,12 +23,12 @@ class ComposeTweetCardWithParent extends StatelessWidget {
         VerticalSpacer.normal,
         if (parentTweet != null)
           _ParentTweetCard(
-            tweet: parentTweet,
+            tweet: parentTweet!,
             label: 'replying to',
           )
         else if (quotedTweet != null)
           _ParentTweetCard(
-            tweet: quotedTweet,
+            tweet: quotedTweet!,
             label: 'quoting',
           ),
       ],

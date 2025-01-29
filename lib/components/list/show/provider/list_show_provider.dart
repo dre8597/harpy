@@ -24,6 +24,7 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
     required String handle,
     required Ref ref,
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
   })  : _handle = handle,
         _ref = ref,
         _twitterApi = twitterApi,

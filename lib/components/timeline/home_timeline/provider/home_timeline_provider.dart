@@ -2,6 +2,7 @@ import 'package:built_collection/built_collection.dart';
 import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
@@ -12,7 +13,7 @@ final homeTimelineProvider =
 
     return HomeTimelineNotifier(
       ref: ref,
-      twitterApi: ref.watch(twitterApiV1Provider),
+      twitterApi: ref.watch(blueskyApiProvider),
     );
   },
   name: 'HomeTimelineProvider',

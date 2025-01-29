@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -36,13 +37,13 @@ class TweetCardMedia extends ConsumerWidget {
           tweet: tweet,
           delegates: delegates,
           tweetIndex: index,
-          onImageLongPress: (index) => onMediaLongPress(tweet.media[index]),
+          onImageLongPress: (index) => onMediaLongPress(tweet.media?[index]),
         );
       case MediaType.gif:
         final heroTag = 'tweet${mediaHeroTag(
           context,
           tweet: tweet,
-          media: tweet.media.single,
+          media: tweet.media?.single,
           index: index,
         )}';
 
@@ -53,26 +54,26 @@ class TweetCardMedia extends ConsumerWidget {
             HeroDialogRoute(
               builder: (_) => MediaGalleryOverlay(
                 tweet: tweet,
-                media: tweet.media.single,
+                media: tweet.media?.single,
                 delegates: delegates,
                 child: TweetGif(tweet: tweet, heroTag: heroTag),
               ),
             ),
           ),
-          onGifLongPress: () => onMediaLongPress(tweet.media.single),
+          onGifLongPress: () => onMediaLongPress(tweet.media?.single),
         );
       case MediaType.video:
         final heroTag = 'tweet${mediaHeroTag(
           context,
           tweet: tweet,
-          media: tweet.media.single,
+          media: tweet.media?.single,
           index: index,
         )}';
 
         child = TweetVideo(
           tweet: tweet,
           heroTag: heroTag,
-          onVideoLongPress: () => onMediaLongPress(tweet.media.single),
+          onVideoLongPress: () => onMediaLongPress(tweet.media?.single),
           overlayBuilder: (data, notifier, child) => StaticVideoPlayerOverlay(
             tweet: tweet,
             data: data,
@@ -81,13 +82,13 @@ class TweetCardMedia extends ConsumerWidget {
               HeroDialogRoute(
                 builder: (_) => MediaGalleryOverlay(
                   tweet: tweet,
-                  media: tweet.media.single,
+                  media: tweet.media?.single,
                   delegates: delegates,
                   child: TweetGalleryVideo(tweet: tweet, heroTag: heroTag),
                 ),
               ),
             ),
-            onVideoLongPress: () => onMediaLongPress(tweet.media.single),
+            onVideoLongPress: () => onMediaLongPress(tweet.media?.single),
             child: child,
           ),
         );

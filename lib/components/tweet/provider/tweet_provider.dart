@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:bluesky/bluesky.dart';
 import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:http/http.dart';
@@ -29,19 +31,23 @@ final tweetProvider = StateNotifierProvider.autoDispose
 class TweetNotifier extends StateNotifier<BlueskyPostData?> with LoggerMixin {
   TweetNotifier({
     required Ref ref,
-    required TwitterApi twitterApi,
+    // required TwitterApi twitterApi,
+    required Bluesky blueskyApi,
     required TranslateService translateService,
     required MessageService messageService,
     required LanguagePreferences languagePreferences,
   })  : _ref = ref,
-        _twitterApi = twitterApi,
+        // _twitterApi = twitterApi,
+        _blueskyApi = blueskyApi,
         _translateService = translateService,
         _messageService = messageService,
         _languagePreferences = languagePreferences,
         super(null);
 
   final Ref _ref;
-  final TwitterApi _twitterApi;
+
+  // final TwitterApi _twitterApi;
+  final Bluesky _blueskyApi;
   final TranslateService _translateService;
   final MessageService _messageService;
   final LanguagePreferences _languagePreferences;

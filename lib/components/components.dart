@@ -13,7 +13,7 @@ export 'changelog/provider/changelog_provider.dart';
 export 'changelog/widget/changelog_dialog.dart';
 export 'changelog/widget/changelog_widget.dart';
 export 'compose/compose_page.dart';
-export 'compose/post_tweet/provider/post_tweet_provider.dart';
+export 'compose/post_tweet/provider/post_skeet_provider.dart';
 export 'compose/post_tweet/widgets/post_tweet_dialog.dart';
 export 'compose/provider/compose_provider.dart';
 export 'compose/widgets/compose_max_length.dart';

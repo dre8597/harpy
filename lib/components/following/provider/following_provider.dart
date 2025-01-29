@@ -19,6 +19,7 @@ class FollowingNotifier extends PaginatedUsersNotifier {
   FollowingNotifier({
     required Ref ref,
     required TwitterApi twitterApi,
+ required Bluesky blueskyApi,
     required String handle,
   })  : _ref = ref,
         _twitterApi = twitterApi,
