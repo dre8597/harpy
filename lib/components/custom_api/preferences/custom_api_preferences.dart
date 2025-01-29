@@ -21,6 +21,7 @@ class CustomApiPreferencesNotifier extends StateNotifier<CustomApiPreferences> {
           CustomApiPreferences(
             customKey: preferences.getString('customKey', ''),
             customSecret: preferences.getString('customSecret', ''),
+            customBlueskyService: preferences.getString('customBlueskyService', ''),
           ),
         );
 
@@ -38,17 +39,22 @@ class CustomApiPreferencesNotifier extends StateNotifier<CustomApiPreferences> {
       ..setString('customKey', key)
       ..setString('customSecret', secret);
   }
+
+  void setCustomBlueskyService(String service) {
+    state = state.copyWith(customBlueskyService: service);
+    _preferences.setString('customBlueskyService', service);
+  }
 }
 
 @freezed
 class CustomApiPreferences with _$CustomApiPreferences {
-  factory CustomApiPreferences({
+  const factory CustomApiPreferences({
     required String customKey,
     required String customSecret,
+    required String customBlueskyService,
   }) = _CustomApiPreferences;
 
   CustomApiPreferences._();
 
-  late final hasCustomApiKeyAndSecret =
-      customKey.isNotEmpty && customSecret.isNotEmpty;
+  late final bool hasCustomApiKeyAndSecret = customKey.isNotEmpty && customSecret.isNotEmpty;
 }
