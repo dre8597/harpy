@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
@@ -32,20 +31,20 @@ class TweetCardName extends ConsumerWidget {
                   // consisting of only zero width characters cause the
                   // rendering of the fitted box to throw exceptions due to the
                   // text having a width of 0.
-                  '${tweet.user.name} ',
+                  '${tweet.author} ',
                   style: theme.textTheme.bodyMedium!
                       .copyWith(height: 1)
                       .apply(fontSizeDelta: style.sizeDelta),
                 ),
               ),
             ),
-            if (tweet.user.isVerified) ...[
-              const SizedBox(width: 2),
-              Icon(
-                CupertinoIcons.checkmark_seal_fill,
-                size: 16 + style.sizeDelta,
-              ),
-            ],
+            // if (tweet.user.isVerified) ...[
+            //   const SizedBox(width: 2),
+            //   Icon(
+            //     CupertinoIcons.checkmark_seal_fill,
+            //     size: 16 + style.sizeDelta,
+            //   ),
+            // ],
           ],
         ),
       ),

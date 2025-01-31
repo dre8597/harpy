@@ -36,5 +36,5 @@ void _onLinkTap(WidgetRef ref, {required String? href}) {
 
   final router = ref.read(routerProvider);
 
-  if (router.location.startsWith('/home')) router.go(href);
+  if (router.state.fullPath?.contains('/home') ?? false) router.go(href);
 }

@@ -81,7 +81,7 @@ class TweetCardTopRow extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (name && tweet.user.name.isNotEmpty)
+                          if (name && tweet.author.isNotEmpty)
                             TweetCardName(
                               tweet: tweet,
                               onUserTap: delegates.onShowUser,

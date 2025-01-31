@@ -11,6 +11,6 @@ part 'media_timeline_entry.freezed.dart';
 class MediaTimelineEntry with _$MediaTimelineEntry {
   const factory MediaTimelineEntry({
     required BlueskyPostData tweet,
-    required MediaData media,
+    required BlueskyMediaData media,
   }) = _MediaTimelineEntry;
 }

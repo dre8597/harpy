@@ -33,7 +33,7 @@ class TweetCardReplies extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (tweet.replyAuthors.isNotEmpty)
+        if (tweet.replyCount > 0)
           Padding(
             padding: theme.spacing.edgeInsets.copyWith(top: 0),
             child: Row(
@@ -49,19 +49,19 @@ class TweetCardReplies extends ConsumerWidget {
                 HorizontalSpacer.normal,
                 Expanded(
                   child: Text(
-                    '${tweet.replyAuthors} replied',
+                    '${tweet.author} replied',
                     style: theme.textTheme.bodyLarge,
                   ),
                 ),
               ],
             ),
           ),
-        for (final reply in tweet.replies) ...[
+        for (final reply in tweet.replies ?? <BlueskyPostData>[]) ...[
           TweetCard(
             tweet: reply,
             color: _cardColor(harpyTheme),
           ),
-          if (reply != tweet.replies.last) VerticalSpacer.normal,
+          if (reply != tweet.replies?.last) VerticalSpacer.normal,
         ],
       ],
     );

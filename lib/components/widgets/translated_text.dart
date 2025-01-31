@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/entities_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
@@ -17,7 +18,7 @@ class TranslatedText extends ConsumerWidget {
   final String text;
   final String? language;
   final TextDirection? textDirection;
-  final EntitiesData? entities;
+  final BlueskyEntitiesData? entities;
   final String? urlToIgnore;
   final double fontSizeDelta;
 

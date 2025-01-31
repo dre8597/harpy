@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/list_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -12,7 +13,7 @@ class TwitterListCard extends StatelessWidget {
     this.onLongPress,
   }) : super(key: key);
 
-  final TwitterListData list;
+  final BlueskyListData list;
   final VoidCallback onSelected;
   final VoidCallback? onLongPress;
 
@@ -31,11 +32,10 @@ class TwitterListCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _ListCardTitle(list: list),
-              if (list.description.isNotEmpty) _ListDescription(list: list),
-              if (list.user != null) ...[
-                VerticalSpacer.small,
-                _ListUser(list: list),
-              ],
+              if (list.description?.isNotEmpty ?? true)
+                _ListDescription(list: list),
+              VerticalSpacer.small,
+              _ListUser(list: list),
             ],
           ),
         ),
@@ -49,7 +49,7 @@ class _ListCardTitle extends StatelessWidget {
     required this.list,
   });
 
-  final TwitterListData list;
+  final BlueskyListData list;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class _ListCardTitle extends StatelessWidget {
             overflow: TextOverflow.fade,
           ),
         ),
-        if (list.isPrivate) ...[
+        if (list.isPrivate ?? false) ...[
           SizedBox(width: theme.spacing.small / 2),
           const Icon(CupertinoIcons.padlock),
         ],
@@ -79,14 +79,14 @@ class _ListDescription extends StatelessWidget {
     required this.list,
   });
 
-  final TwitterListData list;
+  final BlueskyListData list;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Text(
-      list.description,
+      list.description ?? '',
       style: theme.textTheme.bodyLarge,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
@@ -99,7 +99,7 @@ class _ListUser extends StatelessWidget {
     required this.list,
   });
 
-  final TwitterListData list;
+  final BlueskyListData list;
 
   @override
   Widget build(BuildContext context) {
@@ -107,18 +107,18 @@ class _ListUser extends StatelessWidget {
 
     return Row(
       children: [
-        if (list.user!.profileImage?.normal != null) ...[
+        if (list.avatar != null) ...[
           HarpyCircleAvatar(
             // use the normal sized profile image instead of the bigger one for
             // the small circle avatar
-            imageUrl: list.user!.profileImage!.normal!.toString(),
+            imageUrl: list.avatar.toString(),
             radius: 8,
           ),
           HorizontalSpacer.small,
         ],
         Flexible(
           child: Text(
-            list.user!.name,
+            list.name, //TODO: Update to show creator name
             style: theme.textTheme.bodyLarge,
             softWrap: false,
             overflow: TextOverflow.fade,
@@ -126,7 +126,7 @@ class _ListUser extends StatelessWidget {
         ),
         HorizontalSpacer.small,
         Text(
-          '@${list.user!.handle}',
+          '@${list.creatorDid}', //TODO: Update to show creator handle
           textDirection: TextDirection.ltr,
           style: theme.textTheme.bodyLarge,
           softWrap: false,

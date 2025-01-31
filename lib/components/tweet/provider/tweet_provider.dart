@@ -1,16 +1,12 @@
-import 'dart:convert';
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:bluesky/bluesky.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
+import 'package:bluesky/cardyb.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:http/http.dart';
-
 import 'package:rby/rby.dart';
 
 final tweetProvider = StateNotifierProvider.autoDispose
@@ -20,7 +16,7 @@ final tweetProvider = StateNotifierProvider.autoDispose
 
     return TweetNotifier(
       ref: ref,
-      twitterApi: ref.watch(twitterApiV1Provider),
+      blueskyApi: ref.watch(blueskyApiProvider),
       translateService: ref.watch(translateServiceProvider),
       messageService: ref.watch(messageServiceProvider),
       languagePreferences: ref.watch(languagePreferencesProvider),
@@ -31,13 +27,11 @@ final tweetProvider = StateNotifierProvider.autoDispose
 class TweetNotifier extends StateNotifier<BlueskyPostData?> with LoggerMixin {
   TweetNotifier({
     required Ref ref,
-    // required TwitterApi twitterApi,
     required Bluesky blueskyApi,
     required TranslateService translateService,
     required MessageService messageService,
     required LanguagePreferences languagePreferences,
   })  : _ref = ref,
-        // _twitterApi = twitterApi,
         _blueskyApi = blueskyApi,
         _translateService = translateService,
         _messageService = messageService,
@@ -45,168 +39,157 @@ class TweetNotifier extends StateNotifier<BlueskyPostData?> with LoggerMixin {
         super(null);
 
   final Ref _ref;
-
-  // final TwitterApi _twitterApi;
   final Bluesky _blueskyApi;
   final TranslateService _translateService;
   final MessageService _messageService;
   final LanguagePreferences _languagePreferences;
 
-  void initialize(BlueskyPostData tweet) {
-    if (mounted && state == null) state = tweet;
+  void initialize(BlueskyPostData post) {
+    if (mounted && state == null) state = post;
   }
 
-  Future<void> retweet() async {
-    final tweet = state;
-    if (tweet == null || tweet.retweeted) return;
+  Future<void> repost() async {
+    final post = state;
+    if (post == null || (post.isReposted)) return;
 
-    state = tweet.copyWith(
-      retweeted: true,
-      retweetCount: tweet.retweetCount + 1,
+    state = post.copyWith(
+      isReposted: true,
+      repostCount: (post.repostCount) + 1,
     );
 
     try {
-      await _twitterApi.tweetService.retweet(id: tweet.id);
-
-      log.fine('retweeted ${tweet.id}');
+      await _blueskyApi.feed.repost(
+        uri: post.uri,
+        cid: post.id,
+      );
+      log.fine('reposted ${post.id}');
     } catch (e, st) {
-      log.warning('error retweeting ${tweet.id}', e, st);
-
-      state = tweet;
-
-      twitterErrorHandler(_ref, e, st);
+      log.warning('error reposting ${post.id}', e, st);
+      state = post;
+      _messageService.showText('Failed to repost');
     }
   }
 
-  Future<void> unretweet() async {
-    final tweet = state;
-    if (tweet == null || !tweet.retweeted) return;
+  Future<void> unrepost() async {
+    final post = state;
+    if (post == null || !post.isReposted) return;
 
-    state = tweet.copyWith(
-      retweeted: false,
-      retweetCount: math.max(0, tweet.retweetCount - 1),
+    state = post.copyWith(
+      isReposted: false,
+      repostCount: post.repostCount - 1,
     );
 
     try {
-      await _twitterApi.tweetService.unretweet(id: tweet.id);
-
-      log.fine('un-retweeted ${tweet.id}');
+      await _blueskyApi.atproto.repo.deleteRecord(
+        uri: post.uri,
+      );
+      log.fine('un-reposted ${post.id}');
     } catch (e, st) {
-      if (!_actionPerformed(e)) {
-        log.warning('error un-retweeting ${tweet.id}', e, st);
-
-        state = tweet;
-
-        twitterErrorHandler(_ref, e, st);
-      }
+      log.warning('error un-reposting ${post.id}', e, st);
+      state = post;
+      _messageService.showText('Failed to remove repost');
     }
   }
 
-  Future<void> favorite() async {
-    final tweet = state;
-    if (tweet == null || tweet.favorited) return;
+  Future<void> like() async {
+    final post = state;
+    if (post == null || post.isLiked) return;
 
-    state = tweet.copyWith(
-      favorited: true,
-      favoriteCount: tweet.favoriteCount + 1,
+    state = post.copyWith(
+      isLiked: true,
+      likeCount: (post.likeCount) + 1,
     );
 
     try {
-      await _twitterApi.tweetService.createFavorite(id: tweet.id);
-
-      log.fine('favorited ${tweet.id}');
+      await _blueskyApi.feed.like(
+        uri: post.uri,
+        cid: post.id,
+      );
+      log.fine('liked ${post.id}');
     } catch (e, st) {
-      if (!_actionPerformed(e)) {
-        log.warning('error favoriting ${tweet.id}', e, st);
-
-        state = tweet;
-
-        twitterErrorHandler(_ref, e, st);
-      }
+      log.warning('error liking ${post.id}', e, st);
+      state = post;
+      _messageService.showText('Failed to like post');
     }
   }
 
-  Future<void> unfavorite() async {
-    final tweet = state;
-    if (tweet == null || !tweet.favorited) return;
+  Future<void> unlike() async {
+    final post = state;
+    if (post == null || !post.isLiked) return;
 
-    state = tweet.copyWith(
-      favorited: false,
-      favoriteCount: math.max(0, tweet.favoriteCount - 1),
+    state = post.copyWith(
+      isLiked: false,
+      likeCount: (post.likeCount) - 1,
     );
 
     try {
-      await _twitterApi.tweetService.destroyFavorite(id: tweet.id);
-
-      log.fine('un-favorited ${tweet.id}');
+      await _blueskyApi.atproto.repo.deleteRecord(
+        uri: post.uri,
+      );
+      log.fine('un-liked ${post.id}');
     } catch (e, st) {
-      if (!_actionPerformed(e)) {
-        log.warning('error favoriting ${tweet.id}', e, st);
-
-        state = tweet;
-
-        twitterErrorHandler(_ref, e, st);
-      }
+      log.warning('error un-liking ${post.id}', e, st);
+      state = post;
+      _messageService.showText('Failed to remove like');
     }
   }
 
   Future<void> translate({
     required Locale locale,
   }) async {
-    final tweet = state;
-    if (tweet == null) return;
+    final post = state;
+    if (post == null) return;
 
     final translateLanguage =
         _languagePreferences.activeTranslateLanguage(locale);
 
-    final translatable = tweet.translatable(translateLanguage);
+    if (post.text.isEmpty) {
+      log.fine('post not translatable');
+      return;
+    }
 
-    if (tweet.quote != null && tweet.quote!.translatable(translateLanguage)) {
-      // also translate quote if one exist
+    if (post.text.isNotEmpty) {
+      // also translate quoted post if one exists
       _ref
-          .read(tweetProvider(tweet.quote!.originalId).notifier)
+          .read(tweetProvider(post.text).notifier)
           .translate(locale: locale)
           .ignore();
     }
 
-    if (!translatable) {
-      log.fine('tweet not translatable');
-      return;
-    }
-
-    state = tweet.copyWith(isTranslating: true);
+    // state = post.copyWith(translating: true);
 
     final translation = await _translateService
-        .translate(text: tweet.visibleText, to: translateLanguage)
+        .translate(text: post.text, to: translateLanguage)
         .handleError(logErrorHandler);
 
     if (translation != null && !translation.isTranslated) {
-      _messageService.showText('tweet not translated');
+      _messageService.showText('post not translated');
     }
 
-    state = tweet.copyWith(
-      isTranslating: false,
-      translation: translation,
-    );
+    //TODO: Add back translating
+    // state = post.copyWith(
+    //   translating: false,
+    //   translatedText: translation?.translatedText,
+    // );
   }
 
   Future<void> delete({
     VoidCallback? onDeleted,
   }) async {
-    final tweet = state;
-    if (tweet == null) return;
+    final post = state;
+    if (post == null) return;
 
-    log.fine('deleting tweet');
+    log.fine('deleting post');
 
-    final result = await _twitterApi.tweetService
-        .destroy(id: tweet.id, trimUser: true)
-        .handleError((e, st) => twitterErrorHandler(_ref, e, st));
-
-    if (result != null) {
-      _messageService.showText('tweet deleted');
+    try {
+      await _blueskyApi.atproto.repo.deleteRecord(
+        uri: post.uri,
+      );
+      _messageService.showText('post deleted');
       onDeleted?.call();
-    } else {
-      _messageService.showText('error deleting tweet');
+    } catch (e, st) {
+      log.warning('error deleting post', e, st);
+      _messageService.showText('Failed to delete post');
     }
   }
 }
@@ -220,7 +203,7 @@ class TweetNotifier extends StateNotifier<BlueskyPostData?> with LoggerMixin {
 bool _actionPerformed(Object error) {
   if (error is Response) {
     try {
-      final body = jsonDecode(error.body) as Map<String, dynamic>;
+      final body = error.data as Map<String, dynamic>;
       final errors = body['errors'] as List<dynamic>?;
 
       return errors?.any(

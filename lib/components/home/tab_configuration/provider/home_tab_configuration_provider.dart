@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/list_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
@@ -155,7 +156,7 @@ class HomeTabConfigurationNotifier extends StateNotifier<HomeTabConfiguration>
   /// When [icon] is `null`, the first letter of the name will be used as the
   /// icon. If the name is `null`, a random icon will be used instead.
   void addList({
-    required TwitterListData list,
+    required BlueskyListData list,
     String? icon,
   }) {
     if (isFree) return;
@@ -174,7 +175,7 @@ class HomeTabConfigurationNotifier extends StateNotifier<HomeTabConfiguration>
       entries: state.entries.rebuild(
         (builder) => builder.add(
           HomeTabEntry(
-            id: list.id,
+            id: list.cid,
             type: HomeTabEntryType.list,
             icon: icon,
             name: list.name,

@@ -2,7 +2,6 @@ import 'package:built_collection/built_collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -38,7 +37,7 @@ class TweetGif extends ConsumerWidget {
     final mediaPreferences = ref.watch(mediaPreferencesProvider);
     final connectivity = ref.watch(connectivityProvider);
 
-    final mediaData = tweet.media.single as VideoMediaData;
+    final mediaData = tweet.media?.single as VideoMediaData;
     final arguments = _videoArguments(mediaData);
 
     final state = ref.watch(videoPlayerProvider(arguments));

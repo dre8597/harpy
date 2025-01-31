@@ -1,10 +1,10 @@
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
+import 'package:logging/logging.dart';
 
 final homeTimelineProvider =
     StateNotifierProvider.autoDispose<HomeTimelineNotifier, TimelineState>(
@@ -13,7 +13,7 @@ final homeTimelineProvider =
 
     return HomeTimelineNotifier(
       ref: ref,
-      twitterApi: ref.watch(blueskyApiProvider),
+      blueskyApi: ref.watch(blueskyApiProvider),
     );
   },
   name: 'HomeTimelineProvider',
@@ -22,8 +22,11 @@ final homeTimelineProvider =
 class HomeTimelineNotifier extends TimelineNotifier {
   HomeTimelineNotifier({
     required super.ref,
-    required super.twitterApi,
+    required super.blueskyApi,
   });
+
+  @override
+  final log = Logger('HomeTimelineNotifier');
 
   @override
   TimelineFilter? currentFilter() {
@@ -32,13 +35,13 @@ class HomeTimelineNotifier extends TimelineNotifier {
   }
 
   @override
-  Future<List<Tweet>> request({String? sinceId, String? maxId}) {
-    return twitterApi.timelineService.homeTimeline(
-      count: 200,
-      sinceId: sinceId,
-      maxId: maxId,
-      excludeReplies: filter?.excludes.replies,
+  Future<List<BlueskyPostData>> request({String? cursor}) async {
+    final feed = await blueskyApi.feed.getTimeline(
+      cursor: cursor,
+      limit: 50,
     );
+
+    return feed.data.feed.map(BlueskyPostData.fromFeedView).toList();
   }
 
   @override
@@ -53,38 +56,29 @@ class HomeTimelineNotifier extends TimelineNotifier {
   int get restoredTweetId =>
       ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
 
-  void addTweet(BlueskyPostData tweet) {
+  void addTweet(BlueskyPostData post) {
     final currentState = state;
 
     if (currentState is TimelineStateData) {
-      final tweets = List.of(currentState.tweets);
-
-      if (tweet.parentTweetId == null) {
-        tweets.insert(0, tweet);
-      }
-
-      // FIXME: when replying to a tweet add the new tweet as a reply to the
-      //  existing parent
+      final posts = List.of(currentState.tweets);
+      posts.insert(0, post);
 
       state = currentState.copyWith(
-        tweets: tweets.toBuiltList(),
+        tweets: posts.toBuiltList(),
         isInitialResult: false,
       );
     }
   }
 
-  void removeTweet(BlueskyPostData tweet) {
+  void removeTweet(BlueskyPostData post) {
     final currentState = state;
 
     if (currentState is TimelineStateData) {
-      final tweets = List.of(currentState.tweets);
-
-      if (tweet.parentTweetId == null) {
-        tweets.removeWhere((element) => element.id == tweet.id);
-      }
+      final posts = List.of(currentState.tweets);
+      posts.removeWhere((element) => element.id == post.id);
 
       state = currentState.copyWith(
-        tweets: tweets.toBuiltList(),
+        tweets: posts.toBuiltList(),
         isInitialResult: false,
       );
     }

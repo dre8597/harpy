@@ -37,15 +37,15 @@ extension TweetCardElementExtension on TweetCardElement {
     if (config.elements.contains(this)) {
       switch (this) {
         case TweetCardElement.retweeter:
-          return tweet.isRetweet;
+          return tweet.isReposted;
         case TweetCardElement.text:
-          return tweet.hasText;
+          return tweet.text.isNotEmpty;
         case TweetCardElement.quote:
-          return tweet.quote != null;
+          return tweet.text.isNotEmpty; //TODO: Verify
         case TweetCardElement.media:
-          return tweet.media.isNotEmpty;
+          return tweet.media?.isNotEmpty ?? true;
         case TweetCardElement.linkPreview:
-          return tweet.previewUrl != null;
+          return tweet.uri.href.isNotEmpty;
         case TweetCardElement.topRow:
         case TweetCardElement.translation:
         case TweetCardElement.pinned:

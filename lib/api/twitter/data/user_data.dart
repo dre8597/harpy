@@ -1,8 +1,9 @@
 import 'package:bluesky/bluesky.dart';
 // import 'package:dart_twitter_api/twitter_api.dart' as v1;
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/models.dart';
+import 'package:harpy/api/bluesky/data/entities_data.dart';
+import 'package:harpy/api/bluesky/data/bluesky_text_entities.dart';
 // import 'package:twitter_api_v2/twitter_api_v2.dart' as v2;
 
 part 'user_data.freezed.dart';
@@ -14,7 +15,7 @@ class UserData with _$UserData {
     required String name,
     required String handle,
     String? description,
-    // EntitiesData? descriptionEntities,
+    BlueskyEntitiesData? descriptionEntities,
     // UrlData? url,
     UserProfileImage? profileImage,
     String? location,
@@ -83,12 +84,54 @@ class UserData with _$UserData {
   // }
 
   factory UserData.fromBlueskyProfile(Profile profile) {
+    // Extract entities from description if available
+    BlueskyEntitiesData? entities;
+    if (profile.description != null) {
+      final textEntities = _extractEntitiesFromText(profile.description!);
+      entities = BlueskyEntitiesData(
+        mentions: textEntities
+            .where((e) => e.type == 'mention')
+            .map(
+              (e) => BlueskyMentionData(
+                did: e.value,
+                handle: e.value,
+                start: e.start,
+                end: e.end,
+              ),
+            )
+            .toList(),
+        links: textEntities
+            .where((e) => e.type == 'url')
+            .map(
+              (e) => BlueskyLinkData(
+                url: e.value,
+                start: e.start,
+                end: e.end,
+              ),
+            )
+            .toList(),
+        tags: textEntities
+            .where((e) => e.type == 'hashtag')
+            .map(
+              (e) => BlueskyTagData(
+                tag: e.value,
+                start: e.start,
+                end: e.end,
+              ),
+            )
+            .toList(),
+      );
+    }
+
     return UserData(
       id: profile.did,
       name: profile.displayName ?? profile.handle,
       handle: profile.handle,
       description: profile.description,
-      profileImage: profile.avatar != null ? UserProfileImage.fromUrl(profile.avatar!) : null,
+      descriptionEntities: entities,
+      profileImage: profile.avatar != null
+          ? UserProfileImage.fromUrl(profile.avatar!)
+          : null,
       followersCount: profile.followersCount ?? 0,
       followingCount: profile.followsCount ?? 0,
       tweetCount: profile.postsCount ?? 0,
@@ -97,12 +140,54 @@ class UserData with _$UserData {
   }
 
   factory UserData.fromBlueskyActorProfile(ActorProfile profile) {
+    // Extract entities from description if available
+    BlueskyEntitiesData? entities;
+    if (profile.description != null) {
+      final textEntities = _extractEntitiesFromText(profile.description!);
+      entities = BlueskyEntitiesData(
+        mentions: textEntities
+            .where((e) => e.type == 'mention')
+            .map(
+              (e) => BlueskyMentionData(
+                did: e.value,
+                handle: e.value,
+                start: e.start,
+                end: e.end,
+              ),
+            )
+            .toList(),
+        links: textEntities
+            .where((e) => e.type == 'url')
+            .map(
+              (e) => BlueskyLinkData(
+                url: e.value,
+                start: e.start,
+                end: e.end,
+              ),
+            )
+            .toList(),
+        tags: textEntities
+            .where((e) => e.type == 'hashtag')
+            .map(
+              (e) => BlueskyTagData(
+                tag: e.value,
+                start: e.start,
+                end: e.end,
+              ),
+            )
+            .toList(),
+      );
+    }
+
     return UserData(
       id: profile.did,
       name: profile.displayName ?? profile.handle,
       handle: profile.handle,
       description: profile.description,
-      profileImage: profile.avatar != null ? UserProfileImage.fromUrl(profile.avatar!) : null,
+      descriptionEntities: entities,
+      profileImage: profile.avatar != null
+          ? UserProfileImage.fromUrl(profile.avatar!)
+          : null,
       followersCount: profile.followersCount,
       followingCount: profile.followsCount,
       tweetCount: profile.postsCount,
@@ -128,6 +213,53 @@ class UserProfileImage with _$UserProfileImage {
       original: Uri.tryParse(profileImageUrl.replaceAll('_normal', '')),
     );
   }
+}
+
+List<BlueskyTextEntity> _extractEntitiesFromText(String text) {
+  final entities = <BlueskyTextEntity>[];
+
+  // Find mentions
+  final mentionRegex = RegExp(r'@[\w.-]+');
+  for (final match in mentionRegex.allMatches(text)) {
+    entities.add(
+      BlueskyTextEntity(
+        start: match.start,
+        end: match.end,
+        type: 'mention',
+        value: text.substring(match.start + 1, match.end), // Remove @ symbol
+      ),
+    );
+  }
+
+  // Find URLs
+  final urlRegex = RegExp(
+    r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)',
+  );
+  for (final match in urlRegex.allMatches(text)) {
+    entities.add(
+      BlueskyTextEntity(
+        start: match.start,
+        end: match.end,
+        type: 'url',
+        value: text.substring(match.start, match.end),
+      ),
+    );
+  }
+
+  // Find hashtags
+  final hashtagRegex = RegExp(r'#[\w-]+');
+  for (final match in hashtagRegex.allMatches(text)) {
+    entities.add(
+      BlueskyTextEntity(
+        start: match.start,
+        end: match.end,
+        type: 'hashtag',
+        value: text.substring(match.start + 1, match.end), // Remove # symbol
+      ),
+    );
+  }
+
+  return entities;
 }
 
 // EntitiesData _v1UserDescriptionEntities(

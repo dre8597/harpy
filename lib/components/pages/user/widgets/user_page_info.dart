@@ -36,7 +36,7 @@ class UserPageInfo extends StatelessWidget {
                 ),
               _RelationshipButton(
                 user: data.user,
-                relationship: data.relationship,
+                relationship: data.relationship!,
                 notifier: notifier,
               ),
             ],
@@ -182,7 +182,7 @@ class _RelationshipButton extends StatelessWidget {
   });
 
   final UserData user;
-  final RelationshipData relationship;
+  final BlueskyRelationshipData relationship;
   final UserPageNotifier notifier;
 
   String _resolveLabel() {
@@ -190,7 +190,8 @@ class _RelationshipButton extends StatelessWidget {
       return 'blocked';
     } else if (relationship.following) {
       return 'following';
-    } else if (relationship.followingRequested) {
+    } else if (relationship.following) {
+      //TODO: handle pending
       return 'pending';
     } else if (user.isProtected) {
       return 'request';
@@ -202,7 +203,8 @@ class _RelationshipButton extends StatelessWidget {
   Color? _resolveColor(ThemeData theme) {
     if (relationship.blocking) {
       return theme.colorScheme.error;
-    } else if (!relationship.following && !relationship.followingRequested) {
+    } else if (!relationship.following) {
+      //TODO: handle pending
       return theme.colorScheme.onSurface;
     }
 
@@ -233,7 +235,7 @@ class _RelationshipButton extends StatelessWidget {
 
   void _toggleFollow() {
     HapticFeedback.lightImpact();
-    if (relationship.following || relationship.followingRequested) {
+    if (relationship.following) {
       notifier.unfollow();
     } else {
       notifier.follow();

@@ -35,7 +35,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
   void initState() {
     super.initState();
 
-    final provider = tweetProvider(widget.tweet.originalId);
+    final provider = tweetProvider(widget.tweet.rootPostId ?? '');
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (mounted) ref.read(provider.notifier).initialize(widget.tweet);
@@ -45,7 +45,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = tweetProvider(widget.tweet.originalId);
+    final provider = tweetProvider(widget.tweet.rootPostId ?? '');
     final state = ref.watch(provider);
     final notifier = ref.watch(provider.notifier);
 
@@ -68,7 +68,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => delegates.onShowTweet?.call(ref),
-        child: tweet.replies.isEmpty
+        child: tweet.replies?.isEmpty ?? true
             ? child
             : Column(
                 children: [

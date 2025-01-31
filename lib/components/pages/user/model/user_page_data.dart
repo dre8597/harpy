@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 
 part 'user_page_data.freezed.dart';
 
@@ -12,7 +11,7 @@ class UserPageData with _$UserPageData {
     @Default(DescriptionTranslationState.untranslated())
     DescriptionTranslationState descriptionTranslationState,
     BlueskyPostData? pinnedTweet,
-    RelationshipData? relationship,
+    BlueskyRelationshipData? relationship,
   }) = _UserPageData;
 }
 

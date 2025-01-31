@@ -136,7 +136,7 @@ class Authentication with LoggerMixin {
   /// Requests the [UserData] for the authenticated Bluesky user.
   Future<UserData?> _initializeBlueskyUser(String handle) async {
     try {
-      final bluesky = await _ref.read(blueskyApiProvider);
+      final bluesky = _ref.read(blueskyApiProvider);
       final actor = bluesky.actor;
 
       final profile = await actor.getProfile(actor: handle);
@@ -166,12 +166,15 @@ class AuthenticationState with _$AuthenticationState {
   }) = _Authenticated;
 
   const factory AuthenticationState.unauthenticated() = _Unauthenticated;
-  const factory AuthenticationState.awaitingAuthentication() = _AwaitingAuthentication;
+
+  const factory AuthenticationState.awaitingAuthentication() =
+      _AwaitingAuthentication;
 }
 
 extension AuthenticationStateExtension on AuthenticationState {
   UserData? get user => mapOrNull(authenticated: (value) => value.user);
 
   bool get isAuthenticated => this is _Authenticated;
+
   bool get isAwaitingAuthentication => this is _AwaitingAuthentication;
 }

@@ -15,7 +15,8 @@ void showTweetActionsBottomSheet(
   final theme = Theme.of(ref.context);
 
   final authenticationState = ref.read(authenticationStateProvider);
-  final isAuthenticatedUser = tweet.user.id == authenticationState.user?.id;
+  final isAuthenticatedUser =
+      tweet.author == authenticationState.user?.id; //TODO: Verify this
 
   final l10n = Localizations.of<MaterialLocalizations>(
     ref.context,
@@ -35,7 +36,7 @@ void showTweetActionsBottomSheet(
       BottomSheetHeader(
         child: Column(
           children: [
-            Text(tweet.user.name),
+            Text(tweet.author),
             VerticalSpacer.small,
             Wrap(
               children: [
@@ -83,7 +84,7 @@ void showTweetActionsBottomSheet(
       RbyListTile(
         leading: const Icon(CupertinoIcons.square_on_square),
         title: const Text('copy tweet text'),
-        enabled: tweet.hasText,
+        enabled: tweet.text.isNotEmpty,
         onTap: () {
           delegates.onCopyText?.call(ref);
           Navigator.of(ref.context).pop();

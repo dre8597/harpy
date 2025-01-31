@@ -45,7 +45,8 @@ class TweetCardDetails extends ConsumerWidget {
             Text(date, style: textStyle),
           ],
         ),
-        if (tweet.source.isNotEmpty) Text(tweet.source, style: textStyle),
+        if (tweet.parentPostId?.isNotEmpty ?? false)
+          Text(tweet.repostOf?.text ?? '', style: textStyle),
       ],
     );
   }

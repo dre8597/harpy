@@ -1,4 +1,5 @@
 import 'package:any_link_preview/any_link_preview.dart';
+import 'package:bluesky/core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,23 +21,23 @@ class TweetCardLinkPreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final launcher = ref.watch(launcherProvider);
-    final urlString = tweet.previewUrl.toString();
+    final urlString = tweet.uri.href;
 
     return GestureDetector(
       onTap: () => launcher(urlString),
       onLongPress: () => defaultOnUrlLongPress(
         ref,
-        UrlData(
-          expandedUrl: urlString,
-          displayUrl: urlString,
+        BlueskyLinkData(
+          start: 0,
+          end: urlString.length,
           url: urlString,
         ),
       ),
       child: AnyLinkPreview.builder(
-        link: '${tweet.previewUrl}',
+        link: tweet.uri.href,
         placeholderWidget: const _LinkPreviewPlaceholder(),
-        errorWidget: _LinkPreviewError(url: tweet.previewUrl!),
-        itemBuilder: (_, metadata, imageProvider) => Container(
+        errorWidget: _LinkPreviewError(url: tweet.uri),
+        itemBuilder: (_, metadata, imageProvider, __) => Container(
           decoration: BoxDecoration(
             borderRadius: theme.shape.borderRadius,
             border: Border.all(color: theme.dividerColor),
@@ -106,7 +107,7 @@ class _LinkPreviewError extends StatelessWidget {
     required this.url,
   });
 
-  final Uri url;
+  final AtUri url;
 
   String get urlStr {
     final urlString = '$url';

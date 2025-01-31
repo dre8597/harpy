@@ -34,12 +34,12 @@ class TweetDetailHeader extends StatelessWidget {
                 children: [
                   Padding(
                     padding: theme.spacing.edgeInsets.copyWith(bottom: 0),
-                    child: TweetCard(tweet: parent),
+                    child: TweetCard(tweet: parent!),
                   ),
                   VerticalSpacer.normal,
                   TweetListInfoMessage(
                     icon: const Icon(CupertinoIcons.reply),
-                    text: Text('${tweet.user.name} replied'),
+                    text: Text('${tweet.author} replied'),
                   ),
                   VerticalSpacer.normal,
                 ],

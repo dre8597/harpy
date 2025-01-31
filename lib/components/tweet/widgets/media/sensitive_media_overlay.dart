@@ -34,7 +34,8 @@ class _SensitiveMediaOverlayState extends ConsumerState<SensitiveMediaOverlay> {
         Positioned.fill(
           child: RbyAnimatedSwitcher(
             child: media.hidePossiblySensitive &&
-                    widget.tweet.possiblySensitive &&
+                    widget.tweet.labels?.any((label) => label.val == 'warn') ==
+                        true &&
                     _showOverlay
                 ? GestureDetector(
                     onTap: () => setState(() => _showOverlay = false),

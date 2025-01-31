@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -35,7 +34,7 @@ class MediaGalleryOverlay extends ConsumerStatefulWidget {
   });
 
   final BlueskyPostData tweet;
-  final MediaData media;
+  final BlueskyMediaData media;
   final TweetDelegates delegates;
   final Widget child;
   final Set<MediaOverlayActions> actions;
@@ -101,9 +100,10 @@ class _MediaOverlayState extends ConsumerState<MediaGalleryOverlay>
   @override
   Widget build(BuildContext context) {
     final tweet =
-        ref.watch(tweetProvider(widget.tweet.originalId)) ?? widget.tweet;
+        ref.watch(tweetProvider(widget.tweet.rootPostId ?? '')) ?? widget.tweet;
 
-    final overlap = tweet.mediaType != MediaType.video;
+    final overlap =
+        tweet.media?.first.type.toMediaCategory != MediaType.video.name;
 
     final child = Center(
       key: _childKey,
@@ -205,7 +205,7 @@ class _OverlayTweetActions extends ConsumerWidget {
   });
 
   final BlueskyPostData tweet;
-  final MediaData media;
+  final BlueskyMediaData media;
   final TweetDelegates delegates;
   final Set<MediaOverlayActions> actions;
 
@@ -254,11 +254,13 @@ class _OverlayTweetActions extends ConsumerWidget {
           tweet: tweet,
           sizeDelta: 2,
           foregroundColor: Colors.white,
-          onViewMoreActions: (ref) => showMediaActionsBottomSheet(
-            ref,
-            media: media,
-            delegates: delegates,
-          ),
+          onViewMoreActions: (ref) {
+            showMediaActionsBottomSheet(
+              ref,
+              media: media,
+              delegates: delegates,
+            );
+          },
         );
     }
   }
@@ -328,7 +330,7 @@ class _OverlayPreviewText extends ConsumerWidget {
               ],
             ),
             child: Text(
-              tweet.visibleText,
+              tweet.text,
               key: ObjectKey(tweet),
               style: theme.textTheme.bodyMedium!.copyWith(
                 color: Colors.white,

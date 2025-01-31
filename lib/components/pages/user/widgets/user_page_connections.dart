@@ -12,7 +12,7 @@ class UserPageConnections extends StatelessWidget {
   });
 
   final UserData user;
-  final RelationshipData? relationship;
+  final BlueskyRelationshipData? relationship;
   final bool isAuthenticatedUser;
 
   @override

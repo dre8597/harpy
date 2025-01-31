@@ -1,4 +1,8 @@
 import 'package:bluesky/bluesky.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'models.freezed.dart';
+part 'models.g.dart';
 
 /// Represents a byte slice in a text.
 class ByteSlice {
@@ -149,7 +153,25 @@ class ProfileViewer {
 }
 
 /// Represents a label.
-class Label {
-  Label({required this.val});
-  final String val;
+@freezed
+class Label with _$Label {
+  const factory Label({
+    required String val,
+    required String src,
+    required String uri,
+    required DateTime cts,
+    @Default(false) bool neg,
+  }) = _Label;
+
+  const Label._();
+
+  factory Label.fromJson(Map<String, dynamic> json) => _$LabelFromJson(json);
+
+  factory Label.fromBsky(Label label) => Label(
+        val: label.val,
+        src: label.src,
+        uri: label.uri,
+        cts: label.cts,
+        neg: label.neg,
+      );
 }

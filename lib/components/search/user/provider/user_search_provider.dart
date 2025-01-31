@@ -1,11 +1,13 @@
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
+import 'package:logging/logging.dart';
 import 'package:rby/rby.dart';
 
 part 'user_search_provider.freezed.dart';
@@ -13,8 +15,7 @@ part 'user_search_provider.freezed.dart';
 final userSearchProvider = StateNotifierProvider.autoDispose<UserSearchNotifier,
     PaginatedState<UsersSearchData>>(
   (ref) => UserSearchNotifier(
-    ref: ref,
-    twitterApi: ref.watch(twitterApiV1Provider),
+    blueskyApi: ref.watch(blueskyApiProvider),
   ),
   name: 'UserSearchProvider',
 );
@@ -22,32 +23,50 @@ final userSearchProvider = StateNotifierProvider.autoDispose<UserSearchNotifier,
 class UserSearchNotifier extends StateNotifier<PaginatedState<UsersSearchData>>
     with RequestLock, LoggerMixin {
   UserSearchNotifier({
-    required Ref ref,
-    required TwitterApi twitterApi,
- required Bluesky blueskyApi,
-  })  : _ref = ref,
-        _twitterApi = twitterApi,
+    required bsky.Bluesky blueskyApi,
+  })  : _blueskyApi = blueskyApi,
         super(const PaginatedState.initial());
 
-  final Ref _ref;
-  final TwitterApi _twitterApi;
+  final bsky.Bluesky _blueskyApi;
+  @override
+  final log = Logger('UserSearchNotifier');
 
   Future<void> _load({
     required String query,
     required int cursor,
     required Iterable<UserData> oldUsers,
   }) async {
-    final newUsers = await _twitterApi.userService
-        .usersSearch(q: query, count: 20, page: cursor, includeEntities: false)
-        .then((users) => users.map(UserData.fromV1))
-        .then(
-          (users) => users.whereNot(
-            (newUser) => oldUsers.any((oldUser) => newUser.id == oldUser.id),
-          ),
-        )
-        .handleError((e, st) => twitterErrorHandler(_ref, e, st));
+    try {
+      final response = await _blueskyApi.actor.searchActors(
+        term: query,
+        limit: 20,
+        cursor: cursor > 1 ? cursor.toString() : null,
+      );
 
-    if (newUsers != null) {
+      final newUsers = await Future.wait(
+        response.data.actors
+            .whereNot(
+          (actor) => oldUsers.any((oldUser) => actor.did == oldUser.id),
+        )
+            .map((actor) async {
+          // Get full profile for each actor to get counts
+          final profile = await _blueskyApi.actor.getProfile(actor: actor.did);
+          return UserData(
+            id: actor.did,
+            name: actor.displayName ?? actor.handle,
+            handle: actor.handle,
+            description: actor.description,
+            profileImage: actor.avatar != null
+                ? UserProfileImage.fromUrl(actor.avatar!)
+                : null,
+            followersCount: profile.data.followersCount,
+            followingCount: profile.data.followsCount,
+            tweetCount: profile.data.postsCount,
+            createdAt: DateTime.now(), // Bluesky doesn't provide creation date
+          );
+        }),
+      );
+
       log.fine('found ${newUsers.length} new users');
 
       final data = UsersSearchData(
@@ -57,9 +76,10 @@ class UserSearchNotifier extends StateNotifier<PaginatedState<UsersSearchData>>
 
       state = PaginatedState.data(
         data: data,
-        cursor: newUsers.length > 5 ? cursor + 1 : null,
+        cursor: response.data.cursor != null ? cursor + 1 : null,
       );
-    } else {
+    } catch (e, st) {
+      log.warning('error searching users', e, st);
       if (oldUsers.isEmpty) {
         state = const PaginatedState.error();
       } else {

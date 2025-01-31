@@ -1,8 +1,8 @@
-// import 'package:dart_twitter_api/twitter_api.dart';
+// import 'package:bluesky/bluesky.dart';
 // import 'package:freezed_annotation/freezed_annotation.dart';
-
+//
 // part 'relationship_data.freezed.dart';
-
+//
 // @freezed
 // class RelationshipData with _$RelationshipData {
 //   const factory RelationshipData({
@@ -17,21 +17,19 @@
 //     @Default(false) bool muting,
 //     @Default(false) bool wantRetweets,
 //   }) = _RelationshipData;
-
+//
 //   factory RelationshipData.fromV1(Relationship relationship) {
 //     return RelationshipData(
-//       blockedBy: relationship.relationship?.source?.blockedBy ?? false,
-//       blocking: relationship.relationship?.source?.blocking ?? false,
-//       canDm: relationship.relationship?.source?.canDm ?? false,
-//       followedBy: relationship.relationship?.source?.followedBy ?? false,
-//       following: relationship.relationship?.source?.following ?? false,
-//       followingReceived:
-//           relationship.relationship?.source?.followingReceived ?? false,
-//       followingRequested:
-//           relationship.relationship?.source?.followingRequested ?? false,
-//       markedSpam: relationship.relationship?.source?.markedSpam ?? false,
-//       muting: relationship.relationship?.source?.muting ?? false,
-//       wantRetweets: relationship.relationship?.source?.wantRetweets ?? false,
+//       blockedBy: relationship.blockedBy ?? false,
+//       blocking: relationship.source?.blocking ?? false,
+//       canDm: relationship.source?.canDm ?? false,
+//       followedBy: relationship.source?.followedBy ?? false,
+//       following: relationship.source?.following ?? false,
+//       followingReceived: relationship.source?.followingReceived ?? false,
+//       followingRequested: relationship.source?.followingRequested ?? false,
+//       markedSpam: relationship.source?.markedSpam ?? false,
+//       muting: relationship.source?.muting ?? false,
+//       wantRetweets: relationship.source.wantRetweets ?? false,
 //     );
 //   }
 // }

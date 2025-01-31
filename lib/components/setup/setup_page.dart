@@ -1,4 +1,3 @@
-import 'package:built_collection/built_collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,9 +18,7 @@ class SetupPage extends ConsumerStatefulWidget {
 }
 
 class _SetupPageState extends ConsumerState<SetupPage> {
-  late final _connectionsProvider = legacyUserConnectionsProvider(
-    ['harpy_app'].toBuiltList(),
-  );
+  late final _connectionsProvider = legacyUserConnectionsProvider;
 
   final _controller = PageController();
 
@@ -33,7 +30,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   void initState() {
     super.initState();
 
-    ref.read(_connectionsProvider.notifier).load();
+    ref.read(_connectionsProvider.notifier).load(['harpy_app'].toList());
 
     Future<void>.delayed(_delay).then(
       (_) {

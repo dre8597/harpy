@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 
 typedef GalleryEntryBuilder = MediaGalleryEntry? Function(int index);
@@ -16,7 +15,7 @@ class MediaGalleryEntry {
 
   final BlueskyPostData tweet;
   final TweetDelegates delegates;
-  final MediaData media;
+  final BlueskyMediaData media;
   final WidgetBuilder builder;
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/data/list_data.dart';
 import 'package:harpy/api/twitter/data/user_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
@@ -44,7 +45,6 @@ CustomTransitionPage<void> _buildTransitionPage({
         case TransitionType.fade:
           return FadeTransition(opacity: animation, child: child);
         case TransitionType.native:
-        default:
           return child;
       }
     },
@@ -143,7 +143,7 @@ final routesProvider = Provider(
               path: 'lists',
               builder: (context, state) => ListShowPage(
                 handle: state.pathParameters['handle']!,
-                onListSelected: state.extra as ValueChanged<TwitterListData>?,
+                onListSelected: state.extra as ValueChanged<BlueskyListData>?,
               ),
             ),
             GoRoute(
@@ -274,7 +274,8 @@ final routesProvider = Provider(
                   path: 'custom',
                   builder: (context, state) => CustomThemePage(
                     themeId: int.tryParse(
-                        state.uri.queryParameters['themeId'] ?? ''),
+                      state.uri.queryParameters['themeId'] ?? '',
+                    ),
                   ),
                 ),
               ],

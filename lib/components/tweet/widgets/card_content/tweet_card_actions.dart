@@ -1,7 +1,8 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/post_translation_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/components/tweet/widgets/button/replies_button.dart';
 
@@ -54,17 +55,16 @@ class TweetCardActions extends ConsumerWidget {
         );
 
       case TweetCardActionElement.translate:
-        final locale = Localizations.localeOf(context);
+        final translationState = ref.watch(postTranslationProvider(tweet));
+        final shouldShowButton = translationState.maybeMap(
+          initial: (_) => true,
+          translatable: (_) => true,
+          orElse: () => false,
+        );
 
-        final translateLanguage = ref
-            .watch(languagePreferencesProvider)
-            .activeTranslateLanguage(locale);
-
-        if (tweet.translatable(translateLanguage) ||
-            tweet.quoteTranslatable(translateLanguage)) {
+        if (shouldShowButton) {
           return TranslateButton(
-            tweet: tweet,
-            onTranslate: delegates.onTranslate,
+            post: tweet,
             sizeDelta: style.sizeDelta,
           );
         } else {

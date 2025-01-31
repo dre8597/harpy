@@ -27,7 +27,7 @@ class TweetCardHandle extends ConsumerWidget {
 
     final textSpans = [
       TextSpan(
-        text: '@${tweet.user.handle}',
+        text: '@${tweet.author}',
         style: theme.textTheme.bodyLarge!
             .copyWith(height: 1)
             .apply(fontSizeDelta: style.sizeDelta),

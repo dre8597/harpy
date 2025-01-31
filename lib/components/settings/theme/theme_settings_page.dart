@@ -262,7 +262,9 @@ class _LockedProThemes extends ConsumerWidget {
           child: Text(
             'only available for harpy pro',
             style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(.8),
+              color: theme.colorScheme.primary.withValues(
+                alpha: theme.colorScheme.primary.alpha * 0.1,
+              ),
             ),
           ),
         ),

@@ -1,4 +1,3 @@
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:go_router/go_router.dart';
@@ -21,15 +20,13 @@ class TrendCard extends StatelessWidget {
     return RbyListCard(
       leading: const Icon(FeatherIcons.trendingUp, size: 18),
       title: Text(
-        trend.name ?? '',
+        trend.name,
         textDirection: TextDirection.ltr,
       ),
-      subtitle: trend.tweetVolume != null
-          ? Text('${numberFormat.format(trend.tweetVolume)} tweets')
-          : null,
+      subtitle: Text('${numberFormat.format(trend.postCount)} tweets'),
       onTap: () => context.pushNamed(
         TweetSearchPage.name,
-        queryParameters: {'query': trend.name ?? ''},
+        queryParameters: {'query': trend.name},
       ),
     );
   }

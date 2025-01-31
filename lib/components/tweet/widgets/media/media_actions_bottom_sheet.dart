@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
 void showMediaActionsBottomSheet(
   WidgetRef ref, {
-  required MediaData media,
+  required BlueskyMediaData media,
   required TweetDelegates delegates,
 }) {
   showRbyBottomSheet<void>(

@@ -36,7 +36,7 @@ class TweetVisibilityPreferences with LoggerMixin {
   /// setting.
   void updateVisibleTweet(BlueskyPostData tweet) {
     if (_generalPreferences.keepLastHomeTimelinePosition) {
-      final id = int.tryParse(tweet.originalId);
+      final id = int.tryParse(tweet.rootPostId ?? '');
 
       if (id != null) {
         final keepNewestReadTweet = _generalPreferences.keepNewestReadTweet;

@@ -5,8 +5,8 @@
 // part 'twitter_list_data.freezed.dart';
 
 // @freezed
-// class TwitterListData with _$TwitterListData {
-//   factory TwitterListData({
+// class BlueskyListData with _$BlueskyListData {
+//   factory BlueskyListData({
 //     @Default('') String name,
 //     DateTime? createdAt,
 //     int? subscriberCount,
@@ -18,10 +18,10 @@
 //     @Default('') String description,
 //     UserData? user,
 //     @Default(false) bool following,
-//   }) = _TwitterListData;
+//   }) = _BlueskyListData;
 
-//   factory TwitterListData.fromV1(v1.TwitterList list) {
-//     return TwitterListData(
+//   factory BlueskyListData.fromV1(v1.TwitterList list) {
+//     return BlueskyListData(
 //       name: list.name ?? '',
 //       createdAt: list.createdAt,
 //       subscriberCount: list.subscriberCount,
@@ -34,7 +34,7 @@
 //     );
 //   }
 
-//   TwitterListData._();
+//   BlueskyListData._();
 
 //   late final isPrivate = mode == 'private';
 //   late final isPublic = !isPrivate;

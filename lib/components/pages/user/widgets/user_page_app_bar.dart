@@ -69,7 +69,7 @@ class UserPageAppBarButtons extends StatelessWidget {
             const _BackButton(),
             const Spacer(),
             if (!isAuthenticatedUser && data.relationship != null)
-              _MoreButton(relationship: data.relationship, notifier: notifier),
+              _MoreButton(relationship: data.relationship!, notifier: notifier),
           ],
         ),
       ),
@@ -105,7 +105,7 @@ class _MoreButton extends StatelessWidget {
     required this.notifier,
   });
 
-  final RelationshipData relationship;
+  final BlueskyRelationshipData relationship;
   final UserPageNotifier notifier;
 
   Future<void> _showButtonMenu(BuildContext context) async {

@@ -20,7 +20,7 @@ class HarpyPhotoGallery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PhotoViewGallery(
+    return PhotoViewGallery.builder(
       itemCount: itemCount,
       pageController: PageController(initialPage: initialIndex),
       backgroundDecoration: const BoxDecoration(color: Colors.transparent),
@@ -64,7 +64,7 @@ Widget borderRadiusFlightShuttleBuilder(
     animation: animation,
     builder: (_, __) => ClipRRect(
       clipBehavior: Clip.hardEdge,
-      borderRadius: tween.evaluate(animation),
+      borderRadius: tween.evaluate(animation) ?? BorderRadius.zero,
       child: hero.child,
     ),
   );
@@ -76,9 +76,7 @@ PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState actual) {
     case PhotoViewScaleState.covering:
     case PhotoViewScaleState.originalSize:
     case PhotoViewScaleState.zoomedOut:
-      return PhotoViewScaleState.zoomOne;
-    case PhotoViewScaleState.zoomOne:
-    case PhotoViewScaleState.zoomTwo:
+      return PhotoViewScaleState.zoomedIn;
     case PhotoViewScaleState.zoomedIn:
       return PhotoViewScaleState.initial;
   }

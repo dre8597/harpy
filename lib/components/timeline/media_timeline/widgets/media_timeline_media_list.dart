@@ -59,7 +59,7 @@ class _MediaEntryItemState extends ConsumerState<_MediaEntryItem> {
     final entry = widget.entries[widget.index];
 
     final provider = tweetProvider(
-      entry.tweet.originalId,
+      entry.tweet.rootPostId ?? '',
     );
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -73,7 +73,7 @@ class _MediaEntryItemState extends ConsumerState<_MediaEntryItem> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final entry = widget.entries[widget.index];
-    final provider = tweetProvider(entry.tweet.originalId);
+    final provider = tweetProvider(entry.tweet.rootPostId ?? '');
 
     var tweet = ref.watch(provider) ?? entry.tweet;
     var tweetNotifier = ref.watch(provider.notifier);
@@ -91,7 +91,7 @@ class _MediaEntryItemState extends ConsumerState<_MediaEntryItem> {
             actions: _mediaTimelineOverlayActions,
             builder: (index) {
               final provider = tweetProvider(
-                widget.entries[index].tweet.originalId,
+                widget.entries[index].tweet.rootPostId ?? '',
               );
               tweet = ref.read(provider) ?? widget.entries[index].tweet;
 

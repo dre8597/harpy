@@ -56,7 +56,7 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
         RbyPopupMenuListTile(
           value: 0,
           leading: const Icon(FeatherIcons.repeat),
-          title: Text(widget.tweet.retweeted ? 'unretweet' : 'retweet'),
+          title: Text(widget.tweet.isReposted ? 'unretweet' : 'retweet'),
         ),
         if (widget.onComposeQuote != null)
           const RbyPopupMenuListTile(
@@ -75,7 +75,7 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
 
     if (mounted) {
       if (result == 0) {
-        widget.tweet.retweeted
+        widget.tweet.isReposted
             ? widget.onUnretweet?.call(ref)
             : widget.onRetweet?.call(ref);
       } else if (result == 1) {
@@ -94,8 +94,8 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
     final iconSize = iconTheme.size! + widget.sizeDelta;
 
     return TweetActionButton(
-      active: widget.tweet.retweeted,
-      value: widget.tweet.retweetCount,
+      active: widget.tweet.isReposted,
+      value: widget.tweet.repostCount,
       iconBuilder: (_) => Icon(FeatherIcons.repeat, size: iconSize - 1),
       iconAnimationBuilder: (animation, child) => RotationTransition(
         turns: CurvedAnimation(curve: Curves.easeOutBack, parent: animation),

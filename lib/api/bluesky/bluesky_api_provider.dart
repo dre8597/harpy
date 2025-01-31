@@ -4,28 +4,82 @@ import 'package:bluesky/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
 
-/// Provider for the Bluesky API client.
-/// Returns an anonymous client if no credentials are available.
-final blueskyApiProvider = Provider<Future<Bluesky>>(
-  name: 'blueskyApiProvider',
-  (ref) async {
-    final authPreferences = ref.watch(authPreferencesProvider);
-    final service = ref.watch(blueskyServiceProvider);
+/// Status of the Bluesky client initialization
+enum BlueskyStatus {
+  initial,
+  loading,
+  error,
+  ready,
+}
 
-    // Return anonymous instance if no credentials
-    if (!authPreferences.hasBlueskyCredentials) {
-      return Bluesky.anonymous(service: service);
-    }
+/// Provider for the Bluesky client.
+/// The client is initialized automatically when first accessed.
+final blueskyApiProvider = NotifierProvider<BlueskyClientNotifier, Bluesky>(
+  BlueskyClientNotifier.new,
+  name: 'blueskyClientNotifier',
+);
+
+/// Notifier that manages a single Bluesky client instance.
+/// Automatically initializes when accessed and maintains the client state.
+class BlueskyClientNotifier extends Notifier<Bluesky> {
+  BlueskyStatus _status = BlueskyStatus.initial;
+  Object? _error;
+
+  @override
+  Bluesky build() {
+    // Initialize with anonymous client
+    final service = ref.read(blueskyServiceProvider);
+    final client = Bluesky.anonymous(service: service);
+
+    // Start initialization process
+    _initialize();
+
+    return client;
+  }
+
+  Future<void> _initialize() async {
+    if (_status == BlueskyStatus.ready) return;
+
+    _status = BlueskyStatus.loading;
+    _error = null;
 
     try {
-      // Create session with retry logic
+      final authPreferences = ref.read(authPreferencesProvider);
+      final service = ref.read(blueskyServiceProvider);
+
+      if (!authPreferences.hasBlueskyCredentials) {
+        state = Bluesky.anonymous(service: service);
+      } else {
+        final client = await _createAuthenticatedClient(
+          service: service,
+          identifier: authPreferences.blueskyHandle,
+          password: authPreferences.blueskyAppPassword,
+        );
+        state = client;
+      }
+
+      _status = BlueskyStatus.ready;
+    } catch (e) {
+      _error = e;
+      _status = BlueskyStatus.error;
+      // Keep the anonymous client in error state
+      final service = ref.read(blueskyServiceProvider);
+      state = Bluesky.anonymous(service: service);
+    }
+  }
+
+  Future<Bluesky> _createAuthenticatedClient({
+    required String service,
+    required String identifier,
+    required String password,
+  }) async {
+    try {
       final session = await _createSessionWithRetry(
         service: service,
-        identifier: authPreferences.blueskyHandle,
-        password: authPreferences.blueskyAppPassword,
+        identifier: identifier,
+        password: password,
       );
 
-      // Create authenticated instance
       return Bluesky.fromSession(
         session.data,
         service: service,
@@ -36,8 +90,27 @@ final blueskyApiProvider = Provider<Future<Bluesky>>(
       // If session creation fails, return anonymous instance
       return Bluesky.anonymous(service: service);
     }
-  },
-);
+  }
+
+  /// Reinitializes the Bluesky client.
+  /// Useful for handling login/logout or when credentials change.
+  Future<void> reinitialize() async {
+    _status = BlueskyStatus.initial;
+    await _initialize();
+  }
+
+  /// Returns the current initialization status
+  BlueskyStatus get status => _status;
+
+  /// Returns true if the client is currently loading
+  bool get isLoading => _status == BlueskyStatus.loading;
+
+  /// Returns true if the client is ready for use
+  bool get isReady => _status == BlueskyStatus.ready;
+
+  /// Returns the current error if any
+  Object? get error => _error;
+}
 
 /// Provider for the Bluesky service URL.
 /// Returns the custom service URL if configured, otherwise returns the default.

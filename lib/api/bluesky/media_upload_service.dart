@@ -14,7 +14,7 @@ class BlueskyMediaUploadService {
   ///
   /// Returns a list of blob objects that can be used when creating a post.
   Future<List<Map<String, dynamic>>> uploadMedia(List<File> mediaFiles) async {
-    final bluesky = await _ref.read(blueskyApiProvider);
+    final bluesky = _ref.read(blueskyApiProvider);
     final uploads = <Map<String, dynamic>>[];
 
     for (final file in mediaFiles) {
@@ -25,7 +25,8 @@ class BlueskyMediaUploadService {
 
       if (!isMediaSupported(file)) {
         throw Exception(
-            'File size exceeds limit or format not supported: ${file.path}');
+          'File size exceeds limit or format not supported: ${file.path}',
+        );
       }
 
       final bytes = await file.readAsBytes();
@@ -38,11 +39,7 @@ class BlueskyMediaUploadService {
 
         final upload = await bluesky.atproto.repo.uploadBlob(bytes);
 
-        if (upload.status.code >= 200 && upload.status.code < 300) {
-          uploads.add(upload.data.toJson());
-        } else {
-          throw Exception('Failed to upload media: ${upload.status.code}');
-        }
+        uploads.add(upload.data.toJson());
       } catch (e) {
         print('Failed to upload media: $e');
         rethrow;

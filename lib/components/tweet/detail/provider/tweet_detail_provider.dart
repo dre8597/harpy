@@ -1,7 +1,8 @@
 import 'package:bluesky/bluesky.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
+import 'package:bluesky/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 
 final tweetDetailProvider = StateNotifierProvider.family
@@ -9,33 +10,38 @@ final tweetDetailProvider = StateNotifierProvider.family
   name: 'TweetDetailProvider',
   (ref, id) => TweetDetailNotifier(
     id: id,
-    twitterApi: ref.watch(twitterApiV1Provider),
+    blueskyApi: ref.watch(blueskyApiProvider),
   ),
 );
 
 class TweetDetailNotifier extends StateNotifier<AsyncValue<BlueskyPostData>> {
   TweetDetailNotifier({
     required String id,
-    // required TwitterApi twitterApi,
     required Bluesky blueskyApi,
   })  : _id = id,
-        // _twitterApi = twitterApi,
         _blueskyApi = blueskyApi,
         super(const AsyncValue.loading());
 
   final String _id;
-  // final TwitterApi _twitterApi;
   final Bluesky _blueskyApi;
 
-  Future<void> load([BlueskyPostData? tweet]) async {
-    if (tweet != null) {
-      state = AsyncData(tweet);
+  Future<void> load([BlueskyPostData? post]) async {
+    if (post != null) {
+      state = AsyncData(post);
     } else {
-      state = await AsyncValue.guard(
-        () => _twitterApi.tweetService
-            .show(id: _id)
-            .then(BlueskyPostData.fromTweet),
-      );
+      state = await AsyncValue.guard(() async {
+        final uri = AtUri.parse(_id);
+        final response = await _blueskyApi.feed.getPosts(uris: [uri]);
+        if (response.data.posts.isEmpty) {
+          throw Exception('Post not found');
+        }
+
+        final feedView = FeedView(
+          post: response.data.posts.first,
+        );
+
+        return BlueskyPostData.fromFeedView(feedView);
+      });
     }
   }
 }

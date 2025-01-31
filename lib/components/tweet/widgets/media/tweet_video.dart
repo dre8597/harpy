@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -53,7 +52,10 @@ class TweetVideo extends ConsumerWidget {
     final mediaPreferences = ref.watch(mediaPreferencesProvider);
     final connectivity = ref.watch(connectivityProvider);
 
-    final mediaData = tweet.media.single as VideoMediaData;
+    final mediaData = tweet.media?.single as VideoMediaData?;
+    if (mediaData == null) {
+      return const SizedBox();
+    }
     final arguments = _videoArguments(mediaData);
 
     final provider = videoPlayerProvider(arguments);
@@ -184,7 +186,10 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
   @override
   Widget build(BuildContext context) {
     final orientation = MediaQuery.of(context).orientation;
-    final mediaData = widget.tweet.media.single as VideoMediaData;
+    final mediaData = widget.tweet.media?.single as VideoMediaData?;
+    if (mediaData == null) {
+      return const SizedBox();
+    }
     final arguments = _videoArguments(mediaData);
 
     final state = ref.watch(videoPlayerProvider(arguments));

@@ -40,7 +40,7 @@ class TweetCardRetweeter extends ConsumerWidget {
             Flexible(
               child: FittedBox(
                 child: Text(
-                  '${tweet.retweeter!.name} retweeted',
+                  '${tweet.author} retweeted',
                   textDirection: TextDirection.ltr,
                   maxLines: 1,
                   style: textStyle

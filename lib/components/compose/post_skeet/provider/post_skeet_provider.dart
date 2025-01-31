@@ -3,15 +3,12 @@ import 'dart:io';
 
 import 'package:bluesky/bluesky.dart';
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/media_upload_service.dart';
-import 'package:harpy/components/compose/post_tweet/preferences/post_tweet_preferences.dart';
-import 'package:harpy/core/core.dart';
 import 'package:http/http.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:rby/rby.dart';
@@ -22,7 +19,7 @@ final postTweetProvider =
     StateNotifierProvider<PostSkeetNotifier, PostTweetState>(
   (ref) => PostSkeetNotifier(
     ref: ref,
-    twitterApi: ref.watch(twitterApiV1Provider),
+    blueskyApi: ref.watch(blueskyApiProvider),
   ),
   name: 'PostTweetProvider',
 );
@@ -33,7 +30,7 @@ class PostSkeetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
     // required TwitterApi twitterApi,
     required Bluesky blueskyApi,
   })  : _ref = ref,
-        // _twitterApi = twitterApi,
+        // _blueskyApi = twitterApi,
         _blueskyApi = blueskyApi,
         super(const PostTweetState.inProgress());
 
@@ -50,13 +47,10 @@ class PostSkeetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
     BuiltList<PlatformFile>? media,
     MediaType? mediaType,
   }) async {
-    List<String>? mediaIds;
-
-    await _verifyMentionsConnections(text);
     if (state is PostTweetError) return;
 
     if (media != null && media.isNotEmpty && mediaType != null) {
-      mediaIds = await _uploadmedia(media, mediaType);
+      await _uploadmedia(media, mediaType);
 
       if (state is PostTweetError) return;
     }
@@ -67,15 +61,11 @@ class PostSkeetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
 
     String? additionalInfo;
 
-    final status = await _twitterApi.tweetService
-        .update(
-          status: text,
-          mediaIds: mediaIds,
-          attachmentUrl: attachmentUrl,
-          inReplyToStatusId: inReplyToStatusId,
-          autoPopulateReplyMetadata: true,
-        )
-        .then(LegacyTweetData.fromTweet)
+    final status = await _blueskyApi.feed
+        .post(
+      text: text,
+      createdAt: DateTime.now(),
+    )
         .handleError((e, st) {
       if (e is Response) {
         final message = _responseErrorMessage(e.body);
@@ -92,7 +82,16 @@ class PostSkeetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
     if (status != null) {
       state = PostTweetState.success(
         message: 'tweet sent successfully!',
-        tweet: status,
+        tweet: BlueskyPostData(
+          authorAvatar: '',
+          authorDid: _blueskyApi.session!.did,
+          id: status.data.cid,
+          uri: status.data.uri,
+          text: text,
+          author: _blueskyApi.session!.did,
+          handle: _blueskyApi.session!.handle,
+          createdAt: DateTime.now(),
+        ),
       );
     } else {
       state = PostTweetState.error(
@@ -101,52 +100,6 @@ class PostSkeetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
             ? 'Twitter error message:\n'
                 '$additionalInfo'
             : null,
-      );
-    }
-  }
-
-  Future<void> _verifyMentionsConnections(String text) async {
-    state = const PostTweetState.inProgress();
-
-    final mentions = mentionRegex
-        .allMatches(text)
-        .map((match) => removePrependedSymbol(match.group(0), ['@']))
-        .whereType<String>()
-        .toList();
-
-    if (mentions.isEmpty) return;
-
-    try {
-      final friendships = await _twitterApi.userService
-          .friendshipsLookup(screenNames: mentions);
-
-      final unrelatedMentionsCount = friendships
-          .map((friendship) => friendship.connections ?? <String>[])
-          .where(
-            (connections) =>
-                !connections.contains('following') &&
-                !connections.contains('followed_by'),
-          )
-          .length;
-
-      final valid = _ref
-          .read(postTweetPreferencesProvider.notifier)
-          .addAndVerifyUnrelatedMentions(unrelatedMentionsCount);
-
-      if (!valid) {
-        state = const PostTweetState.error(
-          message: 'more than 5 mentions to unrelated users in the past 24h',
-          additionalInfo: 'Twitter limits the amount of times you can '
-              '@mention users that you have no connection to.\n'
-              'Please wait a bit before mentioning other users in your Tweet',
-        );
-      }
-    } catch (e, st) {
-      logErrorHandler(e, st);
-
-      state = const PostTweetState.error(
-        message: 'error posting tweet',
-        additionalInfo: 'Please try again later.',
       );
     }
   }

@@ -15,10 +15,11 @@ class DialogService {
   final Ref _ref;
 
   Future<T?> show<T extends Object>({required Widget child}) async {
-    assert(_ref.read(routerProvider).navigator != null);
+    // assert(_ref.read(routerProvider).navigator != null);
 
     return showDialog<T>(
-      context: _ref.read(routerProvider).navigator!.context,
+      context:
+          _ref.read(routerProvider).routerDelegate.navigatorKey.currentContext!,
       builder: (_) => child,
     );
   }

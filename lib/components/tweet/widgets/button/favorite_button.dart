@@ -27,10 +27,10 @@ class FavoriteButton extends ConsumerWidget {
     final iconSize = iconTheme.size! + sizeDelta;
 
     return TweetActionButton(
-      active: tweet.favorited,
-      value: tweet.favoriteCount,
+      active: tweet.isLiked,
+      value: tweet.likeCount,
       iconBuilder: (_) => Icon(
-        tweet.favorited ? CupertinoIcons.heart_solid : CupertinoIcons.heart,
+        tweet.isLiked ? CupertinoIcons.heart_solid : CupertinoIcons.heart,
         size: iconSize,
       ),
       foregroundColor: foregroundColor,

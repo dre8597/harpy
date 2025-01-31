@@ -1,5 +1,6 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
@@ -14,7 +15,7 @@ final mediaTimelineProvider = Provider.autoDispose
     final entries = <MediaTimelineEntry>[];
 
     for (final tweet in tweets) {
-      for (final media in tweet.media) {
+      for (final media in tweet.media ?? <BlueskyMediaData>[]) {
         final url = media.appropriateUrl(mediaPreferences, connectivity);
 
         if (!entries.any(

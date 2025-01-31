@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -13,7 +12,10 @@ part 'tweet_delegates.freezed.dart';
 
 typedef TweetActionCallback = void Function(WidgetRef ref);
 
-typedef MediaActionCallback = void Function(WidgetRef ref, MediaData media);
+typedef MediaActionCallback = void Function(
+  WidgetRef ref,
+  BlueskyMediaData media,
+);
 
 /// Delegates used by the [TweetCard] and its content.
 @freezed
@@ -47,53 +49,53 @@ TweetDelegates defaultTweetDelegates(
   return TweetDelegates(
     onShowTweet: (ref) => ref.read(routerProvider).pushNamed(
           TweetDetailPage.name,
-          pathParameters: {'handle': tweet.user.handle, 'id': tweet.id},
+          pathParameters: {'handle': tweet.author, 'id': tweet.id},
           extra: tweet,
         ),
     onShowUser: (ref) {
       final router = ref.read(routerProvider);
 
-      if (!router.location.endsWith(tweet.user.handle)) {
+      if (!(router.state.fullPath?.endsWith(tweet.author) ?? false)) {
         router.pushNamed(
           UserPage.name,
-          pathParameters: {'handle': tweet.user.handle},
+          pathParameters: {'handle': tweet.author},
         );
       }
     },
     onShowRetweeter: (ref) {
       final router = ref.read(routerProvider);
 
-      if (!router.location.endsWith(tweet.retweeter!.handle)) {
+      if (!(router.state.fullPath?.endsWith(tweet.author) ?? false)) {
         router.pushNamed(
           UserPage.name,
-          pathParameters: {'handle': tweet.retweeter!.handle},
+          pathParameters: {'handle': tweet.author},
         );
       }
     },
     onFavorite: (_) {
       HapticFeedback.lightImpact();
-      notifier.favorite();
+      notifier.like();
     },
     onUnfavorite: (_) {
       HapticFeedback.lightImpact();
-      notifier.unfavorite();
+      notifier.unlike();
     },
     onRetweet: (_) {
       HapticFeedback.lightImpact();
-      notifier.retweet();
+      notifier.repost();
     },
     onUnretweet: (_) {
       HapticFeedback.lightImpact();
-      notifier.unretweet();
+      notifier.unrepost();
     },
     onTranslate: (ref) {
       HapticFeedback.lightImpact();
       notifier.translate(locale: Localizations.localeOf(ref.context));
     },
-    onShowRetweeters: tweet.retweetCount > 0
+    onShowRetweeters: tweet.repostCount > 0
         ? (ref) => ref.read(routerProvider).pushNamed(
               RetweetersPage.name,
-              pathParameters: {'handle': tweet.user.handle, 'id': tweet.id},
+              pathParameters: {'handle': tweet.author, 'id': tweet.id},
             )
         : null,
     onComposeQuote: (ref) => ref.read(routerProvider).pushNamed(
@@ -113,34 +115,34 @@ TweetDelegates defaultTweetDelegates(
     },
     onOpenTweetExternally: (ref) {
       HapticFeedback.lightImpact();
-      ref.read(launcherProvider)(tweet.tweetUrl, alwaysOpenExternally: true);
+      ref.read(launcherProvider)(tweet.uri.href, alwaysOpenExternally: true);
     },
     onCopyText: (ref) {
       HapticFeedback.lightImpact();
-      Clipboard.setData(ClipboardData(text: tweet.visibleText));
+      Clipboard.setData(ClipboardData(text: tweet.text));
       ref.read(messageServiceProvider).showText('copied tweet text');
     },
     onShareTweet: (ref) {
       HapticFeedback.lightImpact();
-      Share.share(tweet.tweetUrl);
+      Share.share(tweet.uri.href);
     },
     onOpenMediaExternally: (ref, media) {
       HapticFeedback.lightImpact();
-      ref.read(launcherProvider)(media.bestUrl, alwaysOpenExternally: true);
+      ref.read(launcherProvider)(media.url, alwaysOpenExternally: true);
     },
     onDownloadMedia: _downloadMedia,
     onShareMedia: (_, media) {
       HapticFeedback.lightImpact();
-      Share.share(media.bestUrl);
+      Share.share(media.url);
     },
   );
 }
 
 Future<void> _downloadMedia(
   WidgetRef ref,
-  MediaData media,
+  BlueskyMediaData media,
 ) async {
-  var name = filenameFromUrl(media.bestUrl) ?? 'media';
+  var name = filenameFromUrl(media.url) ?? 'media';
 
   final storagePermission = await Permission.storage.request();
 
@@ -150,11 +152,17 @@ Future<void> _downloadMedia(
   }
 
   if (ref.read(mediaPreferencesProvider).showDownloadDialog) {
+    final mediaType = mediaTypeFromPath(media.type.toMediaCategory);
+    if (mediaType == null) {
+      assert(false);
+      return;
+    }
+
     final customName = await showDialog<String>(
       context: ref.context,
       builder: (_) => DownloadDialog(
         initialName: name,
-        type: media.type,
+        type: mediaType,
       ),
     );
 
@@ -167,7 +175,14 @@ Future<void> _downloadMedia(
   }
 
   await ref.read(downloadPathProvider.notifier).initialize();
-  final path = ref.read(downloadPathProvider).fullPathForType(media.type);
+  final mediaType = mediaTypeFromPath(media.type.toMediaCategory);
+
+  if (mediaType == null) {
+    assert(false);
+    return;
+  }
+
+  final path = ref.read(downloadPathProvider).fullPathForType(mediaType);
 
   if (path == null) {
     assert(false);
@@ -175,7 +190,7 @@ Future<void> _downloadMedia(
   }
 
   await ref.read(downloadServiceProvider).download(
-        url: media.bestUrl,
+        url: media.url,
         name: name,
         path: path,
       );

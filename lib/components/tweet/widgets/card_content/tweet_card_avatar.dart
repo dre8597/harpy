@@ -24,11 +24,10 @@ class TweetCardAvatar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final display = ref.watch(displayPreferencesProvider);
-
     return GestureDetector(
       onTap: () => onUserTap?.call(ref),
       child: HarpyCircleAvatar(
-        imageUrl: tweet.user.profileImage?.bigger?.toString() ?? '',
+        imageUrl: tweet.authorAvatar,
         radius: defaultRadius(display.fontSizeDelta) + style.sizeDelta,
       ),
     );

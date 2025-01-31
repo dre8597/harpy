@@ -107,9 +107,11 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
   // Handle tags and mentions through facets
   final postTags = post.record.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
-          .map((f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag)
-                  as bsky.FacetTag)
-              .tag)
+          .map(
+            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag)
+                    as bsky.FacetTag)
+                .tag,
+          )
           .toList() ??
       [];
 

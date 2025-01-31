@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -22,28 +21,36 @@ class TweetCardMedia extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final media = tweet.media?.single;
 
     Widget child;
 
-    void onMediaLongPress(MediaData media) => showMediaActionsBottomSheet(
-          ref,
-          media: media,
-          delegates: delegates,
-        );
+    void onMediaLongPress(BlueskyMediaData? media) {
+      if (media == null) return;
+      showMediaActionsBottomSheet(
+        ref,
+        media: media,
+        delegates: delegates,
+      );
+    }
 
-    switch (tweet.mediaType) {
+    if (media == null) {
+      return const SizedBox();
+    }
+
+    switch (media.type) {
       case MediaType.image:
         child = TweetImages(
           tweet: tweet,
           delegates: delegates,
           tweetIndex: index,
-          onImageLongPress: (index) => onMediaLongPress(tweet.media?[index]),
+          onImageLongPress: (index) => onMediaLongPress(media),
         );
       case MediaType.gif:
         final heroTag = 'tweet${mediaHeroTag(
           context,
           tweet: tweet,
-          media: tweet.media?.single,
+          media: media,
           index: index,
         )}';
 
@@ -54,26 +61,26 @@ class TweetCardMedia extends ConsumerWidget {
             HeroDialogRoute(
               builder: (_) => MediaGalleryOverlay(
                 tweet: tweet,
-                media: tweet.media?.single,
+                media: media,
                 delegates: delegates,
                 child: TweetGif(tweet: tweet, heroTag: heroTag),
               ),
             ),
           ),
-          onGifLongPress: () => onMediaLongPress(tweet.media?.single),
+          onGifLongPress: () => onMediaLongPress(media),
         );
       case MediaType.video:
         final heroTag = 'tweet${mediaHeroTag(
           context,
           tweet: tweet,
-          media: tweet.media?.single,
+          media: media,
           index: index,
         )}';
 
         child = TweetVideo(
           tweet: tweet,
           heroTag: heroTag,
-          onVideoLongPress: () => onMediaLongPress(tweet.media?.single),
+          onVideoLongPress: () => onMediaLongPress(media),
           overlayBuilder: (data, notifier, child) => StaticVideoPlayerOverlay(
             tweet: tweet,
             data: data,
@@ -82,19 +89,16 @@ class TweetCardMedia extends ConsumerWidget {
               HeroDialogRoute(
                 builder: (_) => MediaGalleryOverlay(
                   tweet: tweet,
-                  media: tweet.media?.single,
+                  media: media,
                   delegates: delegates,
                   child: TweetGalleryVideo(tweet: tweet, heroTag: heroTag),
                 ),
               ),
             ),
-            onVideoLongPress: () => onMediaLongPress(tweet.media?.single),
+            onVideoLongPress: () => onMediaLongPress(media),
             child: child,
           ),
         );
-      case null:
-        assert(false);
-        return const SizedBox();
     }
 
     return ClipRRect(
@@ -123,14 +127,10 @@ class _MediaConstrainedHeight extends ConsumerWidget {
   Widget _constrainedAspectRatio(double aspectRatio) {
     return LayoutBuilder(
       builder: (_, constraints) => aspectRatio > constraints.biggest.aspectRatio
-          // child does not take up the constrained height
           ? AspectRatio(
               aspectRatio: aspectRatio,
               child: child,
             )
-          // child takes up all of the constrained height and overflows.
-          // the width of the child gets reduced to match a 16:9 aspect
-          // ratio
           : AspectRatio(
               aspectRatio: min(constraints.biggest.aspectRatio, 16 / 9),
               child: child,
@@ -142,30 +142,36 @@ class _MediaConstrainedHeight extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mediaQuery = MediaQuery.of(context);
     final mediaPreferences = ref.watch(mediaPreferencesProvider);
+    final media = tweet.media?.single;
 
-    Widget child;
+    if (media == null) {
+      return const SizedBox();
+    }
 
-    switch (tweet.mediaType) {
+    final aspectRatio = media.aspectRatioDouble;
+    final isSingleImage =
+        tweet.media?.length == 1 && media.type == MediaType.image;
+
+    switch (media.type) {
       case MediaType.image:
-        child = tweet.hasSingleImage && !mediaPreferences.cropImage
-            ? _constrainedAspectRatio(
-                mediaPreferences.cropImage
-                    ? min(tweet.media.single.aspectRatioDouble, 16 / 9)
-                    : tweet.media.single.aspectRatioDouble,
-              )
-            : _constrainedAspectRatio(16 / 9);
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: mediaQuery.size.height * .8),
+          child: isSingleImage && !mediaPreferences.cropImage
+              ? _constrainedAspectRatio(
+                  mediaPreferences.cropImage
+                      ? min(aspectRatio, 16 / 9)
+                      : aspectRatio,
+                )
+              : _constrainedAspectRatio(16 / 9),
+        );
 
       case MediaType.gif:
       case MediaType.video:
-        child = _constrainedAspectRatio(tweet.media.single.aspectRatioDouble);
-      case null:
-        return const SizedBox();
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: mediaQuery.size.height * .8),
+          child: _constrainedAspectRatio(aspectRatio),
+        );
     }
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: mediaQuery.size.height * .8),
-      child: child,
-    );
   }
 }
 
@@ -177,7 +183,7 @@ class _MediaConstrainedHeight extends ConsumerWidget {
 String mediaHeroTag(
   BuildContext context, {
   required BlueskyPostData tweet,
-  required MediaData media,
+  required BlueskyMediaData media,
   int? index,
 }) {
   final routeSettings = ModalRoute.of(context)?.settings;

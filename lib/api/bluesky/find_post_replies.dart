@@ -1,5 +1,4 @@
 import 'package:bluesky/bluesky.dart';
-import 'package:bluesky/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
@@ -14,13 +13,13 @@ class FindPostReplies {
   ///
   /// Returns a list of [BlueskyPostData] that are replies to the [parentPost].
   Future<List<BlueskyPostData>> findReplies(BlueskyPostData parentPost) async {
-    final blueskyApi = await _ref.read(blueskyApiProvider);
+    final blueskyApi = _ref.read(blueskyApiProvider);
     final replies = <BlueskyPostData>[];
 
     try {
       // Get thread view for the post
       final response = await blueskyApi.feed.getPostThread(
-        uri: AtUri.parse(parentPost.uri),
+        uri: parentPost.uri,
       );
 
       // Handle replies based on thread type
@@ -58,13 +57,13 @@ class FindPostReplies {
   /// Returns a list of [BlueskyPostData] that represents the conversation thread,
   /// including parent posts and replies.
   Future<List<BlueskyPostData>> findThread(BlueskyPostData post) async {
-    final blueskyApi = await _ref.read(blueskyApiProvider);
+    final blueskyApi = _ref.read(blueskyApiProvider);
     final thread = <BlueskyPostData>[];
 
     try {
       // Get full thread view
       final response = await blueskyApi.feed.getPostThread(
-        uri: AtUri.parse(post.uri),
+        uri: post.uri,
         depth: 10, // Get a reasonable depth of replies
       );
 

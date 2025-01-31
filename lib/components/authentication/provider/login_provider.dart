@@ -8,7 +8,6 @@ import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:logging/logging.dart';
 
 import 'package:rby/rby.dart';
 import 'package:twitter_webview_auth/twitter_webview_auth.dart';
@@ -46,7 +45,9 @@ class _Login with LoggerMixin {
   /// * [LoginPage] when authentication was not successful.
   Future<void> login() async {
     if (!_environment.validateAppConfig()) {
-      _ref.read(messageServiceProvider).showText('invalid twitter key / secret');
+      _ref
+          .read(messageServiceProvider)
+          .showText('invalid twitter key / secret');
       return;
     }
 
@@ -76,7 +77,9 @@ class _Login with LoggerMixin {
               userId: userId,
             );
 
-        await _ref.read(authenticationProvider).onLogin(_ref.read(authPreferencesProvider));
+        await _ref
+            .read(authenticationProvider)
+            .onLogin(_ref.read(authPreferencesProvider));
 
         if (_ref.read(authenticationStateProvider).isAuthenticated) {
           if (_ref.read(setupPreferencesProvider).performedSetup) {
@@ -124,7 +127,8 @@ class _Login with LoggerMixin {
 
   /// Used by [TwitterAuth] to navigate to the login webview page.
   Future<Uri?> _webviewNavigation(TwitterLoginWebview webview) async {
-    final context = _ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
+    final context =
+        _ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
     if (context == null) return null;
 
     return Navigator.of(context).push<Uri?>(

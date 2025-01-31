@@ -1,20 +1,19 @@
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
-import 'package:harpy/core/core.dart';
-
-import 'package:rby/rby.dart';
+import 'package:logging/logging.dart';
+import 'package:rby/misc/logger/logger.dart';
 
 part 'tweet_search_provider.freezed.dart';
 
 final tweetSearchProvider =
     StateNotifierProvider.autoDispose<TweetSearchNotifier, TweetSearchState>(
   (ref) => TweetSearchNotifier(
-    ref: ref,
-    twitterApi: ref.watch(twitterApiV1Provider),
+    blueskyApi: ref.watch(blueskyApiProvider),
   ),
   name: 'TweetSearchProvider',
 );
@@ -22,15 +21,13 @@ final tweetSearchProvider =
 class TweetSearchNotifier extends StateNotifier<TweetSearchState>
     with LoggerMixin {
   TweetSearchNotifier({
-    required Ref ref,
-    required TwitterApi twitterApi,
- required Bluesky blueskyApi,
-  })  : _ref = ref,
-        _twitterApi = twitterApi,
+    required bsky.Bluesky blueskyApi,
+  })  : _blueskyApi = blueskyApi,
         super(const TweetSearchState.initial());
 
-  final Ref _ref;
-  final TwitterApi _twitterApi;
+  final bsky.Bluesky _blueskyApi;
+  @override
+  final log = Logger('TweetSearchNotifier');
 
   Future<void> search({
     String? customQuery,
@@ -43,37 +40,58 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
       return;
     }
 
-    log.fine('searching tweets');
+    log.fine('searching posts');
 
     state = TweetSearchState.loading(query: query, filter: filter);
 
-    final tweets = await _twitterApi.tweetSearchService
-        .searchTweets(
-          q: query,
-          count: 100,
-          resultType: filter?.resultType.name,
-        )
-        .then(
-          (result) =>
-              result.statuses?.map(BlueskyPostData.fromTweet).toBuiltList(),
-        )
-        .handleError((e, st) => twitterErrorHandler(_ref, e, st));
+    try {
+      final searchResult = await _blueskyApi.feed.searchPosts(query);
 
-    if (tweets != null) {
-      if (tweets.isEmpty) {
-        log.fine('found no tweets for query: $query');
-
+      if (searchResult.data.posts.isEmpty) {
+        log.fine('found no posts for query: $query');
         state = TweetSearchState.noData(query: query, filter: filter);
       } else {
-        log.fine('found ${tweets.length} tweets for query: $query');
+        log.fine(
+          'found ${searchResult.data.posts.length} posts for query: $query',
+        );
+
+        final posts = searchResult.data.posts
+            .map(
+              (post) => BlueskyPostData(
+                authorAvatar: post.author.avatar ?? '',
+                authorDid: post.author.did,
+                id: post.cid,
+                uri: post.uri,
+                text: post.record.text,
+                author: post.author.handle,
+                handle: post.author.handle,
+                createdAt: post.indexedAt,
+                likeCount: post.likeCount,
+                repostCount: post.repostCount,
+                replyCount: post.replyCount,
+                isLiked: post.viewer.like != null,
+                isReposted: post.viewer.repost != null,
+                media: (post.embed as bsky.EmbedImages?)
+                    ?.images
+                    .map(
+                      (img) => BlueskyMediaData(
+                        url: img.image.ref.toString(),
+                        alt: img.alt,
+                      ),
+                    )
+                    .toList(),
+              ),
+            )
+            .toBuiltList();
 
         state = TweetSearchState.data(
-          tweets: tweets,
+          tweets: posts,
           query: query,
           filter: filter,
         );
       }
-    } else {
+    } catch (e, st) {
+      log.severe('Error searching posts', e, st);
       state = TweetSearchState.error(query: query, filter: filter);
     }
   }

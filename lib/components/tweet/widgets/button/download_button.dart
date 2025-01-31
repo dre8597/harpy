@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 
 class DownloadButton extends ConsumerWidget {
@@ -14,7 +13,7 @@ class DownloadButton extends ConsumerWidget {
   });
 
   final BlueskyPostData tweet;
-  final MediaData media;
+  final BlueskyMediaData media;
   final MediaActionCallback? onDownload;
   final double sizeDelta;
   final Color? foregroundColor;
