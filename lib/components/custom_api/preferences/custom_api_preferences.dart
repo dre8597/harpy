@@ -21,7 +21,7 @@ class CustomApiPreferencesNotifier extends StateNotifier<CustomApiPreferences> {
           CustomApiPreferences(
             customKey: preferences.getString('customKey', ''),
             customSecret: preferences.getString('customSecret', ''),
-            customBlueskyService: preferences.getString('customBlueskyService', ''),
+            customBlueskyService: preferences.getString('customBlueskyService', 'bsky.social'),
           ),
         );
 

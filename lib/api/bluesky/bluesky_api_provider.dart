@@ -118,7 +118,7 @@ final blueskyServiceProvider = Provider<String>(
   name: 'blueskyServiceProvider',
   (ref) {
     final customApiPreferences = ref.watch(customApiPreferencesProvider);
-    return customApiPreferences.customBlueskyService ?? 'https://bsky.social';
+    return customApiPreferences.customBlueskyService;
   },
 );
 

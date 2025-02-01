@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
+import 'package:rby/theme/radius_scheme.dart';
+import 'package:rby/theme/spacing_scheme.dart';
 
 part 'harpy_text_theme.dart';
 part 'harpy_theme_colors.dart';
@@ -59,9 +61,22 @@ class HarpyTheme {
         onSurface: colors.onSurface,
         surface: colors.averageBackgroundColor,
       ),
-      // spacingScheme: ,
-      // spacing: RbySpacingTheme(base: _paddingValue),
-      // shape: shapeTheme,
+      spacingScheme: SpacingScheme(
+        xxs: _paddingValue / 4,
+        xs: _paddingValue / 2,
+        s: _paddingValue * 0.75,
+        m: _paddingValue,
+        l: _paddingValue * 1.5,
+        xl: _paddingValue * 2,
+        xxl: _paddingValue * 3,
+      ),
+      radiusScheme: const RadiusScheme(
+        tiny: Radius.circular(4),
+        small: Radius.circular(6),
+        medium: Radius.circular(9),
+        large: Radius.circular(12),
+        huge: Radius.circular(24),
+      ),
     );
 
     themeData = theme.data.copyWith(
@@ -99,6 +114,25 @@ class HarpyTheme {
         scrolledUnderElevation: 0,
         color: colors.averageBackgroundColor,
       ),
+
+      // animation durations
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+      extensions: <ThemeExtension<dynamic>>{
+        const RbyAnimationTheme(
+          short: Duration(milliseconds: 200),
+          long: Duration(milliseconds: 400),
+        ),
+        RbySpacingTheme(
+          base: _paddingValue,
+          small: _paddingValue / 2,
+        ),
+      },
     );
   }
 
