@@ -13,7 +13,6 @@ final listTimelineProvider = StateNotifierProvider.autoDispose
 
     return ListTimelineNotifier(
       ref: ref,
-      blueskyApi: ref.watch(blueskyApiProvider),
       listId: listId,
     );
   },
@@ -23,7 +22,6 @@ final listTimelineProvider = StateNotifierProvider.autoDispose
 class ListTimelineNotifier extends TimelineNotifier {
   ListTimelineNotifier({
     required super.ref,
-    required super.blueskyApi,
     required String listId,
   }) : _listId = listId {
     loadInitial();

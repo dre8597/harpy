@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 part 'display_preferences.freezed.dart';
 
@@ -19,7 +19,7 @@ class DisplayPreferencesNotifier extends StateNotifier<DisplayPreferences> {
   })  : _preferences = preferences,
         super(
           DisplayPreferences(
-            compactMode: preferences.getBool('compactMode', false),
+            compactMode: preferences.getBool('compactMode'),
             displayFont: preferences.getString(
               'displayFontFamily',
               kDisplayFont,
@@ -28,8 +28,8 @@ class DisplayPreferencesNotifier extends StateNotifier<DisplayPreferences> {
               'bodyFontFamily',
               kBodyFont,
             ),
-            fontSizeDeltaId: preferences.getInt('fontSizeDeltaId', 0),
-            absoluteTweetTime: preferences.getBool('showAbsoluteTime', false),
+            fontSizeDeltaId: preferences.getInt('fontSizeDeltaId'),
+            absoluteTweetTime: preferences.getBool('showAbsoluteTime'),
           ),
         );
 

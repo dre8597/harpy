@@ -3,6 +3,8 @@ import 'package:bluesky/bluesky.dart';
 import 'package:bluesky/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/core/core.dart';
+import 'dart:async';
 
 /// Status of the Bluesky client initialization
 enum BlueskyStatus {
@@ -24,15 +26,18 @@ final blueskyApiProvider = NotifierProvider<BlueskyClientNotifier, Bluesky>(
 class BlueskyClientNotifier extends Notifier<Bluesky> {
   BlueskyStatus _status = BlueskyStatus.initial;
   Object? _error;
+  Timer? _refreshTimer;
 
   @override
   Bluesky build() {
+    // Cancel timer when notifier is disposed
+    ref.onDispose(() {
+      _refreshTimer?.cancel();
+    });
+
     // Initialize with anonymous client
     final service = ref.read(blueskyServiceProvider);
     final client = Bluesky.anonymous(service: service);
-
-    // Start initialization process
-    _initialize();
 
     return client;
   }
@@ -50,22 +55,124 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
       if (!authPreferences.hasBlueskyCredentials) {
         state = Bluesky.anonymous(service: service);
       } else {
-        final client = await _createAuthenticatedClient(
-          service: service,
-          identifier: authPreferences.blueskyHandle,
-          password: authPreferences.blueskyAppPassword,
-        );
+        Bluesky client;
+
+        // Try to restore from stored session first
+        if (authPreferences.hasBlueskySession) {
+          client = await _restoreSession(service);
+        } else {
+          // No stored session, create new one
+          client = await _createAuthenticatedClient(
+            service: service,
+            identifier: authPreferences.blueskyHandle,
+            password: authPreferences.blueskyAppPassword,
+          );
+        }
+
         state = client;
+        _scheduleTokenRefresh();
       }
 
       _status = BlueskyStatus.ready;
     } catch (e) {
       _error = e;
       _status = BlueskyStatus.error;
-      // Keep the anonymous client in error state
+      // Keep the anonymous client in error state and clear auth
       final service = ref.read(blueskyServiceProvider);
       state = Bluesky.anonymous(service: service);
+      ref.read(authPreferencesProvider.notifier).clearAuth();
+      // Navigate back to login
+      ref.read(routerProvider).goNamed(LoginPage.name);
     }
+  }
+
+  Future<Bluesky> _restoreSession(String service) async {
+    final authPreferences = ref.read(authPreferencesProvider);
+
+    try {
+      final client = Bluesky.fromSession(
+        Session(
+          accessJwt: authPreferences.blueskyAccessJwt,
+          refreshJwt: authPreferences.blueskyRefreshJwt,
+          did: authPreferences.blueskyDid,
+          handle: authPreferences.blueskyHandle,
+        ),
+        service: service,
+      );
+
+      // Verify session is still valid
+      try {
+        await client.actor.getProfile(actor: authPreferences.blueskyHandle);
+        return client;
+      } catch (e) {
+        // Try to refresh the session first
+        try {
+          return await _refreshSession(
+            service: service,
+            refreshJwt: authPreferences.blueskyRefreshJwt,
+          );
+        } catch (refreshError) {
+          // If refresh fails, create new session
+          return await _createAuthenticatedClient(
+            service: service,
+            identifier: authPreferences.blueskyHandle,
+            password: authPreferences.blueskyAppPassword,
+          );
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to restore session: $e');
+    }
+  }
+
+  Future<Bluesky> _refreshSession({
+    required String service,
+    required String refreshJwt,
+  }) async {
+    try {
+      final session = await refreshSession(
+        service: service,
+        refreshJwt: refreshJwt,
+      );
+
+      // Store new session data
+      await ref.read(authPreferencesProvider.notifier).setBlueskySession(
+            accessJwt: session.data.accessJwt,
+            refreshJwt: session.data.refreshJwt,
+            did: session.data.did,
+          );
+
+      _scheduleTokenRefresh();
+
+      return Bluesky.fromSession(
+        session.data,
+        service: service,
+      );
+    } catch (e) {
+      throw Exception('Failed to refresh session: $e');
+    }
+  }
+
+  void _scheduleTokenRefresh() {
+    _refreshTimer?.cancel();
+
+    // Schedule refresh 5 minutes before token expiration (tokens typically last 2 hours)
+    _refreshTimer = Timer(const Duration(hours: 1, minutes: 55), () async {
+      try {
+        final authPreferences = ref.read(authPreferencesProvider);
+        final service = ref.read(blueskyServiceProvider);
+
+        if (authPreferences.hasBlueskySession) {
+          state = await _refreshSession(
+            service: service,
+            refreshJwt: authPreferences.blueskyRefreshJwt,
+          );
+        }
+      } catch (e) {
+        // If refresh fails, force reinitialization
+        reinitialize();
+      }
+    });
   }
 
   Future<Bluesky> _createAuthenticatedClient({
@@ -80,21 +187,27 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
         password: password,
       );
 
+      // Store session data
+      await ref.read(authPreferencesProvider.notifier).setBlueskySession(
+            accessJwt: session.data.accessJwt,
+            refreshJwt: session.data.refreshJwt,
+            did: session.data.did,
+          );
+
+      _scheduleTokenRefresh();
+
       return Bluesky.fromSession(
         session.data,
         service: service,
       );
     } catch (e) {
-      // Log error for debugging
-      print('Failed to create Bluesky session: $e');
-      // If session creation fails, return anonymous instance
-      return Bluesky.anonymous(service: service);
+      throw Exception('Failed to create Bluesky session: $e');
     }
   }
 
   /// Reinitializes the Bluesky client.
-  /// Useful for handling login/logout or when credentials change.
   Future<void> reinitialize() async {
+    _refreshTimer?.cancel();
     _status = BlueskyStatus.initial;
     await _initialize();
   }
@@ -110,6 +223,12 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
 
   /// Returns the current error if any
   Object? get error => _error;
+
+  Future<void> initializeAuth() async {
+    // Start initialization process
+    await _initialize();
+    await ref.read(authenticationProvider).restoreSession();
+  }
 }
 
 /// Provider for the Bluesky service URL.

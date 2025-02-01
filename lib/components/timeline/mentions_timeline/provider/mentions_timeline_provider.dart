@@ -14,7 +14,6 @@ final mentionsTimelineProvider = StateNotifierProvider.autoDispose<
 
     return MentionsTimelineNotifier(
       ref: ref,
-      blueskyApi: ref.watch(blueskyApiProvider),
     );
   },
   name: 'MentionsTimelineProvider',
@@ -23,7 +22,6 @@ final mentionsTimelineProvider = StateNotifierProvider.autoDispose<
 class MentionsTimelineNotifier extends TimelineNotifier<bool> {
   MentionsTimelineNotifier({
     required super.ref,
-    required super.blueskyApi,
   });
 
   @override

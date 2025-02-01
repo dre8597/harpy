@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/translate/data/languages.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 part 'language_preferences.freezed.dart';
 
@@ -22,7 +22,7 @@ class LanguagePreferencesNotifier extends StateNotifier<LanguagePreferences> {
   })  : _preferences = preferences,
         super(
           LanguagePreferences(
-            translateLanguage: preferences.getString('translateLanguage', ''),
+            translateLanguage: preferences.getString('translateLanguage'),
           ),
         );
 

@@ -12,7 +12,6 @@ final likesTimelineProvider = StateNotifierProvider.autoDispose
 
     return LikesTimelineNotifier(
       ref: ref,
-      blueskyApi: ref.watch(blueskyApiProvider),
       userId: userId,
     );
   },
@@ -22,7 +21,6 @@ final likesTimelineProvider = StateNotifierProvider.autoDispose
 class LikesTimelineNotifier extends TimelineNotifier {
   LikesTimelineNotifier({
     required super.ref,
-    required super.blueskyApi,
     required String userId,
   }) : _userId = userId {
     loadInitial();

@@ -1,6 +1,6 @@
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:logging/logging.dart';
 import 'package:rby/rby.dart';
 
 const _fallbackAesKey = 'QpIX8Hr8JAKezBYuP4+zTThm1U3fCiIzsPi9057adZM=';
@@ -8,6 +8,8 @@ const _fallbackAesKey = 'QpIX8Hr8JAKezBYuP4+zTThm1U3fCiIzsPi9057adZM=';
 const sentryDns = String.fromEnvironment('sentry_dsn');
 const isFree = String.fromEnvironment('flavor', defaultValue: 'free') == 'free';
 const isPro = String.fromEnvironment('flavor') == 'pro';
+
+final _log = Logger('Environment');
 
 final environmentProvider = Provider(
   (ref) {
@@ -17,8 +19,11 @@ final environmentProvider = Provider(
       'twitter_consumer_secret',
     );
 
+    final actualAesKey = aesKey.isNotEmpty ? aesKey : _fallbackAesKey;
+    _log.fine('Initializing environment with AES key: ${actualAesKey.substring(0, 10)}...');
+
     if (aesKey.isNotEmpty) {
-      final encrypter = Encrypter(AES(Key.fromBase64(aesKey)));
+      final encrypter = Encrypter(AES(Key.fromBase64(actualAesKey)));
 
       final consumerKeyPair = twitterConsumerKey.split(':');
       final consumerSecretPair = twitterConsumerSecret.split(':');
@@ -30,13 +35,13 @@ final environmentProvider = Provider(
       final encryptedSecret = Encrypted.fromBase64(consumerSecretPair[1]);
 
       return Environment(
-        aesKey: aesKey,
+        aesKey: actualAesKey,
         twitterConsumerKey: encrypter.decrypt(encryptedKey, iv: keyIv),
         twitterConsumerSecret: encrypter.decrypt(encryptedSecret, iv: secretIv),
       );
     } else {
-      return const Environment(
-        aesKey: _fallbackAesKey,
+      return Environment(
+        aesKey: actualAesKey,
         twitterConsumerKey: twitterConsumerKey,
         twitterConsumerSecret: twitterConsumerSecret,
       );
@@ -80,8 +85,7 @@ class Environment with LoggerMixin {
   /// --dart-define=twitter_consumer_secret=your_consumer_secret
   /// ```
   bool validateAppConfig() {
-    final valid =
-        twitterConsumerKey.isNotEmpty && twitterConsumerSecret.isNotEmpty;
+    final valid = twitterConsumerKey.isNotEmpty && twitterConsumerSecret.isNotEmpty;
 
     if (!valid) {
       log.severe(

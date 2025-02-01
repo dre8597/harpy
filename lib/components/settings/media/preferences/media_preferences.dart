@@ -2,12 +2,11 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 part 'media_preferences.freezed.dart';
 
-final mediaPreferencesProvider =
-    StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
+final mediaPreferencesProvider = StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
   (ref) => MediaPreferencesNotifier(
     preferences: ref.watch(preferencesProvider(null)),
   ),
@@ -21,23 +20,20 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
         super(
           MediaPreferences(
             bestMediaQuality: preferences.getInt('bestMediaQuality', 2),
-            cropImage: preferences.getBool('cropImage', false),
+            cropImage: preferences.getBool('cropImage'),
             autoplayGifs: preferences.getInt('autoplayMedia', 1),
             autoplayVideos: preferences.getInt('autoplayVideos', 2),
             startVideoPlaybackMuted: preferences.getBool(
               'startVideoPlaybackMuted',
-              false,
             ),
             hidePossiblySensitive: preferences.getBool(
               'hidePossiblySensitive',
-              false,
             ),
             openLinksExternally: preferences.getBool(
               'openLinksExternally',
-              false,
             ),
             showDownloadDialog: preferences.getBool('showDownloadDialog', true),
-            downloadPathData: preferences.getString('downloadPathData', ''),
+            downloadPathData: preferences.getString('downloadPathData'),
           ),
         );
 
@@ -157,18 +153,15 @@ class MediaPreferences with _$MediaPreferences {
   /// Whether gifs should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayGifs(ConnectivityResult connectivity) =>
-      autoplayGifs == 0 ||
-      autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayGifs == 0 || autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether videos should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayVideos(ConnectivityResult connectivity) =>
-      autoplayVideos == 0 ||
-      autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayVideos == 0 || autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether the best media quality should be used, taking the connectivity
   /// into account.
   bool shouldUseBestMediaQuality(ConnectivityResult connectivity) =>
-      bestMediaQuality == 0 ||
-      bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
+      bestMediaQuality == 0 || bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
 }

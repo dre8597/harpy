@@ -47,7 +47,12 @@ class HarpyTheme {
   late final ThemeData themeData;
 
   void _setupThemeData() {
-    final shapeTheme = RbyShapeTheme(radius: const Radius.circular(12));
+    final shapeTheme = RbyShapeTheme(
+      radius: const Radius.circular(12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
 
     final theme = RbyTheme(
       colorScheme: ColorScheme(
@@ -131,6 +136,12 @@ class HarpyTheme {
         RbySpacingTheme(
           base: _paddingValue,
           small: _paddingValue / 2,
+        ),
+        RbyShapeTheme(
+          radius: const Radius.circular(12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       },
     );

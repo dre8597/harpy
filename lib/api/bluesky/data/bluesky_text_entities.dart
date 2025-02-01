@@ -34,8 +34,7 @@ extension BlueskyPostTextData on BlueskyPostData {
             start: match.start,
             end: match.end,
             type: 'mention',
-            value:
-                mentions![entities.length], // Use the corresponding mention DID
+            value: text.substring(match.start + 1, match.end),
           ),
         );
       }

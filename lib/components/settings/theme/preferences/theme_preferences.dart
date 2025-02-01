@@ -5,13 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
+import 'package:rby/rby.dart' hide Preferences;
 
 part 'theme_preferences.freezed.dart';
 
-final themePreferencesProvider =
-    StateNotifierProvider<ThemePreferencesNotifier, ThemePreferences>(
+final themePreferencesProvider = StateNotifierProvider<ThemePreferencesNotifier, ThemePreferences>(
   (ref) {
     final prefix = ref.watch(authPreferencesProvider).userId;
 
@@ -22,17 +21,15 @@ final themePreferencesProvider =
   name: 'ThemePreferencesProvider',
 );
 
-class ThemePreferencesNotifier extends StateNotifier<ThemePreferences>
-    with LoggerMixin {
+class ThemePreferencesNotifier extends StateNotifier<ThemePreferences> with LoggerMixin {
   ThemePreferencesNotifier({
     required Preferences preferences,
   })  : _preferences = preferences,
         super(
           ThemePreferences(
-            lightThemeId: preferences.getInt('lightThemeId', isFree ? 0 : 1),
-            darkThemeId: preferences.getInt('darkThemeId', 0),
-            customThemes:
-                preferences.getStringList('customThemes', []).toBuiltList(),
+            lightThemeId: preferences.getInt('lightThemeId'),
+            darkThemeId: preferences.getInt('darkThemeId'),
+            customThemes: BuiltList<String>.of(preferences.getStringList('customThemes', [])),
           ),
         );
 
@@ -83,12 +80,10 @@ class ThemePreferencesNotifier extends StateNotifier<ThemePreferences>
 
       if (updateLightThemeSelection || updateDarkThemeSelection) {
         setThemeId(
-          lightThemeId: updateLightThemeSelection
-              ? themeId ?? state.customThemes.length - 1 + 10
-              : null,
-          darkThemeId: updateDarkThemeSelection
-              ? themeId ?? state.customThemes.length - 1 + 10
-              : null,
+          lightThemeId:
+              updateLightThemeSelection ? themeId ?? state.customThemes.length - 1 + 10 : null,
+          darkThemeId:
+              updateDarkThemeSelection ? themeId ?? state.customThemes.length - 1 + 10 : null,
         );
       }
     } catch (e, st) {

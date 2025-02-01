@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 part 'general_preferences.freezed.dart';
 
@@ -22,29 +22,16 @@ class GeneralPreferencesNotifier extends StateNotifier<GeneralPreferences> {
         _deviceInfo = deviceInfo,
         super(
           GeneralPreferences(
-            showChangelogDialog: preferences.getBool(
-              'showChangelogDialog',
-              true,
-            ),
-            lastShownVersion: preferences.getInt('lastShownVersion', 0),
-            performanceMode: preferences.getBool('performanceMode', false),
+            showChangelogDialog: preferences.getBool('showChangelogDialog', true),
+            lastShownVersion: preferences.getInt('lastShownVersion'),
+            performanceMode: preferences.getBool('performanceMode'),
             crashReports: preferences.getBool('crashReports', true),
-            homeTimelinePositionBehavior: preferences.getInt(
-              'timelinePositionBehavior',
-              2,
-            ),
-            floatingComposeButton: preferences.getBool(
-              'floatingComposeButton',
-              false,
-            ),
-            homeTimelineRefreshBehavior:
-                preferences.getBool('timelineRefreshBehavior', false),
+            homeTimelinePositionBehavior: preferences.getInt('timelinePositionBehavior', 2),
+            homeTimelineRefreshBehavior: preferences.getBool('timelineRefreshBehavior'),
+            floatingComposeButton: preferences.getBool('floatingComposeButton'),
             hideHomeAppBar: preferences.getBool('hideHomeTabBar', true),
-            bottomAppBar: preferences.getBool('bottomAppBar', false),
-            alwaysUse24HourFormat: preferences.getBool(
-              'alwaysUse24HourFormat',
-              false,
-            ),
+            bottomAppBar: preferences.getBool('bottomAppBar'),
+            alwaysUse24HourFormat: preferences.getBool('alwaysUse24HourFormat'),
           ),
         );
 
@@ -184,6 +171,5 @@ class GeneralPreferences with _$GeneralPreferences {
   bool shouldShowChangelogDialog(DeviceInfo deviceInfo) =>
       showChangelogDialog &&
       lastShownVersion != 0 &&
-      (int.tryParse(deviceInfo.packageInfo?.buildNumber ?? '0') ?? 0) >
-          lastShownVersion;
+      (int.tryParse(deviceInfo.packageInfo?.buildNumber ?? '0') ?? 0) > lastShownVersion;
 }

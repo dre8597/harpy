@@ -65,7 +65,7 @@ dependencies:
   scroll_to_index: ^3.0.0
   sentry_flutter: ^8.12.0
   share_plus: ^10.1.4
-  shared_preferences: ^2.0.7
+  shared_preferences: ^2.5.1
   shimmer: ^3.0.0
   sliver_tools: ^0.2.6
   smooth_page_indicator: ^1.0.0+2

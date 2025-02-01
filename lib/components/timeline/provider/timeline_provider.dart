@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
@@ -31,8 +32,8 @@ abstract class TimelineNotifier<T extends Object>
     extends StateNotifier<TimelineState<T>> with RequestLock, LoggerMixin {
   TimelineNotifier({
     required this.ref,
-    required this.blueskyApi,
   }) : super(const TimelineState.initial()) {
+    blueskyApi = ref.watch(blueskyApiProvider);
     filter = currentFilter();
 
     ref.listen(
@@ -53,7 +54,7 @@ abstract class TimelineNotifier<T extends Object>
   final Ref ref;
 
   @protected
-  final bsky.Bluesky blueskyApi;
+  late final bsky.Bluesky blueskyApi;
 
   /// The current filter for the timeline.
   TimelineFilter? filter;

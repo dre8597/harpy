@@ -44,6 +44,11 @@ class _Login with LoggerMixin {
   }) async {
     log.fine('logging in with Bluesky');
 
+    final environment = _ref.read(environmentProvider);
+    log.fine(
+      'Using AES key: ${environment.aesKey.substring(0, 10)}...',
+    ); // Only log part of the key for security
+
     _ref.read(authenticationStateProvider.notifier).state =
         const AuthenticationState.awaitingAuthentication();
 
@@ -57,10 +62,16 @@ class _Login with LoggerMixin {
         password: password,
       );
 
-      // Store credentials
-      _ref.read(authPreferencesProvider.notifier).setBlueskyAuth(
+      // Store credentials and session data
+      await _ref.read(authPreferencesProvider.notifier).setBlueskyAuth(
             handle: identifier,
             password: password,
+          );
+
+      await _ref.read(authPreferencesProvider.notifier).setBlueskySession(
+            accessJwt: session.data.accessJwt,
+            refreshJwt: session.data.refreshJwt,
+            did: session.data.did,
           );
 
       log.fine('successfully authenticated with Bluesky');

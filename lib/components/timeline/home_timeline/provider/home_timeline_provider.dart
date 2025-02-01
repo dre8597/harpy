@@ -13,7 +13,6 @@ final homeTimelineProvider =
 
     return HomeTimelineNotifier(
       ref: ref,
-      blueskyApi: ref.watch(blueskyApiProvider),
     );
   },
   name: 'HomeTimelineProvider',
@@ -22,7 +21,6 @@ final homeTimelineProvider =
 class HomeTimelineNotifier extends TimelineNotifier {
   HomeTimelineNotifier({
     required super.ref,
-    required super.blueskyApi,
   });
 
   @override
@@ -36,9 +34,10 @@ class HomeTimelineNotifier extends TimelineNotifier {
 
   @override
   Future<List<BlueskyPostData>> request({String? cursor}) async {
+    print('requesting home timeline ${blueskyApi.session?.status}');
     final feed = await blueskyApi.feed.getTimeline(
       cursor: cursor,
-      limit: 50,
+      limit: 50
     );
 
     return feed.data.feed.map(BlueskyPostData.fromFeedView).toList();

@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
+import 'package:rby/rby.dart' hide Preferences;
 
 part 'post_tweet_preferences.freezed.dart';
 part 'post_tweet_preferences.g.dart';

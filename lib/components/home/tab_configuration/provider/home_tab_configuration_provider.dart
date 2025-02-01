@@ -5,8 +5,9 @@ import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/list_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
-import 'package:rby/rby.dart';
+import 'package:rby/rby.dart' hide Preferences;
 
 final homeTabConfigurationProvider = StateNotifierProvider.autoDispose<
     HomeTabConfigurationNotifier, HomeTabConfiguration>(
