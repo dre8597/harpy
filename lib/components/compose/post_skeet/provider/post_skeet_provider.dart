@@ -9,6 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/media_upload_service.dart';
+import 'package:harpy/api/bluesky/media_video_converter.dart';
 import 'package:http/http.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:rby/rby.dart';
@@ -119,10 +120,11 @@ class PostSkeetNotifier extends StateNotifier<PostTweetState> with LoggerMixin {
         additionalInfo: 'this may take a moment',
       );
 
-      final converted = await _ref.read(mediaVideoConverter).convertVideo(
-            media.single.path,
-            media.single.extension,
-          );
+      final converted =
+          await _ref.read(blueskyMediaVideoConverterProvider).convertVideo(
+                media.single.path,
+                media.single.extension,
+              );
 
       if (converted != null) {
         mediaFiles.add(converted);

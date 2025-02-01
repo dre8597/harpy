@@ -10,7 +10,7 @@ environment:
   sdk: ">=3.6.0 <4.0.0"
 
 dependencies:
-  android_path_provider: ^0.3.0
+#  android_path_provider: ^0.3.0
   any_link_preview: ^3.0.3
   bluesky: ^0.18.8
   built_collection: ^5.1.1
@@ -28,15 +28,14 @@ dependencies:
   file_picker: ^8.1.7
   flare_flutter:
     git:
-      url: https://github.com/mdpe-ir/Flare-Flutter
+      url: https://github.com/mbfakourii/Flare-Flutter.git
       path: flare_flutter
-      ref: stable
+      ref: remove_hashValues
   flutter:
     sdk: flutter
   flutter_colorpicker: ^1.0.3
   flutter_displaymode: ^0.6.0
   flutter_feather_icons: ^2.0.0+1
-  flutter_ffmpeg: ^0.4.0
   flutter_image: ^4.1.0
   flutter_keyboard_visibility: ^6.0.0
   flutter_localizations:
@@ -102,9 +101,9 @@ dev_dependencies:
   riverpod_generator: ^2.6.4
 
 dependency_overrides:
-  collection: ^1.19.1
-  intl: ^0.18.0
-  material_color_utilities: ^0.2.0
+  collection: 1.19.0
+  intl: 0.19.0
+  material_color_utilities: 0.11.1
 
 flutter:
   uses-material-design: true

@@ -1,9 +1,10 @@
 import 'package:bluesky/bluesky.dart';
 // import 'package:dart_twitter_api/twitter_api.dart' as v1;
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:harpy/api/bluesky/data/models.dart';
-import 'package:harpy/api/bluesky/data/entities_data.dart';
 import 'package:harpy/api/bluesky/data/bluesky_text_entities.dart';
+import 'package:harpy/api/bluesky/data/entities_data.dart';
+import 'package:harpy/api/bluesky/data/models.dart';
+
 // import 'package:twitter_api_v2/twitter_api_v2.dart' as v2;
 
 part 'user_data.freezed.dart';
