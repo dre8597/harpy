@@ -18,15 +18,15 @@ class UserPageNotifier extends _$UserPageNotifier {
   final log = Logger('UserPageNotifier');
 
   @override
-  Future<UserPageData> build(String handle) async {
+  Future<UserPageData> build(String authorDid) async {
     _languagePreferences = ref.watch(languagePreferencesProvider);
     _translateService = ref.watch(translateServiceProvider);
     _blueskyApi = ref.watch(blueskyApiProvider);
 
-    final profile = await _blueskyApi.actor.getProfile(actor: handle);
+    final profile = await _blueskyApi.actor.getProfile(actor: authorDid);
 
     BlueskyPostData? pinnedPost;
-    final pinnedPosts = await _blueskyApi.feed.getAuthorFeed(actor: handle);
+    final pinnedPosts = await _blueskyApi.feed.getAuthorFeed(actor: authorDid);
     if (pinnedPosts.data.feed.isNotEmpty) {
       final pinnedPostView = pinnedPosts.data.feed.first;
       pinnedPost = BlueskyPostData.fromFeedView(pinnedPostView);

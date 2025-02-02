@@ -71,7 +71,9 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
                 replyCount: post.replyCount,
                 isLiked: post.viewer.like != null,
                 isReposted: post.viewer.repost != null,
-                media: (post.embed as bsky.EmbedImages?)
+                media: (post.embed as bsky
+                        .EmbedImages?) //TODO: Update to handle all video types i.e., I/flutter ( 2922): type '_$UEmbedViewVideoImpl' is not a subtype of type 'EmbedImages?' in type cast
+
                     ?.images
                     .map(
                       (img) => BlueskyMediaData(

@@ -49,7 +49,7 @@ TweetDelegates defaultTweetDelegates(
   return TweetDelegates(
     onShowTweet: (ref) => ref.read(routerProvider).pushNamed(
           TweetDetailPage.name,
-          pathParameters: {'handle': tweet.author, 'id': tweet.id},
+          pathParameters: {'authorDid': tweet.authorDid, 'id': tweet.id},
           extra: tweet,
         ),
     onShowUser: (ref) {
@@ -58,7 +58,7 @@ TweetDelegates defaultTweetDelegates(
       if (!(router.state.fullPath?.endsWith(tweet.author) ?? false)) {
         router.pushNamed(
           UserPage.name,
-          pathParameters: {'handle': tweet.author},
+          pathParameters: {'authorDid': tweet.authorDid},
         );
       }
     },
@@ -68,7 +68,7 @@ TweetDelegates defaultTweetDelegates(
       if (!(router.state.fullPath?.endsWith(tweet.author) ?? false)) {
         router.pushNamed(
           UserPage.name,
-          pathParameters: {'handle': tweet.author},
+          pathParameters: {'authorDid': tweet.authorDid},
         );
       }
     },
@@ -95,7 +95,10 @@ TweetDelegates defaultTweetDelegates(
     onShowRetweeters: tweet.repostCount > 0
         ? (ref) => ref.read(routerProvider).pushNamed(
               RetweetersPage.name,
-              pathParameters: {'handle': tweet.author, 'id': tweet.id},
+              pathParameters: {
+                'authorDid': tweet.authorDid,
+                'id': tweet.uri.toString()
+              },
             )
         : null,
     onComposeQuote: (ref) => ref.read(routerProvider).pushNamed(

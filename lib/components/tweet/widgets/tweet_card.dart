@@ -45,7 +45,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = tweetProvider(widget.tweet.rootPostId ?? '');
+    final provider = tweetProvider(widget.tweet.id ?? '');
     final state = ref.watch(provider);
     final notifier = ref.watch(provider.notifier);
 

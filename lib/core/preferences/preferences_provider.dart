@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Provides access to the [SharedPreferences] instance.
 final sharedPreferencesProvider = Provider<SharedPreferences>(
-  (ref) => throw UnimplementedError('Initialize SharedPreferences in main.dart'),
+  (ref) =>
+      throw UnimplementedError('Initialize SharedPreferences in main.dart'),
   name: 'SharedPreferencesProvider',
 );
 

@@ -22,12 +22,15 @@ class GeneralPreferencesNotifier extends StateNotifier<GeneralPreferences> {
         _deviceInfo = deviceInfo,
         super(
           GeneralPreferences(
-            showChangelogDialog: preferences.getBool('showChangelogDialog', true),
+            showChangelogDialog:
+                preferences.getBool('showChangelogDialog', true),
             lastShownVersion: preferences.getInt('lastShownVersion'),
             performanceMode: preferences.getBool('performanceMode'),
             crashReports: preferences.getBool('crashReports', true),
-            homeTimelinePositionBehavior: preferences.getInt('timelinePositionBehavior', 2),
-            homeTimelineRefreshBehavior: preferences.getBool('timelineRefreshBehavior'),
+            homeTimelinePositionBehavior:
+                preferences.getInt('timelinePositionBehavior', 2),
+            homeTimelineRefreshBehavior:
+                preferences.getBool('timelineRefreshBehavior'),
             floatingComposeButton: preferences.getBool('floatingComposeButton'),
             hideHomeAppBar: preferences.getBool('hideHomeTabBar', true),
             bottomAppBar: preferences.getBool('bottomAppBar'),
@@ -171,5 +174,6 @@ class GeneralPreferences with _$GeneralPreferences {
   bool shouldShowChangelogDialog(DeviceInfo deviceInfo) =>
       showChangelogDialog &&
       lastShownVersion != 0 &&
-      (int.tryParse(deviceInfo.packageInfo?.buildNumber ?? '0') ?? 0) > lastShownVersion;
+      (int.tryParse(deviceInfo.packageInfo?.buildNumber ?? '0') ?? 0) >
+          lastShownVersion;
 }

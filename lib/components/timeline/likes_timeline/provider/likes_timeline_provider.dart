@@ -4,8 +4,8 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final likesTimelineProvider =
-    StateNotifierProvider.autoDispose.family<LikesTimelineNotifier, TimelineState, String>(
+final likesTimelineProvider = StateNotifierProvider.autoDispose
+    .family<LikesTimelineNotifier, TimelineState, String>(
   (ref, userId) {
     ref.cacheFor(const Duration(minutes: 15));
 

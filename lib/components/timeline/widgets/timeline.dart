@@ -21,7 +21,8 @@ class Timeline extends ConsumerStatefulWidget {
     this.onUpdatedTweetVisibility,
   });
 
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
+      provider;
   final Key? listKey;
   final TweetBuilder tweetBuilder;
   final List<Widget> beginSlivers;
@@ -184,7 +185,8 @@ class _TimelineState extends ConsumerState<Timeline> {
                 ...widget.beginSlivers,
                 SliverFillLoadingError(
                   message: const Text('no tweets found'),
-                  onChangeFilter: notifier.filter != null ? widget.onChangeFilter : null,
+                  onChangeFilter:
+                      notifier.filter != null ? widget.onChangeFilter : null,
                 ),
                 ...widget.endSlivers,
               ],

@@ -5,8 +5,8 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final listTimelineProvider =
-    StateNotifierProvider.autoDispose.family<ListTimelineNotifier, TimelineState, String>(
+final listTimelineProvider = StateNotifierProvider.autoDispose
+    .family<ListTimelineNotifier, TimelineState, String>(
   (ref, listId) {
     ref.cacheFor(const Duration(minutes: 5));
 

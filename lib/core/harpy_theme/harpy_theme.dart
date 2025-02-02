@@ -146,10 +146,13 @@ class HarpyTheme {
         ),
         // Add the icon theme with proper builders
         RbyIconDataTheme(
-          drawer: (context) => Icon(CupertinoIcons.bars, color: colors.onSurface),
-          close: (context) => Icon(CupertinoIcons.xmark, color: colors.onSurface),
+          drawer: (context) =>
+              Icon(CupertinoIcons.bars, color: colors.onSurface),
+          close: (context) =>
+              Icon(CupertinoIcons.xmark, color: colors.onSurface),
           back: (context) => Icon(CupertinoIcons.back, color: colors.onSurface),
-          expand: (context) => Icon(CupertinoIcons.chevron_down, color: colors.onSurface),
+          expand: (context) =>
+              Icon(CupertinoIcons.chevron_down, color: colors.onSurface),
         ),
       },
     );

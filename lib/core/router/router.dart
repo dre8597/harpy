@@ -122,27 +122,27 @@ final routesProvider = Provider(
       routes: [
         GoRoute(
           name: UserPage.name,
-          path: 'user/:handle',
+          path: 'user/:authorDid',
           builder: (context, state) =>
-              UserPage(handle: state.pathParameters['handle']!),
+              UserPage(authorDid: state.pathParameters['authorDid']!),
           routes: [
             GoRoute(
               name: FollowingPage.name,
               path: 'following',
               builder: (context, state) =>
-                  FollowingPage(handle: state.pathParameters['handle']!),
+                  FollowingPage(handle: state.pathParameters['authorDid']!),
             ),
             GoRoute(
               name: FollowersPage.name,
               path: 'followers',
               builder: (context, state) =>
-                  FollowersPage(userId: state.pathParameters['handle']!),
+                  FollowersPage(userId: state.pathParameters['authorDid']!),
             ),
             GoRoute(
               name: ListShowPage.name,
               path: 'lists',
               builder: (context, state) => ListShowPage(
-                handle: state.pathParameters['handle']!,
+                handle: state.pathParameters['authorDid']!,
                 onListSelected: state.extra as ValueChanged<BlueskyListData>?,
               ),
             ),

@@ -107,7 +107,7 @@ class _AuthenticatedUser extends ConsumerWidget {
       borderRadius: theme.shape.borderRadius,
       onTap: () => context.pushNamed(
         UserPage.name,
-        pathParameters: {'handle': user.handle},
+        pathParameters: {'authorDid': user.id},
       ),
       child: Card(
         child: Padding(
@@ -243,7 +243,7 @@ class _Entries extends ConsumerWidget {
         title: const Text('profile'),
         onTap: () => context.pushNamed(
           UserPage.name,
-          pathParameters: {'handle': user.handle},
+          pathParameters: {'authorDid': user.handle},
         ),
       ),
       VerticalSpacer.normal,

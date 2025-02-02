@@ -8,6 +8,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/handle_posts.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -76,8 +77,23 @@ abstract class TimelineNotifier<T extends Object>
   @protected
   TimelineFilter? currentFilter();
 
+  /// Abstract method that subclasses must implement to fetch their specific
+  /// timeline data.
   @protected
   Future<TimelineResponse> request({String? cursor});
+
+  /// Helper method to process feed views into a timeline response.
+  ///
+  /// This method handles the conversion of feed views into [BlueskyPostData]
+  /// objects, including proper handling of reply chains and filtering.
+  @protected
+  Future<TimelineResponse> handleTimelinePosts(
+    List<bsky.FeedView> posts,
+    String? cursor,
+  ) async {
+    final processedPosts = await handlePosts(posts, filter);
+    return TimelineResponse(processedPosts.toList(), cursor);
+  }
 
   Future<void> load({bool clearPrevious = false}) async {
     if (!mounted) return;
@@ -156,19 +172,18 @@ abstract class TimelineNotifier<T extends Object>
         if (response.posts.isEmpty) {
           state = currentState.copyWith(loadingMore: false);
         } else {
-          // Deduplicate posts based on both id and uri to ensure uniqueness
-          final existingPosts = currentState.tweets.toSet();
-          final newPosts = response.posts.where(
-            (post) => !existingPosts.any(
-              (existing) => existing.id == post.id || existing.uri == post.uri,
-            ),
-          );
+          // Deduplicate posts by comparing post ids
+          final existingPostIds =
+              currentState.tweets.map((post) => post.id).toSet();
+          final newPosts = response.posts
+              .where((post) => !existingPostIds.contains(post.id))
+              .toList();
 
-          state = TimelineState.data(
-            tweets: currentState.tweets.rebuild((b) => b.addAll(newPosts)),
+          final allTweets = [...state.tweets, ...newPosts];
+          state = state.copyWith(
+            tweets: BuiltList.of(allTweets),
             cursor: response.cursor,
-            customData: buildCustomData(
-                currentState.tweets.rebuild((b) => b.addAll(newPosts))),
+            loadingMore: false,
           );
         }
       } catch (error, stackTrace) {
@@ -195,19 +210,17 @@ abstract class TimelineNotifier<T extends Object>
       final response = await request();
 
       if (response.posts.isNotEmpty) {
-        // Deduplicate posts based on both id and uri to ensure uniqueness
-        final existingPosts = state.tweets.toSet();
-        final newPosts = response.posts.where(
-          (post) => !existingPosts.any(
-            (existing) => existing.id == post.id || existing.uri == post.uri,
-          ),
-        );
+        // Deduplicate posts by comparing post ids
+        final existingPostIds = state.tweets.map((post) => post.id).toSet();
+        final newPosts = response.posts
+            .where((post) => !existingPostIds.contains(post.id))
+            .toList();
 
+        final allTweets = [...state.tweets, ...newPosts];
         state = TimelineState.data(
-          tweets: BuiltList.of([...newPosts, ...state.tweets]),
+          tweets: BuiltList.of(allTweets),
           cursor: response.cursor,
-          customData:
-              buildCustomData(BuiltList.of([...newPosts, ...state.tweets])),
+          customData: buildCustomData(BuiltList.of(allTweets)),
         );
       } else {
         state = state.copyWith(refreshing: false);

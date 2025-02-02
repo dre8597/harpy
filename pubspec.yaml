@@ -69,10 +69,7 @@ dependencies:
   shimmer: ^3.0.0
   sliver_tools: ^0.2.6
   smooth_page_indicator: ^1.0.0+2
-  super_sliver_list:
-    git:
-      url: https://github.com/superlistapp/super_sliver_list
-      ref: 196abe17bae1803435d3112fd11c58ef4c2d577e
+  super_sliver_list: ^0.4.1
   timeago: ^3.0.2
   translator: ^1.0.3+1
   tuple: ^2.0.0

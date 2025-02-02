@@ -32,14 +32,15 @@ class LegacyUserConnectionsNotifier
   final bsky.Bluesky _blueskyApi;
   final log = Logger('LegacyUserConnectionsNotifier');
 
-  Future<void> load(List<String> handles) async {
+  Future<void> load(List<String> authorDids) async {
     try {
       final mappedConnections = <String, BuiltSet<LegacyUserConnection>>{};
 
       await Future.wait(
-        handles.map((handle) async {
+        authorDids.map((authorDid) async {
           try {
-            final profile = await _blueskyApi.actor.getProfile(actor: handle);
+            final profile =
+                await _blueskyApi.actor.getProfile(actor: authorDid);
             final connections = <LegacyUserConnection>[];
 
             if (profile.data.viewer.following != null) {
@@ -54,9 +55,9 @@ class LegacyUserConnectionsNotifier
               connections.add(LegacyUserConnection.muting);
             }
 
-            mappedConnections[handle] = connections.toBuiltSet();
+            mappedConnections[authorDid] = connections.toBuiltSet();
           } catch (e, st) {
-            log.warning('error loading profile for $handle', e, st);
+            log.warning('error loading profile for $authorDid', e, st);
           }
         }),
       );

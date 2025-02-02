@@ -122,16 +122,20 @@ class Preferences {
   }
 
   /// Gets a boolean value from preferences.
-  bool getBool(String key, [bool defaultValue = false]) => get<bool>(key) ?? defaultValue;
+  bool getBool(String key, [bool defaultValue = false]) =>
+      get<bool>(key) ?? defaultValue;
 
   /// Gets an integer value from preferences.
-  int getInt(String key, [int defaultValue = 0]) => get<int>(key) ?? defaultValue;
+  int getInt(String key, [int defaultValue = 0]) =>
+      get<int>(key) ?? defaultValue;
 
   /// Gets a double value from preferences.
-  double getDouble(String key, [double defaultValue = 0.0]) => get<double>(key) ?? defaultValue;
+  double getDouble(String key, [double defaultValue = 0.0]) =>
+      get<double>(key) ?? defaultValue;
 
   /// Gets a string value from preferences.
-  String getString(String key, [String defaultValue = '']) => get<String>(key) ?? defaultValue;
+  String getString(String key, [String defaultValue = '']) =>
+      get<String>(key) ?? defaultValue;
 
   /// Gets a list of strings from preferences.
   List<String> getStringList(
@@ -153,7 +157,8 @@ class Preferences {
   Future<bool> setString(String key, String value) => set<String>(key, value);
 
   /// Sets a list of strings in preferences.
-  Future<bool> setStringList(String key, List<String> value) => set<List<String>>(key, value);
+  Future<bool> setStringList(String key, List<String> value) =>
+      set<List<String>>(key, value);
 
   /// Removes a value from preferences.
   Future<bool> remove(String key) => sharedPreferences.remove(_buildKey(key));

@@ -20,7 +20,8 @@ final environmentProvider = Provider(
     );
 
     final actualAesKey = aesKey.isNotEmpty ? aesKey : _fallbackAesKey;
-    _log.fine('Initializing environment with AES key: ${actualAesKey.substring(0, 10)}...');
+    _log.fine(
+        'Initializing environment with AES key: ${actualAesKey.substring(0, 10)}...');
 
     if (aesKey.isNotEmpty) {
       final encrypter = Encrypter(AES(Key.fromBase64(actualAesKey)));
@@ -85,7 +86,8 @@ class Environment with LoggerMixin {
   /// --dart-define=twitter_consumer_secret=your_consumer_secret
   /// ```
   bool validateAppConfig() {
-    final valid = twitterConsumerKey.isNotEmpty && twitterConsumerSecret.isNotEmpty;
+    final valid =
+        twitterConsumerKey.isNotEmpty && twitterConsumerSecret.isNotEmpty;
 
     if (!valid) {
       log.severe(

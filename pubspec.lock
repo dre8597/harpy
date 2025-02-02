@@ -1406,12 +1406,11 @@ packages:
   super_sliver_list:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "196abe17bae1803435d3112fd11c58ef4c2d577e"
-      resolved-ref: "196abe17bae1803435d3112fd11c58ef4c2d577e"
-      url: "https://github.com/superlistapp/super_sliver_list"
-    source: git
-    version: "0.0.6"
+      name: super_sliver_list
+      sha256: b1e1e64d08ce40e459b9bb5d9f8e361617c26b8c9f3bb967760b0f436b6e3f56
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.1"
   term_glyph:
     dependency: transitive
     description:

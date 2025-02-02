@@ -29,8 +29,8 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   @override
   void initState() {
     super.initState();
-
-    ref.read(_connectionsProvider.notifier).load(['harpy_app'].toList());
+    final userDid = ref.read(authenticationStateProvider).user?.id ?? '';
+    ref.read(_connectionsProvider.notifier).load([userDid]);
 
     Future<void>.delayed(_delay).then(
       (_) {

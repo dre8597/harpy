@@ -10,7 +10,8 @@ import 'package:rby/rby.dart' hide Preferences;
 
 part 'theme_preferences.freezed.dart';
 
-final themePreferencesProvider = StateNotifierProvider<ThemePreferencesNotifier, ThemePreferences>(
+final themePreferencesProvider =
+    StateNotifierProvider<ThemePreferencesNotifier, ThemePreferences>(
   (ref) {
     final prefix = ref.watch(authPreferencesProvider).userId;
 
@@ -21,7 +22,8 @@ final themePreferencesProvider = StateNotifierProvider<ThemePreferencesNotifier,
   name: 'ThemePreferencesProvider',
 );
 
-class ThemePreferencesNotifier extends StateNotifier<ThemePreferences> with LoggerMixin {
+class ThemePreferencesNotifier extends StateNotifier<ThemePreferences>
+    with LoggerMixin {
   ThemePreferencesNotifier({
     required Preferences preferences,
   })  : _preferences = preferences,
@@ -29,7 +31,8 @@ class ThemePreferencesNotifier extends StateNotifier<ThemePreferences> with Logg
           ThemePreferences(
             lightThemeId: preferences.getInt('lightThemeId'),
             darkThemeId: preferences.getInt('darkThemeId'),
-            customThemes: BuiltList<String>.of(preferences.getStringList('customThemes', [])),
+            customThemes: BuiltList<String>.of(
+                preferences.getStringList('customThemes', [])),
           ),
         );
 
@@ -80,10 +83,12 @@ class ThemePreferencesNotifier extends StateNotifier<ThemePreferences> with Logg
 
       if (updateLightThemeSelection || updateDarkThemeSelection) {
         setThemeId(
-          lightThemeId:
-              updateLightThemeSelection ? themeId ?? state.customThemes.length - 1 + 10 : null,
-          darkThemeId:
-              updateDarkThemeSelection ? themeId ?? state.customThemes.length - 1 + 10 : null,
+          lightThemeId: updateLightThemeSelection
+              ? themeId ?? state.customThemes.length - 1 + 10
+              : null,
+          darkThemeId: updateDarkThemeSelection
+              ? themeId ?? state.customThemes.length - 1 + 10
+              : null,
         );
       }
     } catch (e, st) {

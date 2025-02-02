@@ -53,8 +53,10 @@ class _HarpyTapBarState extends ConsumerState<HarpyTabBar> {
   void didUpdateWidget(covariant HarpyTabBar oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.controller != null && oldWidget.controller != widget.controller) {
-      _tabController = widget.controller!..animation?.addListener(_tabControllerListener);
+    if (widget.controller != null &&
+        oldWidget.controller != widget.controller) {
+      _tabController = widget.controller!
+        ..animation?.addListener(_tabControllerListener);
       // we set the animation value to the last entry to prevent the animation
       // to flicker when updating the controller (which only happens when we are
       // on the last tab)
@@ -108,7 +110,8 @@ class _HarpyTapBarState extends ConsumerState<HarpyTabBar> {
     );
   }
 
-  double _tabAnimationValue(int index) => (_animationValue - index).clamp(-1, 1).abs().toDouble();
+  double _tabAnimationValue(int index) =>
+      (_animationValue - index).clamp(-1, 1).abs().toDouble();
 
   Widget _buildTab(ThemeData theme, int index) {
     return AutoScrollTag(
@@ -142,7 +145,8 @@ class _HarpyTapBarState extends ConsumerState<HarpyTabBar> {
           children: [
             for (int i = 0; i < widget.tabs.length; i++) ...[
               _buildTab(theme, i),
-              if (i != widget.tabs.length - 1) SizedBox(width: theme.spacing.small),
+              if (i != widget.tabs.length - 1)
+                SizedBox(width: theme.spacing.small),
             ],
             if (widget.endWidgets != null) ...[
               for (final Widget widget in widget.endWidgets!) ...[
@@ -176,6 +180,7 @@ class HarpyTabScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(HarpyTabScope oldWidget) {
-    return oldWidget.index != index || oldWidget.animationValue != animationValue;
+    return oldWidget.index != index ||
+        oldWidget.animationValue != animationValue;
   }
 }

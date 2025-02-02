@@ -57,7 +57,8 @@ class BlueskyPostData with _$BlueskyPostData {
 
   const BlueskyPostData._();
 
-  factory BlueskyPostData.fromJson(Map<String, dynamic> json) => _$BlueskyPostDataFromJson(json);
+  factory BlueskyPostData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyPostDataFromJson(json);
 
   /// Creates a [BlueskyPostData] from a Bluesky FeedView.
   factory BlueskyPostData.fromFeedView(bsky.FeedView post) {
@@ -82,7 +83,9 @@ class BlueskyPostData with _$BlueskyPostData {
     final externalUrls = postRecord.facets
         ?.where((f) => f.features.any((feat) => feat is bsky.FacetLink))
         .map(
-          (f) => (f.features.firstWhere((feat) => feat is bsky.FacetLink) as bsky.FacetLink).uri,
+          (f) => (f.features.firstWhere((feat) => feat is bsky.FacetLink)
+                  as bsky.FacetLink)
+              .uri,
         )
         .toList();
 
@@ -115,7 +118,8 @@ class BlueskyPostData with _$BlueskyPostData {
       embedView.maybeWhen(
         record: (data) {
           if (data.record is bsky.FeedView) {
-            quoteData = BlueskyPostData.fromFeedView(data.record as bsky.FeedView);
+            quoteData =
+                BlueskyPostData.fromFeedView(data.record as bsky.FeedView);
           }
         },
         orElse: () {},
@@ -146,13 +150,16 @@ class BlueskyPostData with _$BlueskyPostData {
       tags: postRecord.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
           .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag) as bsky.FacetTag).tag,
+            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag)
+                    as bsky.FacetTag)
+                .tag,
           )
           .toList(),
       mentions: postRecord.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetMention))
           .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention) as bsky.FacetMention)
+            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention)
+                    as bsky.FacetMention)
                 .did,
           )
           .toList(),
@@ -180,7 +187,8 @@ class BlueskyMediaData with _$BlueskyMediaData implements MediaData {
 
   const BlueskyMediaData._();
 
-  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) => _$BlueskyMediaDataFromJson(json);
+  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyMediaDataFromJson(json);
 
   factory BlueskyMediaData.fromImage(bsky.Image image) {
     final imageRef = image.image.ref.toString();
@@ -192,7 +200,8 @@ class BlueskyMediaData with _$BlueskyMediaData implements MediaData {
     return BlueskyMediaData(
       alt: image.alt,
       url: imageRef,
-      thumb: imageRef, // Use same URL for thumb since Bluesky doesn't provide thumbnails yet
+      thumb:
+          imageRef, // Use same URL for thumb since Bluesky doesn't provide thumbnails yet
       aspectRatio: aspectRatioValue,
     );
   }
@@ -228,5 +237,6 @@ class EmbedRecord with _$EmbedRecord {
 
   const EmbedRecord._();
 
-  factory EmbedRecord.fromJson(Map<String, dynamic> json) => _$EmbedRecordFromJson(json);
+  factory EmbedRecord.fromJson(Map<String, dynamic> json) =>
+      _$EmbedRecordFromJson(json);
 }

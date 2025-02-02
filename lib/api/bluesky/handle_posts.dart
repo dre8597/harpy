@@ -23,44 +23,41 @@ BuiltList<BlueskyPostData> _isolateHandlePosts(List<dynamic> arguments) {
   final posts = arguments[0] as List<bsky.FeedView>;
   final filter = arguments[1] as TimelineFilter?;
 
+  // Convert the incoming feed views into our post data objects (after filtering)
   final postDataList = posts
-      .where((post) => !_filterPost(post.post, filter))
+      .where((feedView) => !_filterPost(feedView.post, filter))
       .map(BlueskyPostData.fromFeedView)
       .toList();
 
-  for (var i = 0; i < postDataList.length; i++) {
-    final post = postDataList[i];
+  // Build a lookup map by id
+  final postsById = <String, BlueskyPostData>{
+    for (final post in postDataList) post.id: post,
+  };
 
-    if (post.parentPostId != null && i != postDataList.length - 1) {
-      // look for parent in older posts
-      for (var j = i + 1; j < postDataList.length; j++) {
-        final olderPost = postDataList[j];
+  // Build a list to hold root posts (those that are not a reply to another post in this batch)
+  final rootPosts = <BlueskyPostData>[];
 
-        if (olderPost.id == post.parentPostId) {
-          // found parent post, remove child post from list and add it to
-          // the replies of the parent post
-          postDataList[j] = olderPost.copyWith(
-            replies: [...?olderPost.replies, post],
-          );
-
-          postDataList.removeAt(i);
-          i--;
-
-          break;
-        }
-      }
+  // Process each post: if it has a parent that exists in our map, attach it as a reply;
+  // otherwise, treat it as a root post.
+  for (final post in postDataList) {
+    if (post.parentPostId != null && postsById.containsKey(post.parentPostId)) {
+      final parent = postsById[post.parentPostId!]!;
+      // Create or update the parent's replies list
+      final updatedReplies = [...?parent.replies, post];
+      postsById[post.parentPostId!] = parent.copyWith(replies: updatedReplies);
+    } else {
+      rootPosts.add(post);
     }
   }
 
-  // sort to make sure the posts are in chronological order with the newest
-  // reply to a post pushing the parent post to the front
-  postDataList.sort((a, b) {
-    final targetA = a.replies?.isNotEmpty == true ? a.replies!.first : a;
-    final targetB = b.replies?.isNotEmpty == true ? b.replies!.first : b;
+  // Sort the root posts so that posts with the most recent reply (or the post itself) are first.
+  rootPosts.sort((a, b) {
+    final targetA = (a.replies?.isNotEmpty ?? false) ? a.replies!.first : a;
+    final targetB = (b.replies?.isNotEmpty ?? false) ? b.replies!.first : b;
     return targetB.createdAt.compareTo(targetA.createdAt);
   });
 
-  return postDataList.toBuiltList();
+  return BuiltList.of(rootPosts);
 }
 
 bool _filterPost(bsky.Post post, TimelineFilter? filter) {

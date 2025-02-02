@@ -6,8 +6,8 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final mentionsTimelineProvider =
-    StateNotifierProvider.autoDispose<MentionsTimelineNotifier, TimelineState<bool>>(
+final mentionsTimelineProvider = StateNotifierProvider.autoDispose<
+    MentionsTimelineNotifier, TimelineState<bool>>(
   (ref) {
     ref.cacheFor(const Duration(minutes: 15));
 
@@ -38,7 +38,8 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
 
     final posts = feed.data.notifications
         .where(
-          (notification) => notification.reason == bsky.NotificationReason.mention,
+          (notification) =>
+              notification.reason == bsky.NotificationReason.mention,
         )
         .map(
           (notification) => BlueskyPostData(
@@ -62,7 +63,8 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
     if (posts.isEmpty) return false;
 
     final newId = int.tryParse(posts.first.id) ?? 0;
-    final lastId = ref.read(tweetVisibilityPreferencesProvider).lastViewedMention;
+    final lastId =
+        ref.read(tweetVisibilityPreferencesProvider).lastViewedMention;
 
     return lastId < newId;
   }
@@ -72,7 +74,8 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
 
     final currentState = state;
 
-    if (currentState is TimelineStateData<bool> && currentState.tweets.isNotEmpty) {
+    if (currentState is TimelineStateData<bool> &&
+        currentState.tweets.isNotEmpty) {
       final id = int.tryParse(currentState.tweets.first.id) ?? 0;
       ref.read(tweetVisibilityPreferencesProvider).lastViewedMention = id;
       state = currentState.copyWith(customData: false);
