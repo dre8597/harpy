@@ -31,7 +31,7 @@ class HomeTabAddListCard extends ConsumerWidget {
               )
           : () => context.pushNamed(
                 ListShowPage.name,
-                pathParameters: {'handle': authentication.user!.handle},
+                pathParameters: {'authorDid': authentication.user!.id},
                 // ignore: avoid_types_on_closure_parameters
                 extra: (BlueskyListData list) {
                   HapticFeedback.lightImpact();

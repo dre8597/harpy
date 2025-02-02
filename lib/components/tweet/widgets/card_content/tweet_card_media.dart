@@ -21,7 +21,7 @@ class TweetCardMedia extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final media = tweet.media?.single;
+    final media = tweet.media?.first;
 
     Widget child;
 

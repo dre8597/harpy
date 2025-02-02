@@ -104,49 +104,46 @@ abstract class TimelineNotifier<T extends Object>
       state = state.copyWith(loadingMore: true);
     }
 
-    if (!lock()) {
-      try {
-        final cursor = clearPrevious ? null : state.cursor;
-        final response = await request(cursor: cursor);
+    try {
+      final cursor = clearPrevious ? null : state.cursor;
+      final response = await request(cursor: cursor);
 
-        if (!mounted) return;
+      if (!mounted) return;
 
-        if (response.posts.isEmpty) {
-          if (clearPrevious) {
-            state = const TimelineState.noData();
-          } else {
-            state = state.copyWith(loadingMore: false);
-          }
+      if (response.posts.isEmpty) {
+        if (clearPrevious) {
+          state = const TimelineState.noData();
         } else {
-          if (clearPrevious) {
-            state = TimelineState.data(
-              tweets: BuiltList.of(response.posts),
-              cursor: response.cursor,
-              customData: buildCustomData(BuiltList.of(response.posts)),
-            );
-          } else {
-            // Deduplicate posts based on both id and uri to ensure uniqueness
-            final existingPosts = state.tweets.toSet();
-            final newPosts = response.posts.where(
-              (post) => !existingPosts.any(
-                (existing) =>
-                    existing.id == post.id || existing.uri == post.uri,
-              ),
-            );
-
-            final allTweets = [...state.tweets, ...newPosts];
-            state = state.copyWith(
-              tweets: BuiltList.of(allTweets),
-              cursor: response.cursor,
-              loadingMore: false,
-            );
-          }
+          state = state.copyWith(loadingMore: false);
         }
-      } catch (error, stackTrace) {
-        if (!mounted) return;
-        log.severe('error loading timeline', error, stackTrace);
-        state = const TimelineState.error();
+      } else {
+        if (clearPrevious) {
+          state = TimelineState.data(
+            tweets: BuiltList.of(response.posts),
+            cursor: response.cursor,
+            customData: buildCustomData(BuiltList.of(response.posts)),
+          );
+        } else {
+          // Deduplicate posts based on both id and uri to ensure uniqueness
+          final existingPosts = state.tweets.toSet();
+          final newPosts = response.posts.where(
+            (post) => !existingPosts.any(
+              (existing) => existing.id == post.id || existing.uri == post.uri,
+            ),
+          );
+
+          final allTweets = [...state.tweets, ...newPosts];
+          state = state.copyWith(
+            tweets: BuiltList.of(allTweets),
+            cursor: response.cursor,
+            loadingMore: false,
+          );
+        }
       }
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      log.severe('error loading timeline', error, stackTrace);
+      state = const TimelineState.error();
     }
   }
 

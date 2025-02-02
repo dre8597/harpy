@@ -33,6 +33,7 @@ enum TweetCardActionElement {
 }
 
 extension TweetCardElementExtension on TweetCardElement {
+  //TODO: Update this work with Bluesky data instead
   bool shouldBuild(BlueskyPostData tweet, TweetCardConfig config) {
     if (config.elements.contains(this)) {
       switch (this) {

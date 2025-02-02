@@ -18,8 +18,7 @@ final tweetSearchProvider =
   name: 'TweetSearchProvider',
 );
 
-class TweetSearchNotifier extends StateNotifier<TweetSearchState>
-    with LoggerMixin {
+class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMixin {
   TweetSearchNotifier({
     required bsky.Bluesky blueskyApi,
   })  : _blueskyApi = blueskyApi,
@@ -28,6 +27,54 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
   final bsky.Bluesky _blueskyApi;
   @override
   final log = Logger('TweetSearchNotifier');
+
+  List<BlueskyMediaData>? _processEmbed(bsky.EmbedView? embed) {
+    if (embed == null) return null;
+
+    return embed.map(
+      record: (_) => null,
+      images: (images) => images.data.images
+          .map(
+            (img) => BlueskyMediaData(
+              url: img.fullsize,
+              alt: img.alt ?? '',
+            ),
+          )
+          .toList(),
+      external: (_) => null,
+      recordWithMedia: (recordWithMedia) {
+        return recordWithMedia.data.media.map(
+          images: (images) => images.data.images
+              .map(
+                (img) => BlueskyMediaData(
+                  url: img.fullsize,
+                  alt: img.alt ?? '',
+                ),
+              )
+              .toList(),
+          external: (_) => null,
+          video: (video) => [
+            BlueskyMediaData(
+              url: video.data.playlist,
+              alt: video.data.alt ?? '',
+              type: MediaType.video,
+              thumb: video.data.thumbnail,
+            ),
+          ],
+          unknown: (_) => null,
+        );
+      },
+      video: (video) => [
+        BlueskyMediaData(
+          url: video.data.playlist,
+          alt: video.data.alt ?? '',
+          type: MediaType.video,
+          thumb: video.data.thumbnail,
+        ),
+      ],
+      unknown: (_) => null,
+    );
+  }
 
   Future<void> search({
     String? customQuery,
@@ -71,17 +118,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
                 replyCount: post.replyCount,
                 isLiked: post.viewer.like != null,
                 isReposted: post.viewer.repost != null,
-                media: (post.embed as bsky
-                        .EmbedImages?) //TODO: Update to handle all video types i.e., I/flutter ( 2922): type '_$UEmbedViewVideoImpl' is not a subtype of type 'EmbedImages?' in type cast
-
-                    ?.images
-                    .map(
-                      (img) => BlueskyMediaData(
-                        url: img.image.ref.toString(),
-                        alt: img.alt,
-                      ),
-                    )
-                    .toList(),
+                media: _processEmbed(post.embed),
               ),
             )
             .toBuiltList();

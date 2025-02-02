@@ -20,7 +20,7 @@ void defaultOnUserMentionTap(WidgetRef ref, BlueskyMentionData mention) {
   if (!currentPath.endsWith(mention.handle ?? mention.did)) {
     router.pushNamed(
       UserPage.name,
-      pathParameters: {'handle': mention.handle ?? mention.did},
+      pathParameters: {'authorDid': mention.did},
     );
   }
 }

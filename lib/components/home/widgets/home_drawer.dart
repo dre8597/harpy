@@ -165,7 +165,7 @@ class _ConnectionsCount extends ConsumerWidget {
               title: FittedBox(child: Text('$count  following')),
               onTap: () => context.pushNamed(
                 FollowingPage.name,
-                pathParameters: {'handle': user.handle},
+                pathParameters: {'authorDid': user.id},
               ),
             ),
           ),
@@ -178,7 +178,7 @@ class _ConnectionsCount extends ConsumerWidget {
               title: FittedBox(child: Text('$count  followers')),
               onTap: () => context.pushNamed(
                 FollowersPage.name,
-                pathParameters: {'handle': user.handle},
+                pathParameters: {'authorDid': user.id},
               ),
             ),
           ),
@@ -258,7 +258,7 @@ class _Entries extends ConsumerWidget {
         title: const Text('lists'),
         onTap: () => context.pushNamed(
           ListShowPage.name,
-          pathParameters: {'handle': user.handle},
+          pathParameters: {'authorDid': user.id},
         ),
       ),
       VerticalSpacer.normal,

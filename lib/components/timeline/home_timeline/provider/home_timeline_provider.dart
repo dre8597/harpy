@@ -34,7 +34,7 @@ class HomeTimelineNotifier extends TimelineNotifier {
 
   @override
   Future<TimelineResponse> request({String? cursor}) async {
-    print('requesting home timeline ${blueskyApi.session?.status}');
+    print('requesting home timeline ${blueskyApi.session?.active}');
 
     final feed = await blueskyApi.feed.getTimeline(
       cursor: cursor,

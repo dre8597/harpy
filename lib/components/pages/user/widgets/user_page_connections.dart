@@ -34,7 +34,7 @@ class UserPageConnections extends StatelessWidget {
                 onTap: enableTap
                     ? () => context.pushNamed(
                           FollowingPage.name,
-                          pathParameters: {'handle': user.handle},
+                          pathParameters: {'authorDid': user.id},
                         )
                     : null,
               ),
@@ -52,7 +52,7 @@ class UserPageConnections extends StatelessWidget {
                 onTap: enableTap
                     ? () => context.pushNamed(
                           FollowersPage.name,
-                          pathParameters: {'handle': user.handle},
+                          pathParameters: {'authorDid': user.id},
                         )
                     : null,
               ),
