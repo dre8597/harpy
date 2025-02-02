@@ -1,8 +1,6 @@
-import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
@@ -10,7 +8,6 @@ final listMembersProvider = StateNotifierProvider.autoDispose
     .family<ListsMembersNotifier, PaginatedState<BuiltList<UserData>>, String>(
   (ref, listId) => ListsMembersNotifier(
     ref: ref,
-    blueskyApi: ref.watch(blueskyApiProvider),
     listId: listId,
   ),
   name: 'ListMembersProvider',
@@ -22,7 +19,6 @@ final listMembersProvider = StateNotifierProvider.autoDispose
 class ListsMembersNotifier extends PaginatedUsersNotifier {
   ListsMembersNotifier({
     required Ref ref,
-    required bsky.Bluesky blueskyApi,
     required String listId,
   })  : _ref = ref,
         super(const PaginatedState.loading()) {

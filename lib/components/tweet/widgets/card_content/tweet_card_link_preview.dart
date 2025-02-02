@@ -20,7 +20,7 @@ class TweetCardLinkPreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final launcher = ref.watch(launcherProvider);
-    final urlString = tweet.uri.href;
+    final urlString = tweet.uri.toString();
 
     return GestureDetector(
       onTap: () => launcher(urlString),
@@ -33,7 +33,7 @@ class TweetCardLinkPreview extends ConsumerWidget {
         ),
       ),
       child: AnyLinkPreview.builder(
-        link: tweet.uri.href,
+        link: tweet.uri.toString(),
         placeholderWidget: const _LinkPreviewPlaceholder(),
         errorWidget: _LinkPreviewError(url: tweet.uri),
         itemBuilder: (_, metadata, imageProvider, __) => Container(

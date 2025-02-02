@@ -1,4 +1,3 @@
-import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
@@ -14,7 +13,6 @@ final legacyUserConnectionsProvider = StateNotifierProvider<
     BuiltMap<String, BuiltSet<LegacyUserConnection>>>(
   (ref) => LegacyUserConnectionsNotifier(
     ref: ref,
-    blueskyApi: ref.watch(blueskyApiProvider),
   ),
   name: 'legacyUserConnectionsProvider',
 );
@@ -23,13 +21,10 @@ class LegacyUserConnectionsNotifier
     extends StateNotifier<BuiltMap<String, BuiltSet<LegacyUserConnection>>> {
   LegacyUserConnectionsNotifier({
     required Ref ref,
-    required bsky.Bluesky blueskyApi,
   })  : _ref = ref,
-        _blueskyApi = blueskyApi,
         super(BuiltMap());
 
   final Ref _ref;
-  final bsky.Bluesky _blueskyApi;
   final log = Logger('LegacyUserConnectionsNotifier');
 
   Future<void> load(List<String> authorDids) async {
@@ -38,9 +33,10 @@ class LegacyUserConnectionsNotifier
 
       await Future.wait(
         authorDids.map((authorDid) async {
+          final blueskyApi = _ref.read(blueskyApiProvider);
           try {
             final profile =
-                await _blueskyApi.actor.getProfile(actor: authorDid);
+                await blueskyApi.actor.getProfile(actor: authorDid);
             final connections = <LegacyUserConnection>[];
 
             if (profile.data.viewer.following != null) {
@@ -72,6 +68,7 @@ class LegacyUserConnectionsNotifier
   }
 
   Future<void> follow(String handle) async {
+    final _blueskyApi = _ref.read(blueskyApiProvider);
     log.fine('follow $handle');
 
     state = state.rebuild(
@@ -111,6 +108,8 @@ class LegacyUserConnectionsNotifier
     );
 
     try {
+      final _blueskyApi = _ref.read(blueskyApiProvider);
+
       final profile = await _blueskyApi.actor.getProfile(actor: handle);
       await _blueskyApi.atproto.repo
           .deleteRecord(uri: profile.data.viewer.following!);

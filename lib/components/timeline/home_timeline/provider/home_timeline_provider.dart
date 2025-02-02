@@ -1,6 +1,7 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/components/timeline/provider/timeline_provider.dart';
 import 'package:harpy/core/core.dart';
@@ -34,6 +35,8 @@ class HomeTimelineNotifier extends TimelineNotifier {
 
   @override
   Future<TimelineResponse> request({String? cursor}) async {
+    final blueskyApi = ref.read(blueskyApiProvider);
+
     print('requesting home timeline ${blueskyApi.session?.active}');
 
     final feed = await blueskyApi.feed.getTimeline(

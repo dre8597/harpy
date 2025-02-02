@@ -49,8 +49,7 @@ class _DrawerAnimationListener extends StatefulWidget {
   final AnimatedWidgetBuilder builder;
 
   @override
-  _DrawerAnimationListenerState createState() =>
-      _DrawerAnimationListenerState();
+  _DrawerAnimationListenerState createState() => _DrawerAnimationListenerState();
 }
 
 class _DrawerAnimationListenerState extends State<_DrawerAnimationListener>
@@ -63,8 +62,7 @@ class _DrawerAnimationListenerState extends State<_DrawerAnimationListener>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _tabController = HomeTabController.of(context)!
-      ..animation!.addListener(_tabControllerListener);
+    _tabController = HomeTabController.of(context)!..animation!.addListener(_tabControllerListener);
   }
 
   @override
@@ -301,7 +299,12 @@ class _Entries extends ConsumerWidget {
         onTap: () async {
           final result = await showDialog<bool>(
             context: context,
-            builder: (_) => const LogoutDialog(),
+            builder: (context) => Theme(
+              data: Theme.of(context).copyWith(
+                extensions: {...Theme.of(context).extensions.values},
+              ),
+              child: const LogoutDialog(),
+            ),
           );
 
           if (result ?? false) ref.read(logoutProvider).logout().ignore();

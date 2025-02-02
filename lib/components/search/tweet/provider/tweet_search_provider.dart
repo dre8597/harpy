@@ -13,18 +13,19 @@ part 'tweet_search_provider.freezed.dart';
 final tweetSearchProvider =
     StateNotifierProvider.autoDispose<TweetSearchNotifier, TweetSearchState>(
   (ref) => TweetSearchNotifier(
-    blueskyApi: ref.watch(blueskyApiProvider),
+    ref: ref,
   ),
   name: 'TweetSearchProvider',
 );
 
-class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMixin {
+class TweetSearchNotifier extends StateNotifier<TweetSearchState>
+    with LoggerMixin {
   TweetSearchNotifier({
-    required bsky.Bluesky blueskyApi,
-  })  : _blueskyApi = blueskyApi,
+    required Ref ref,
+  })  : _ref = ref,
         super(const TweetSearchState.initial());
 
-  final bsky.Bluesky _blueskyApi;
+  final Ref _ref;
   @override
   final log = Logger('TweetSearchNotifier');
 
@@ -37,7 +38,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
           .map(
             (img) => BlueskyMediaData(
               url: img.fullsize,
-              alt: img.alt ?? '',
+              alt: img.alt,
             ),
           )
           .toList(),
@@ -48,7 +49,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
               .map(
                 (img) => BlueskyMediaData(
                   url: img.fullsize,
-                  alt: img.alt ?? '',
+                  alt: img.alt,
                 ),
               )
               .toList(),
@@ -92,6 +93,8 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
     state = TweetSearchState.loading(query: query, filter: filter);
 
     try {
+      final _blueskyApi = _ref.read(blueskyApiProvider);
+
       final searchResult = await _blueskyApi.feed.searchPosts(query);
 
       if (searchResult.data.posts.isEmpty) {

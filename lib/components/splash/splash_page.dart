@@ -43,29 +43,29 @@ class _SplashPageState extends ConsumerState<SplashPage> with LoggerMixin {
     try {
       // Initialize app
       await ref.read(applicationProvider).initialize(redirect: widget.redirect);
-
-      // Check for stored credentials
-      final authPreferences = ref.read(authPreferencesProvider);
-
-      if (authPreferences.hasBlueskyCredentials && !mounted) {
-        // If we have credentials but the widget is no longer mounted,
-        // let the application provider handle navigation
-        return;
-      }
-
-      if (authPreferences.hasBlueskyCredentials && mounted) {
-        // Attempt auto-login with stored credentials
-        await ref.read(loginProvider).loginWithBluesky(
-              identifier: authPreferences.blueskyHandle,
-              password: authPreferences.blueskyAppPassword,
-            );
-      } else if (mounted) {
-        // No stored credentials, navigate to login
-        ref.read(routerProvider).goNamed(
-          LoginPage.name,
-          queryParameters: {'transition': 'fade'},
-        );
-      }
+      //
+      // // Check for stored credentials
+      // final authPreferences = ref.read(authPreferencesProvider);
+      //
+      // if (authPreferences.hasBlueskyCredentials && !mounted) {
+      //   // If we have credentials but the widget is no longer mounted,
+      //   // let the application provider handle navigation
+      //   return;
+      // }
+      //
+      // if (authPreferences.hasBlueskyCredentials && mounted) {
+      //   // Attempt auto-login with stored credentials
+      //   await ref.read(loginProvider).loginWithBluesky(
+      //         identifier: authPreferences.blueskyHandle,
+      //         password: authPreferences.blueskyAppPassword,
+      //       );
+      // } else if (mounted) {
+      //   // No stored credentials, navigate to login
+      //   ref.read(routerProvider).goNamed(
+      //     LoginPage.name,
+      //     queryParameters: {'transition': 'fade'},
+      //   );
+      // }
     } catch (e) {
       log.warning('Auto-login failed', e);
       // If auto-login fails and widget is still mounted, navigate to login page

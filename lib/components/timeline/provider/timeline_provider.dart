@@ -49,14 +49,12 @@ abstract class TimelineNotifier<T extends Object>
   final Ref ref;
 
   @protected
-  late final bsky.Bluesky blueskyApi;
 
   TimelineFilter? filter;
 
   void _initialize() {
     if (!mounted) return;
 
-    blueskyApi = ref.watch(blueskyApiProvider);
     filter = currentFilter();
 
     ref.listen(

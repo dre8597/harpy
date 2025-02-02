@@ -1,4 +1,3 @@
-import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,7 +14,7 @@ part 'user_search_provider.freezed.dart';
 final userSearchProvider = StateNotifierProvider.autoDispose<UserSearchNotifier,
     PaginatedState<UsersSearchData>>(
   (ref) => UserSearchNotifier(
-    blueskyApi: ref.watch(blueskyApiProvider),
+    ref: ref,
   ),
   name: 'UserSearchProvider',
 );
@@ -23,11 +22,11 @@ final userSearchProvider = StateNotifierProvider.autoDispose<UserSearchNotifier,
 class UserSearchNotifier extends StateNotifier<PaginatedState<UsersSearchData>>
     with RequestLock, LoggerMixin {
   UserSearchNotifier({
-    required bsky.Bluesky blueskyApi,
-  })  : _blueskyApi = blueskyApi,
+    required Ref ref,
+  })  : _ref = ref,
         super(const PaginatedState.initial());
 
-  final bsky.Bluesky _blueskyApi;
+  final Ref _ref;
   @override
   final log = Logger('UserSearchNotifier');
 
@@ -37,6 +36,8 @@ class UserSearchNotifier extends StateNotifier<PaginatedState<UsersSearchData>>
     required Iterable<UserData> oldUsers,
   }) async {
     try {
+      final _blueskyApi = _ref.read(blueskyApiProvider);
+
       final response = await _blueskyApi.actor.searchActors(
         term: query,
         limit: 20,

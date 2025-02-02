@@ -86,6 +86,11 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
     }
   }
 
+  Future<void> setBlueskySession(Bluesky client) async {
+    state = client;
+    _scheduleTokenRefresh();
+  }
+
   Future<Bluesky> _restoreSession(String service) async {
     final authPreferences = ref.read(authPreferencesProvider);
 
@@ -170,7 +175,7 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
         }
       } catch (e) {
         // If refresh fails, force reinitialization
-        reinitialize();
+        await reinitialize();
       }
     });
   }
@@ -223,12 +228,6 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
 
   /// Returns the current error if any
   Object? get error => _error;
-
-  Future<void> initializeAuth() async {
-    // Start initialization process
-    await _initialize();
-    await ref.read(authenticationProvider).restoreSession();
-  }
 }
 
 /// Provider for the Bluesky service URL.

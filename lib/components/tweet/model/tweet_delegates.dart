@@ -118,7 +118,7 @@ TweetDelegates defaultTweetDelegates(
     },
     onOpenTweetExternally: (ref) {
       HapticFeedback.lightImpact();
-      ref.read(launcherProvider)(tweet.uri.href, alwaysOpenExternally: true);
+      ref.read(launcherProvider)(tweet.uri.toString(), alwaysOpenExternally: true);
     },
     onCopyText: (ref) {
       HapticFeedback.lightImpact();
@@ -127,7 +127,7 @@ TweetDelegates defaultTweetDelegates(
     },
     onShareTweet: (ref) {
       HapticFeedback.lightImpact();
-      Share.share(tweet.uri.href);
+      Share.share(tweet.uri.toString());
     },
     onOpenMediaExternally: (ref, media) {
       HapticFeedback.lightImpact();

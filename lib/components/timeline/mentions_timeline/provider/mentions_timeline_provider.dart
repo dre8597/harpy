@@ -2,6 +2,7 @@ import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
@@ -31,6 +32,8 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
 
   @override
   Future<TimelineResponse> request({String? cursor}) async {
+    final blueskyApi = ref.read(blueskyApiProvider);
+
     final feed = await blueskyApi.notification.listNotifications(
       cursor: cursor,
       limit: 50,

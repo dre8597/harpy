@@ -1,4 +1,3 @@
-import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
@@ -21,7 +20,6 @@ final followingProvider = StateNotifierProvider.autoDispose
     .family<FollowingNotifier, PaginatedState<BuiltList<UserData>>, String>(
   (ref, handle) => FollowingNotifier(
     ref: ref,
-    blueskyApi: ref.watch(blueskyApiProvider),
     handle: handle,
   ),
   name: 'FollowingProvider',
@@ -30,17 +28,14 @@ final followingProvider = StateNotifierProvider.autoDispose
 class FollowingNotifier extends PaginatedUsersNotifier {
   FollowingNotifier({
     required Ref ref,
-    required bsky.Bluesky blueskyApi,
     required String handle,
   })  : _ref = ref,
-        _blueskyApi = blueskyApi,
         _handle = handle,
         super(const PaginatedState.loading()) {
     loadInitial();
   }
 
   final Ref _ref;
-  final bsky.Bluesky _blueskyApi;
   final String _handle;
 
   @override
@@ -51,6 +46,8 @@ class FollowingNotifier extends PaginatedUsersNotifier {
 
   @override
   Future<PaginatedUsers> request([int? cursor]) async {
+    final _blueskyApi = _ref.read(blueskyApiProvider);
+
     final response = await _blueskyApi.graph.getFollows(
       actor: _handle,
       cursor: cursor?.toString(),

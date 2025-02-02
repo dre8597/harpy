@@ -137,6 +137,8 @@ class HarpyTheme {
         RbySpacingTheme(
           base: _paddingValue,
           small: _paddingValue / 2,
+          large: _paddingValue * 2,
+
         ),
         RbyShapeTheme(
           radius: const Radius.circular(12),

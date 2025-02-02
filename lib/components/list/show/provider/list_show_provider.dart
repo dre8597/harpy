@@ -1,4 +1,3 @@
-import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -14,7 +13,7 @@ final listShowProvider = StateNotifierProvider.autoDispose
     .family<ListShowNotifier, ListShowState, String>(
   (ref, handle) => ListShowNotifier(
     handle: handle,
-    blueskyApi: ref.watch(blueskyApiProvider),
+    ref: ref,
   ),
   name: 'ListShowProvider',
 );
@@ -24,19 +23,21 @@ final listShowProvider = StateNotifierProvider.autoDispose
 class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
   ListShowNotifier({
     required String handle,
-    required bsky.Bluesky blueskyApi,
+    required Ref ref,
   })  : _handle = handle,
-        _blueskyApi = blueskyApi,
+        _ref = ref,
         super(const ListShowState.loading()) {
     load();
   }
 
+  final Ref _ref;
   final String _handle;
-  final bsky.Bluesky _blueskyApi;
   @override
   final log = Logger('ListShowNotifier');
 
   Future<void> load() async {
+    final _blueskyApi = _ref.read(blueskyApiProvider);
+
     log.fine('loading lists');
     state = const ListShowState.loading();
 
@@ -111,6 +112,8 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
       );
 
       try {
+        final _blueskyApi = _ref.read(blueskyApiProvider);
+
         final response = await _blueskyApi.graph.getLists(
           actor: _handle,
           cursor: currentState.ownershipsCursor,
@@ -165,6 +168,8 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
       );
 
       try {
+        final _blueskyApi = _ref.read(blueskyApiProvider);
+
         final response = await _blueskyApi.graph.getLists(
           actor: _handle,
           cursor: currentState.subscriptionsCursor,
@@ -242,6 +247,7 @@ class ListShowState with _$ListShowState {
 
 extension ListShowStateExtension on ListShowState {
   bool get loadingMoreOwnerships => this is _LoadingMoreOwnerships;
+
   bool get loadingMoreSubscriptions => this is _LoadingMoreSubscriptions;
 
   BuiltList<BlueskyListData> get ownerships => maybeMap(

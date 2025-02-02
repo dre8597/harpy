@@ -12,7 +12,7 @@ final trendsLocationsProvider = StateNotifierProvider.autoDispose<
     ref.cacheFor(const Duration(minutes: 5));
 
     return TrendsLocationsNotifier(
-      blueskyApi: ref.watch(blueskyApiProvider),
+      ref: ref,
     );
   },
   name: 'TrendsLocationsProvider',
@@ -22,8 +22,8 @@ class TrendsLocationsNotifier
     extends StateNotifier<AsyncValue<BuiltList<TrendsLocationData>>>
     with LoggerMixin {
   TrendsLocationsNotifier({
-    required bsky.Bluesky blueskyApi,
-  })  : _blueskyApi = blueskyApi,
+    required Ref ref,
+  })  : _blueskyApi = ref.read(blueskyApiProvider),
         super(const AsyncValue.loading()) {
     load();
   }

@@ -50,9 +50,6 @@ class Application with LoggerMixin {
       _ref.read(connectivityProvider.notifier).initialize(),
     ]);
 
-    // // Now that preferences are initialized, restore session
-    await _ref.read(blueskyApiProvider.notifier).initializeAuth();
-
     _ref.read(applicationStateProvider.notifier).state =
         ApplicationState.initialized;
 

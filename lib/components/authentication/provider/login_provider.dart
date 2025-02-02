@@ -82,6 +82,8 @@ class _Login with LoggerMixin {
         service: service,
       );
 
+      await _ref.read(blueskyApiProvider.notifier).setBlueskySession(bluesky);
+
       // Get user profile
       final profile = await bluesky.actor.getProfile(actor: identifier);
 
