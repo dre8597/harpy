@@ -45,13 +45,17 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
   @override
   void dispose() {
     widget.controller.removeListener(_scrollListener);
-
     super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant LoadMoreHandler oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_scrollListener);
+      widget.controller.addListener(_scrollListener);
+    }
 
     // When re-enabling the listener, we want to query the current scroll extent
     // to potentially call the callback.
@@ -62,7 +66,7 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
 
   void _scrollListener() {
     if (_loading || !widget.listen || !mounted) return;
-    assert(widget.controller.hasClients);
+    if (!widget.controller.hasClients) return;
     if (widget.controller.positions.length != 1) return;
 
     final position = widget.controller.positions.first;
@@ -76,19 +80,27 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
   Future<void> _loadMore() async {
     if (_loading) return;
 
-    if (mounted) setState(() => _loading = true);
-    await widget.onLoadMore();
-    if (mounted) setState(() => _loading = false);
-
-    // After loading more, re-trigger the listener in case the scroll extent is
-    // still below the extent trigger.
-    _scrollListener();
+    try {
+      if (mounted) setState(() => _loading = true);
+      await widget.onLoadMore();
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+        // After loading more, re-trigger the listener in case the scroll extent is
+        // still below the extent trigger.
+        _scrollListener();
+      }
+    }
   }
 
   bool _onNotification(ScrollNotification notification) {
+    if (!mounted) return false;
+
     if (notification.metrics.extentAfter <=
         (widget.extentTrigger ?? notification.metrics.viewportDimension / 2)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _loadMore());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadMore();
+      });
     }
 
     return false;

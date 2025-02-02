@@ -34,7 +34,7 @@ class _MediaTimelineState extends ConsumerState<MediaTimeline> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(homeTimelineProvider.notifier).loadInitial();
+      ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
     });
   }
 
@@ -68,7 +68,7 @@ class _MediaTimelineState extends ConsumerState<MediaTimeline> {
       child: LoadMoreHandler(
         controller: _controller!,
         listen: timelineState.canLoadMore,
-        onLoadMore: timelineNotifier.loadOlder,
+        onLoadMore: timelineNotifier.load,
         child: CustomScrollView(
           key: const PageStorageKey('media_timeline'),
           controller: _controller,

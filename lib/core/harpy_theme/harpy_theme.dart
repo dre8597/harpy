@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -142,6 +143,13 @@ class HarpyTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+        ),
+        // Add the icon theme with proper builders
+        RbyIconDataTheme(
+          drawer: (context) => Icon(CupertinoIcons.bars, color: colors.onSurface),
+          close: (context) => Icon(CupertinoIcons.xmark, color: colors.onSurface),
+          back: (context) => Icon(CupertinoIcons.back, color: colors.onSurface),
+          expand: (context) => Icon(CupertinoIcons.chevron_down, color: colors.onSurface),
         ),
       },
     );

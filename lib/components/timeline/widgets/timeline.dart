@@ -179,7 +179,7 @@ class _TimelineState extends ConsumerState<Timeline> {
             orElse: () => LoadMoreHandler(
               controller: _controller!,
               listen: state.canLoadMore,
-              onLoadMore: notifier.loadOlder,
+              onLoadMore: notifier.load,
               child: TweetList(
                 state.tweets.toList(),
                 key: widget.listKey,

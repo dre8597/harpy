@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final userTimelineProvider = StateNotifierProvider.autoDispose
-    .family<UserTimelineNotifier, TimelineState, String>(
+final userTimelineProvider =
+    StateNotifierProvider.autoDispose.family<UserTimelineNotifier, TimelineState, String>(
   (ref, userId) {
     ref.cacheFor(const Duration(minutes: 5));
 
@@ -23,7 +22,7 @@ class UserTimelineNotifier extends TimelineNotifier {
     required super.ref,
     required String userId,
   }) : _userId = userId {
-    loadInitial();
+    load();
   }
 
   final String _userId;
@@ -37,15 +36,16 @@ class UserTimelineNotifier extends TimelineNotifier {
   }
 
   @override
-  Future<List<BlueskyPostData>> request({
-    String? cursor,
-  }) async {
+  Future<TimelineResponse> request({String? cursor}) async {
     final feed = await blueskyApi.feed.getAuthorFeed(
       actor: _userId,
       cursor: cursor,
       limit: 50,
     );
 
-    return feed.data.feed.map(BlueskyPostData.fromFeedView).toList();
+    return TimelineResponse(
+      feed.data.feed.map(BlueskyPostData.fromFeedView).toList(),
+      feed.data.cursor,
+    );
   }
 }

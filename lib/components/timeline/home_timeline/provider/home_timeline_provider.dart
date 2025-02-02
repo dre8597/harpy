@@ -1,13 +1,12 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/timeline/provider/timeline_provider.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final homeTimelineProvider =
-    StateNotifierProvider.autoDispose<HomeTimelineNotifier, TimelineState>(
+final homeTimelineProvider = StateNotifierProvider.autoDispose<HomeTimelineNotifier, TimelineState>(
   (ref) {
     ref.cacheFor(const Duration(minutes: 15));
 
@@ -33,14 +32,18 @@ class HomeTimelineNotifier extends TimelineNotifier {
   }
 
   @override
-  Future<List<BlueskyPostData>> request({String? cursor}) async {
+  Future<TimelineResponse> request({String? cursor}) async {
     print('requesting home timeline ${blueskyApi.session?.status}');
+
     final feed = await blueskyApi.feed.getTimeline(
       cursor: cursor,
-      limit: 50
+      limit: 50,
     );
 
-    return feed.data.feed.map(BlueskyPostData.fromFeedView).toList();
+    return TimelineResponse(
+      feed.data.feed.map(BlueskyPostData.fromFeedView).toList(),
+      feed.data.cursor,
+    );
   }
 
   @override
@@ -51,9 +54,7 @@ class HomeTimelineNotifier extends TimelineNotifier {
   bool get restoreRefreshPosition =>
       ref.read(generalPreferencesProvider).homeTimelineRefreshBehavior;
 
-  @override
-  int get restoredTweetId =>
-      ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
+  int get restoredTweetId => ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
 
   void addTweet(BlueskyPostData post) {
     final currentState = state;

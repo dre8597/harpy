@@ -41,11 +41,11 @@ extension TweetCardElementExtension on TweetCardElement {
         case TweetCardElement.text:
           return tweet.text.isNotEmpty;
         case TweetCardElement.quote:
-          return tweet.text.isNotEmpty; //TODO: Verify
+          return tweet.quoteOf != null;
         case TweetCardElement.media:
-          return tweet.media?.isNotEmpty ?? true;
+          return tweet.media?.isNotEmpty ?? false;
         case TweetCardElement.linkPreview:
-          return tweet.uri.href.isNotEmpty;
+          return tweet.externalUrls?.isNotEmpty ?? false;
         case TweetCardElement.topRow:
         case TweetCardElement.translation:
         case TweetCardElement.pinned:

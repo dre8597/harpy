@@ -14,6 +14,14 @@ import 'package:rby/rby.dart';
 
 part 'timeline_provider.freezed.dart';
 
+/// Response from a timeline request containing the posts and cursor for pagination.
+class TimelineResponse {
+  TimelineResponse(this.posts, this.cursor);
+
+  final List<BlueskyPostData> posts;
+  final String? cursor;
+}
+
 /// Implements common functionality for notifiers that handle timelines.
 ///
 /// Implementations can use the generic type to build their own custom data
@@ -33,12 +41,27 @@ abstract class TimelineNotifier<T extends Object>
   TimelineNotifier({
     required this.ref,
   }) : super(const TimelineState.initial()) {
+    _initialize();
+  }
+
+  @protected
+  final Ref ref;
+
+  @protected
+  late final bsky.Bluesky blueskyApi;
+
+  TimelineFilter? filter;
+
+  void _initialize() {
+    if (!mounted) return;
+
     blueskyApi = ref.watch(blueskyApiProvider);
     filter = currentFilter();
 
     ref.listen(
       timelineFilterProvider,
       (_, __) {
+        if (!mounted) return;
         final newFilter = currentFilter();
 
         if (filter != newFilter) {
@@ -51,93 +74,146 @@ abstract class TimelineNotifier<T extends Object>
   }
 
   @protected
-  final Ref ref;
-
-  @protected
-  late final bsky.Bluesky blueskyApi;
-
-  /// The current filter for the timeline.
-  TimelineFilter? filter;
-
-  /// Returns the current filter for this timeline.
   TimelineFilter? currentFilter();
 
-  /// Makes a request to get the posts for this timeline.
-  /// [cursor] is used for pagination in Bluesky's API.
-  Future<List<BlueskyPostData>> request({String? cursor});
+  @protected
+  Future<TimelineResponse> request({String? cursor});
 
-  /// Loads the initial posts for this timeline.
-  Future<void> loadInitial() => load(clearPrevious: true);
-
-  /// Loads more posts for this timeline.
-  ///
-  /// When [clearPrevious] is `true`, the previous posts are removed and the
-  /// timeline starts fresh.
   Future<void> load({bool clearPrevious = false}) async {
+    if (!mounted) return;
+
     if (clearPrevious) {
-      state = TimelineState.loading();
+      state = const TimelineState.loading();
     } else {
       state = state.copyWith(loadingMore: true);
     }
 
-    try {
-      final cursor = clearPrevious ? null : state.tweets.lastOrNull?.id;
-      final posts = await request(cursor: cursor);
+    if (!lock()) {
+      try {
+        final cursor = clearPrevious ? null : state.cursor;
+        final response = await request(cursor: cursor);
 
-      if (posts.isEmpty) {
-        if (clearPrevious) {
-          state = TimelineState.noData();
+        if (!mounted) return;
+
+        if (response.posts.isEmpty) {
+          if (clearPrevious) {
+            state = const TimelineState.noData();
+          } else {
+            state = state.copyWith(loadingMore: false);
+          }
         } else {
-          state = state.copyWith(loadingMore: false);
+          if (clearPrevious) {
+            state = TimelineState.data(
+              tweets: BuiltList.of(response.posts),
+              cursor: response.cursor,
+              customData: buildCustomData(BuiltList.of(response.posts)),
+            );
+          } else {
+            // Deduplicate posts based on both id and uri to ensure uniqueness
+            final existingPosts = state.tweets.toSet();
+            final newPosts = response.posts.where(
+              (post) => !existingPosts.any(
+                (existing) =>
+                    existing.id == post.id || existing.uri == post.uri,
+              ),
+            );
+
+            final allTweets = [...state.tweets, ...newPosts];
+            state = state.copyWith(
+              tweets: BuiltList.of(allTweets),
+              cursor: response.cursor,
+              loadingMore: false,
+            );
+          }
         }
-      } else {
-        if (clearPrevious) {
-          state = TimelineState.data(
-            tweets: BuiltList.of(posts),
-            cursor: posts.lastOrNull?.id,
-            customData: buildCustomData(BuiltList.of(posts)),
-          );
-        } else {
-          final allTweets = [...state.tweets, ...posts];
-          state = state.copyWith(
-            tweets: BuiltList.of(allTweets),
-            cursor: posts.lastOrNull?.id,
-            loadingMore: false,
-          );
-        }
+      } catch (error, stackTrace) {
+        if (!mounted) return;
+        log.severe('error loading timeline', error, stackTrace);
+        state = const TimelineState.error();
       }
-    } catch (e, st) {
-      log.severe('error loading timeline', e, st);
-      state = TimelineState.error();
     }
   }
 
-  /// Loads older posts for this timeline.
-  Future<void> loadOlder() => load();
+  Future<void> loadMore() async {
+    if (!mounted) return;
+
+    final currentState = state;
+    if (!currentState.canLoadMore) return;
+
+    final cursor = currentState.cursor;
+    if (cursor == null) return;
+
+    if (!lock()) {
+      try {
+        state = TimelineState.loadingMore(
+          data: currentState as TimelineStateData<T>,
+        );
+
+        final response = await request(cursor: cursor);
+
+        if (!mounted) return;
+
+        if (response.posts.isEmpty) {
+          state = currentState.copyWith(loadingMore: false);
+        } else {
+          // Deduplicate posts based on both id and uri to ensure uniqueness
+          final existingPosts = currentState.tweets.toSet();
+          final newPosts = response.posts.where(
+            (post) => !existingPosts.any(
+              (existing) => existing.id == post.id || existing.uri == post.uri,
+            ),
+          );
+
+          state = TimelineState.data(
+            tweets: currentState.tweets.rebuild((b) => b.addAll(newPosts)),
+            cursor: response.cursor,
+            customData: buildCustomData(
+                currentState.tweets.rebuild((b) => b.addAll(newPosts))),
+          );
+        }
+      } catch (error, stackTrace) {
+        if (!mounted) return;
+        log.severe('error loading more tweets', error, stackTrace);
+        state = TimelineState.data(
+          tweets: currentState.tweets,
+          cursor: cursor,
+        );
+      }
+    }
+  }
 
   /// Refreshes the timeline by loading new posts since the newest post in the
   /// timeline.
   Future<void> refresh() async {
     if (state.tweets.isEmpty) {
-      return loadInitial();
+      return load();
     }
 
     state = state.copyWith(refreshing: true);
 
     try {
-      final posts = await request();
+      final response = await request();
 
-      if (posts.isNotEmpty) {
+      if (response.posts.isNotEmpty) {
+        // Deduplicate posts based on both id and uri to ensure uniqueness
+        final existingPosts = state.tweets.toSet();
+        final newPosts = response.posts.where(
+          (post) => !existingPosts.any(
+            (existing) => existing.id == post.id || existing.uri == post.uri,
+          ),
+        );
+
         state = TimelineState.data(
-          tweets: BuiltList.of(posts),
-          cursor: posts.lastOrNull?.id,
-          customData: buildCustomData(BuiltList.of(posts)),
+          tweets: BuiltList.of([...newPosts, ...state.tweets]),
+          cursor: response.cursor,
+          customData:
+              buildCustomData(BuiltList.of([...newPosts, ...state.tweets])),
         );
       } else {
         state = state.copyWith(refreshing: false);
       }
-    } catch (e, st) {
-      log.severe('error refreshing timeline', e, st);
+    } catch (error, stackTrace) {
+      log.severe('error refreshing timeline', error, stackTrace);
       state = state.copyWith(refreshing: false);
     }
   }
@@ -153,85 +229,6 @@ abstract class TimelineNotifier<T extends Object>
 
   @protected
   T? buildCustomData(BuiltList<BlueskyPostData> posts) => null;
-
-  Future<void> loadAndRestore(String postId) async {
-    final posts = await _loadPostsSince(postId);
-
-    if (posts.isNotEmpty) {
-      log.fine('found ${posts.length} posts');
-
-      final cursor = posts.lastOrNull?.id;
-
-      BlueskyPostData? restoredPost;
-      int? restoredPostIndex;
-
-      for (var i = 0; i < posts.length; i++) {
-        final id = posts[i].rootPostId;
-        if (id == null) continue;
-
-        if (id == postId) {
-          restoredPost = posts[i];
-          restoredPostIndex = i;
-          break;
-        }
-      }
-
-      if (restoredPostIndex != null && restoredPostIndex > 1) {
-        final data = TimelineStateData(
-          tweets: BuiltList.of(posts.sublist(0, restoredPostIndex)),
-          cursor: cursor,
-          initialResultsCount: restoredPostIndex,
-          initialResultsLastId: restoredPost!.rootPostId ?? '',
-          isInitialResult: true,
-          customData: buildCustomData(BuiltList.of(posts)),
-        );
-
-        state = TimelineState.loadingMore(data: data);
-        await Future<void>.delayed(const Duration(milliseconds: 1000));
-
-        state = data.copyWith(
-          tweets: BuiltList.of(
-            data.tweets.followedBy(posts.sublist(restoredPostIndex)),
-          ),
-          cursor: cursor,
-          isInitialResult: false,
-        );
-      } else {
-        state = TimelineState.data(
-          tweets: BuiltList.of(posts),
-          cursor: cursor,
-          customData: buildCustomData(BuiltList.of(posts)),
-        );
-      }
-    } else {
-      state = const TimelineState.error();
-    }
-  }
-
-  Future<List<BlueskyPostData>> _loadPostsSince(String postId) async {
-    final timelinePosts = <BlueskyPostData>[];
-    String? cursor;
-
-    for (var i = 0; i < 3; i++) {
-      try {
-        final morePosts = await request(cursor: cursor);
-        if (morePosts.isEmpty) break;
-
-        if (morePosts.isNotEmpty) {
-          cursor = morePosts.last.id;
-        }
-
-        timelinePosts.addAll(morePosts);
-
-        if (morePosts.any((post) => post.rootPostId == postId)) break;
-      } catch (e, st) {
-        log.severe('error loading posts', e, st);
-        break;
-      }
-    }
-
-    return timelinePosts;
-  }
 }
 
 @freezed
@@ -280,6 +277,26 @@ extension TimelineStateExtension<T extends Object> on TimelineState<T> {
         noData: () => false,
         loadingMore: (data) => data.cursor != null,
         error: () => false,
+      );
+
+  String? get cursor => when<String?>(
+        initial: () => null,
+        loading: () => null,
+        data: (
+          tweets,
+          cursor,
+          initialResultsLastId,
+          initialResultsCount,
+          isInitialResult,
+          refreshing,
+          loadingMore,
+          clearPrevious,
+          customData,
+        ) =>
+            cursor,
+        noData: () => null,
+        loadingMore: (data) => (data as TimelineStateData<T>).cursor,
+        error: () => null,
       );
 
   BuiltList<BlueskyPostData> get tweets => when<BuiltList<BlueskyPostData>>(

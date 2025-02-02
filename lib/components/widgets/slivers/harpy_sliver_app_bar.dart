@@ -173,7 +173,7 @@ Widget? _leading(
     child = leading;
   } else if (Scaffold.of(context).hasDrawer) {
     child = RbyButton.transparent(
-      icon: theme.iconData.drawer(context),
+      icon: Icon(Icons.menu),
       onTap: Scaffold.of(context).openDrawer,
     );
   } else if (route is PageRoute<dynamic> && route.fullscreenDialog) {
@@ -183,7 +183,7 @@ Widget? _leading(
     );
   } else if (Navigator.of(context).canPop()) {
     child = RbyButton.transparent(
-      icon: theme.iconData.back(context),
+      icon: const Icon(Icons.arrow_back),
       onTap: Navigator.of(context).pop,
     );
   }

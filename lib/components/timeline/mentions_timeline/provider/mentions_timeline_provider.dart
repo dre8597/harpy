@@ -2,13 +2,12 @@ import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final mentionsTimelineProvider = StateNotifierProvider.autoDispose<
-    MentionsTimelineNotifier, TimelineState<bool>>(
+final mentionsTimelineProvider =
+    StateNotifierProvider.autoDispose<MentionsTimelineNotifier, TimelineState<bool>>(
   (ref) {
     ref.cacheFor(const Duration(minutes: 15));
 
@@ -31,16 +30,15 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
   TimelineFilter? currentFilter() => null;
 
   @override
-  Future<List<BlueskyPostData>> request({String? cursor}) async {
+  Future<TimelineResponse> request({String? cursor}) async {
     final feed = await blueskyApi.notification.listNotifications(
       cursor: cursor,
       limit: 50,
     );
 
-    return feed.data.notifications
+    final posts = feed.data.notifications
         .where(
-          (notification) =>
-              notification.reason == bsky.NotificationReason.mention,
+          (notification) => notification.reason == bsky.NotificationReason.mention,
         )
         .map(
           (notification) => BlueskyPostData(
@@ -51,11 +49,12 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
             handle: notification.author.handle,
             createdAt: notification.indexedAt,
             authorDid: notification.author.did,
-            authorAvatar:
-                notification.author.avatar ?? '', // TODO: Add null check
+            authorAvatar: notification.author.avatar ?? '',
           ),
         )
         .toList();
+
+    return TimelineResponse(posts, feed.data.cursor);
   }
 
   @override
@@ -63,8 +62,7 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
     if (posts.isEmpty) return false;
 
     final newId = int.tryParse(posts.first.id) ?? 0;
-    final lastId =
-        ref.read(tweetVisibilityPreferencesProvider).lastViewedMention;
+    final lastId = ref.read(tweetVisibilityPreferencesProvider).lastViewedMention;
 
     return lastId < newId;
   }
@@ -74,8 +72,7 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
 
     final currentState = state;
 
-    if (currentState is TimelineStateData<bool> &&
-        currentState.tweets.isNotEmpty) {
+    if (currentState is TimelineStateData<bool> && currentState.tweets.isNotEmpty) {
       final id = int.tryParse(currentState.tweets.first.id) ?? 0;
       ref.read(tweetVisibilityPreferencesProvider).lastViewedMention = id;
       state = currentState.copyWith(customData: false);

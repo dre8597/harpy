@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final likesTimelineProvider = StateNotifierProvider.autoDispose
-    .family<LikesTimelineNotifier, TimelineState, String>(
+final likesTimelineProvider =
+    StateNotifierProvider.autoDispose.family<LikesTimelineNotifier, TimelineState, String>(
   (ref, userId) {
     ref.cacheFor(const Duration(minutes: 15));
 
@@ -23,7 +22,7 @@ class LikesTimelineNotifier extends TimelineNotifier {
     required super.ref,
     required String userId,
   }) : _userId = userId {
-    loadInitial();
+    load();
   }
 
   final String _userId;
@@ -34,15 +33,16 @@ class LikesTimelineNotifier extends TimelineNotifier {
   TimelineFilter? currentFilter() => null;
 
   @override
-  Future<List<BlueskyPostData>> request({
-    String? cursor,
-  }) async {
+  Future<TimelineResponse> request({String? cursor}) async {
     final feed = await blueskyApi.feed.getActorLikes(
       actor: _userId,
       cursor: cursor,
       limit: 50,
     );
 
-    return feed.data.feed.map(BlueskyPostData.fromFeedView).toList();
+    return TimelineResponse(
+      feed.data.feed.map(BlueskyPostData.fromFeedView).toList(),
+      feed.data.cursor,
+    );
   }
 }
