@@ -21,8 +21,7 @@ class Timeline extends ConsumerStatefulWidget {
     this.onUpdatedTweetVisibility,
   });
 
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
-      provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
   final Key? listKey;
   final TweetBuilder tweetBuilder;
   final List<Widget> beginSlivers;
@@ -42,26 +41,41 @@ class Timeline extends ConsumerStatefulWidget {
 
 class _TimelineState extends ConsumerState<Timeline> {
   ScrollController? _controller;
-  bool _disposeController = false;
+  bool _ownsController = false;
 
   /// The index of the newest visible tweet.
   int _newestVisibleIndex = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    _initializeController();
+  }
 
-    if (_controller == null) {
-      _controller = PrimaryScrollController.of(context);
-      _disposeController = true;
-    }
+  void _initializeController() {
+    // Create our own controller
+    _controller = ScrollController();
+    _ownsController = true;
   }
 
   @override
   void dispose() {
-    if (_disposeController) _controller?.dispose();
-
+    if (_ownsController) {
+      _controller?.dispose();
+    }
+    _controller = null;
     super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    // Remove listeners but don't dispose when widget is temporarily removed from tree
+    _controller?.removeListener(_scrollListener);
+    super.deactivate();
+  }
+
+  void _scrollListener() {
+    // Add any scroll listening logic here if needed
   }
 
   void _onLayoutFinished({
@@ -170,8 +184,7 @@ class _TimelineState extends ConsumerState<Timeline> {
                 ...widget.beginSlivers,
                 SliverFillLoadingError(
                   message: const Text('no tweets found'),
-                  onChangeFilter:
-                      notifier.filter != null ? widget.onChangeFilter : null,
+                  onChangeFilter: notifier.filter != null ? widget.onChangeFilter : null,
                 ),
                 ...widget.endSlivers,
               ],

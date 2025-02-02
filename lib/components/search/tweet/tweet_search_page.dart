@@ -24,9 +24,7 @@ class _TweetSearchPageState extends ConsumerState<TweetSearchPage> {
 
     if (widget.initialQuery != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(tweetSearchProvider.notifier)
-            .search(customQuery: widget.initialQuery);
+        ref.read(tweetSearchProvider.notifier).search(customQuery: widget.initialQuery);
       });
     }
   }

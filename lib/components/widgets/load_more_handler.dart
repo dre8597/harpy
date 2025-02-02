@@ -73,7 +73,7 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
 
     if (position.extentAfter <=
         (widget.extentTrigger ?? position.viewportDimension / 2)) {
-      _loadMore();
+      // _loadMore();
     }
   }
 

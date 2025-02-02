@@ -14,8 +14,7 @@ class MediaTimeline extends ConsumerStatefulWidget {
     this.endSlivers = const [SliverBottomPadding()],
   });
 
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
-      provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
 
   final double? scrollToTopOffset;
   final List<Widget> beginSlivers;
@@ -27,31 +26,29 @@ class MediaTimeline extends ConsumerStatefulWidget {
 
 class _MediaTimelineState extends ConsumerState<MediaTimeline> {
   ScrollController? _controller;
-  bool _disposeController = false;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (_controller == null) {
-      _controller = PrimaryScrollController.of(context);
-      _disposeController = true;
-    }
+  void _initializeController() {
+    _controller = ScrollController();
+    _ownsController = true;
   }
 
   @override
   void dispose() {
-    if (_disposeController) _controller?.dispose();
-
+    if (_ownsController) {
+      _controller?.dispose();
+    }
+    _controller = null;
     super.dispose();
   }
 
