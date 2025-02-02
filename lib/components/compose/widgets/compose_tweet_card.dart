@@ -102,14 +102,15 @@ class _TopRow extends ConsumerWidget {
 
     return TweetCardTopRow(
       tweet: BlueskyPostData(
-        authorAvatar: authentication.user?.profileImage?.original?.path ?? '',
-        authorDid: authentication.user?.id ?? '',
+        authorAvatar:
+            authentication.user?.profileImage?.original?.toString() ?? '',
+        authorDid: authentication.user?.handle ?? '',
         createdAt: DateTime.now(),
         id: '',
         uri: const AtUri(''),
         text: '',
         author: authentication.user!.id,
-        handle: '',
+        handle: authentication.user?.handle ?? '',
       ),
       delegates: const TweetDelegates(),
       innerPadding: theme.spacing.small,

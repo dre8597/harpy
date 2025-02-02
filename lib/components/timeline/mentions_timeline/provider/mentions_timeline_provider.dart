@@ -45,7 +45,7 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
             id: notification.cid,
             uri: notification.uri,
             text: notification.reason.value,
-            author: notification.author.handle,
+            author: notification.author.displayName ?? '',
             handle: notification.author.handle,
             createdAt: notification.indexedAt,
             authorDid: notification.author.did,

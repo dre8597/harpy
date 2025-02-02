@@ -63,7 +63,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
                 id: post.cid,
                 uri: post.uri,
                 text: post.record.text,
-                author: post.author.handle,
+                author: post.author.displayName ?? '',
                 handle: post.author.handle,
                 createdAt: post.indexedAt,
                 likeCount: post.likeCount,
