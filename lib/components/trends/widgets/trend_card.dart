@@ -16,14 +16,18 @@ class TrendCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final numberFormat = intl.NumberFormat.compact(locale: locale);
-
+    final textColor = Theme.of(context).colorScheme.onSurface;
     return RbyListCard(
       leading: const Icon(FeatherIcons.trendingUp, size: 18),
       title: Text(
         trend.name,
         textDirection: TextDirection.ltr,
+        style: TextStyle(color: textColor),
       ),
-      subtitle: Text('${numberFormat.format(trend.postCount)} tweets'),
+      subtitle: Text(
+        '${numberFormat.format(trend.postCount)} tweets',
+        style: TextStyle(color: textColor),
+      ),
       onTap: () => context.pushNamed(
         TweetSearchPage.name,
         queryParameters: {'query': trend.name},
