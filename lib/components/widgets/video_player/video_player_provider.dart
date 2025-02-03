@@ -54,32 +54,32 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   final Ref _ref;
 
   late String _quality;
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _isPreloaded = false;
 
-  VideoPlayerController get controller => _controller;
+  VideoPlayerController get controller => _controller!;
 
   void _controllerListener() {
-    if (!mounted) return;
+    if (!mounted || _controller == null) return;
 
-    WakelockPlus.toggle(enable: _controller.value.isPlaying);
+    WakelockPlus.toggle(enable: _controller!.value.isPlaying);
 
-    if (!_controller.value.isInitialized) {
+    if (!_controller!.value.isInitialized) {
       state = const VideoPlayerState.uninitialized();
-    } else if (_controller.value.hasError) {
-      state = VideoPlayerState.error(_controller.value.errorDescription!);
+    } else if (_controller!.value.hasError) {
+      state = VideoPlayerState.error(_controller!.value.errorDescription!);
     } else {
       state = VideoPlayerState.data(
         quality: _quality,
         qualities: _urls,
-        isBuffering: _controller.value.isBuffering,
-        isPlaying: _controller.value.isPlaying,
-        isMuted: _controller.value.volume == 0,
-        isFinished: _controller.value.duration != Duration.zero &&
-            _controller.value.position >=
-                _controller.value.duration - const Duration(milliseconds: 800),
-        position: _controller.value.position,
-        duration: _controller.value.duration,
+        isBuffering: _controller!.value.isBuffering,
+        isPlaying: _controller!.value.isPlaying,
+        isMuted: _controller!.value.volume == 0,
+        isFinished: _controller!.value.duration != Duration.zero &&
+            _controller!.value.position >=
+                _controller!.value.duration - const Duration(milliseconds: 800),
+        position: _controller!.value.position,
+        duration: _controller!.value.duration,
         isPreloaded: _isPreloaded,
       );
     }
@@ -132,13 +132,15 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
             videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
           );
         }
-
-        await _controller.initialize();
-        _controller.addListener(_controllerListener);
+        if(_controller == null) {
+          throw Exception('Failed to resolve video URL');
+        }
+        await _controller!.initialize();
+        _controller!.addListener(_controllerListener);
 
         final startMuted = _ref.read(mediaPreferencesProvider).startVideoPlaybackMuted;
-        await _controller.setVolume(startMuted ? 0.0 : 1.0);
-        await _controller.setLooping(_loop);
+        await _controller!.setVolume(startMuted ? 0.0 : 1.0);
+        await _controller!.setLooping(_loop);
 
         _isPreloaded = true;
         _controllerListener();
@@ -166,51 +168,51 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   }
 
   Future<void> togglePlayback() async {
-    if (!mounted) return;
-    return _controller.value.isPlaying ? _controller.pause() : _controller.play();
+    if (!mounted || _controller == null) return;
+    return _controller!.value.isPlaying ? _controller!.pause() : _controller!.play();
   }
 
   Future<void> pause() async {
-    if (!mounted) return;
-    return _controller.pause();
+    if (!mounted || _controller == null) return;
+    return _controller!.pause();
   }
 
   Future<void> toggleMute() async {
-    if (!mounted) return;
-    return _controller.value.volume == 0 ? _controller.setVolume(1) : _controller.setVolume(0);
+    if (!mounted || _controller == null) return;
+    return _controller!.value.volume == 0 ? _controller!.setVolume(1) : _controller!.setVolume(0);
   }
 
   Future<void> forward() async {
-    if (!mounted) return;
-    final position = await _controller.position;
+    if (!mounted || _controller == null) return;
+    final position = await _controller!.position;
 
     if (position != null) {
-      return _controller.seekTo(position + const Duration(seconds: 5));
+      return _controller!.seekTo(position + const Duration(seconds: 5));
     }
   }
 
   Future<void> rewind() async {
-    if (!mounted) return;
-    final position = await _controller.position;
+    if (!mounted || _controller == null) return;
+    final position = await _controller!.position;
 
-    if (position != null) {
-      return _controller.seekTo(position - const Duration(seconds: 5));
+    if (position != null ) {
+      return _controller!.seekTo(position - const Duration(seconds: 5));
     }
   }
 
   Future<void> changeQuality(String quality) async {
-    if (mounted || _quality == quality) return;
+    if (mounted || _quality == quality || _controller == null) return;
 
     final url = _urls[quality];
 
     if (url != null) {
-      final position = await _controller.position;
-      final volume = _controller.value.volume;
-      final isPlaying = _controller.value.isPlaying;
-      final isLooping = _controller.value.isLooping;
+      final position = await _controller!.position;
+      final volume = _controller!.value.volume;
+      final isPlaying = _controller!.value.isPlaying;
+      final isLooping = _controller!.value.isLooping;
 
       final oldController = _controller;
-      oldController.removeListener(_controllerListener);
+      oldController!.removeListener(_controllerListener);
 
       try {
         final controller = VideoPlayerController.networkUrl(Uri.dataFromString(url));
@@ -261,7 +263,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   @override
   void dispose() {
     WakelockPlus.disable();
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 }

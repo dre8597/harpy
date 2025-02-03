@@ -104,7 +104,7 @@ class _TimelineState extends ConsumerState<Timeline> {
   }
 
   Widget _tweetBuilder(TimelineState state, BlueskyPostData tweet, int index) {
-    return state.showNewTweetsExist(tweet.rootPostId)
+    return state.showNewTweetsExist(tweet.rootPostId ?? tweet.id)
         ? Column(
             mainAxisSize: MainAxisSize.min,
             children: [
