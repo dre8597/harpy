@@ -42,18 +42,15 @@ BuiltList<BlueskyPostData> _isolateHandlePosts(List<dynamic> arguments) {
   for (final post in postDataList) {
     if (post.parentPostId != null && postsById.containsKey(post.parentPostId)) {
       final parent = postsById[post.parentPostId!]!;
-      // Create or update the parent's replies list, maintaining chronological order
-      final updatedReplies = [...?parent.replies, post]
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      // Add new replies at the beginning to maintain chronological order
+      final updatedReplies = [post, ...?parent.replies];
       postsById[post.parentPostId!] = parent.copyWith(replies: updatedReplies);
     } else {
       rootPosts.add(post);
     }
   }
 
-  // Sort root posts by their own creation date, not by their replies
-  rootPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
+  // Return root posts in their original order without sorting
   return BuiltList.of(rootPosts);
 }
 
@@ -102,9 +99,7 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
   final postTags = post.record.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
           .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag)
-                    as bsky.FacetTag)
-                .tag,
+            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag) as bsky.FacetTag).tag,
           )
           .toList() ??
       [];
@@ -112,8 +107,7 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
   final postMentions = post.record.facets
           ?.where((f) => f.features.any((feat) => feat is bsky.FacetMention))
           .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention)
-                    as bsky.FacetMention)
+            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention) as bsky.FacetMention)
                 .did,
           )
           .toList() ??
@@ -123,17 +117,13 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
 
   // Filter included hashtags
   if (filter.includes.hashtags.isNotEmpty &&
-      filter.includes.hashtags
-          .map(_prepareHashtag)
-          .every(postTags.containsNot)) {
+      filter.includes.hashtags.map(_prepareHashtag).every(postTags.containsNot)) {
     return true;
   }
 
   // Filter included mentions
   if (filter.includes.mentions.isNotEmpty &&
-      filter.includes.mentions
-          .map(_prepareMention)
-          .every(postMentions.containsNot)) {
+      filter.includes.mentions.map(_prepareMention).every(postMentions.containsNot)) {
     return true;
   }
 
@@ -153,17 +143,13 @@ bool _filterPost(bsky.Post post, TimelineFilter? filter) {
 
   // Filter excluded mentions
   if (filter.excludes.mentions.isNotEmpty &&
-      filter.excludes.mentions
-          .map(_prepareMention)
-          .any(postMentions.contains)) {
+      filter.excludes.mentions.map(_prepareMention).any(postMentions.contains)) {
     return true;
   }
 
   // Filter excluded phrases
   if (filter.excludes.phrases.isNotEmpty &&
-      filter.excludes.phrases
-          .map((phrase) => phrase.toLowerCase())
-          .any(postText.contains)) {
+      filter.excludes.phrases.map((phrase) => phrase.toLowerCase()).any(postText.contains)) {
     return true;
   }
 

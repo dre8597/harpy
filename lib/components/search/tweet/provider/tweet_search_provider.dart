@@ -18,8 +18,7 @@ final tweetSearchProvider =
   name: 'TweetSearchProvider',
 );
 
-class TweetSearchNotifier extends StateNotifier<TweetSearchState>
-    with LoggerMixin {
+class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMixin {
   TweetSearchNotifier({
     required Ref ref,
   })  : _ref = ref,
@@ -55,12 +54,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
               .toList(),
           external: (_) => null,
           video: (video) => [
-            BlueskyMediaData(
-              url: video.data.playlist,
-              alt: video.data.alt ?? '',
-              type: MediaType.video,
-              thumb: video.data.thumbnail,
-            ),
+            BlueskyMediaData.fromUEmbedViewMediaVideo(video),
           ],
           unknown: (_) => null,
         );

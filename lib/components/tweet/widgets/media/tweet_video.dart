@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:built_collection/built_collection.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,6 +38,7 @@ class TweetVideo extends ConsumerWidget {
     this.placeholderBuilder,
     this.onVideoLongPress,
     this.compact = false,
+    this.mediaData,
   });
 
   final BlueskyPostData tweet;
@@ -45,6 +47,7 @@ class TweetVideo extends ConsumerWidget {
   final HeroPlaceholderBuilder? placeholderBuilder;
   final bool compact;
   final VoidCallback? onVideoLongPress;
+  final VideoMediaData? mediaData;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,12 +55,18 @@ class TweetVideo extends ConsumerWidget {
     final mediaPreferences = ref.watch(mediaPreferencesProvider);
     final connectivity = ref.watch(connectivityProvider);
 
-    final mediaData = tweet.media?.single as VideoMediaData?;
-    if (mediaData == null) {
+    final videoData = mediaData ??
+        tweet.media
+            ?.firstWhereOrNull(
+              (m) => m.type == MediaType.video,
+            )
+            ?.toVideoMediaData();
+
+    if (videoData == null) {
       return const SizedBox();
     }
-    final arguments = _videoArguments(mediaData);
 
+    final arguments = _videoArguments(videoData);
     final provider = videoPlayerProvider(arguments);
     final state = ref.watch(provider);
     final notifier = ref.watch(provider.notifier);
@@ -86,7 +95,7 @@ class TweetVideo extends ConsumerWidget {
             toHeroContext,
           ),
           child: AspectRatio(
-            aspectRatio: mediaData.aspectRatioDouble,
+            aspectRatio: videoData.aspectRatioDouble,
             child: state.maybeMap(
               data: (data) => overlayBuilder(
                 data,
@@ -94,22 +103,22 @@ class TweetVideo extends ConsumerWidget {
                 OverflowBox(
                   maxHeight: double.infinity,
                   child: AspectRatio(
-                    aspectRatio: mediaData.aspectRatioDouble,
+                    aspectRatio: videoData.aspectRatioDouble,
                     child: VideoPlayer(notifier.controller),
                   ),
                 ),
               ),
               loading: (_) => MediaThumbnail(
-                thumbnail: mediaData.thumbnail,
-                duration: mediaData.duration,
+                thumbnail: videoData.thumbnail,
+                duration: videoData.duration,
                 center: MediaThumbnailIcon(
                   icon: const CircularProgressIndicator(),
                   compact: compact,
                 ),
               ),
               orElse: () => MediaThumbnail(
-                thumbnail: mediaData.thumbnail,
-                duration: mediaData.duration,
+                thumbnail: videoData.thumbnail,
+                duration: videoData.duration,
                 center: MediaThumbnailIcon(
                   icon: const Icon(Icons.play_arrow_rounded),
                   compact: compact,
@@ -130,16 +139,19 @@ class TweetGalleryVideo extends ConsumerWidget {
     required this.tweet,
     required this.heroTag,
     this.onVideoLongPress,
+    this.mediaData,
   });
 
   final BlueskyPostData tweet;
   final Object heroTag;
   final VoidCallback? onVideoLongPress;
+  final VideoMediaData? mediaData;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return TweetVideo(
       tweet: tweet,
+      mediaData: mediaData,
       heroTag: heroTag,
       overlayBuilder: (data, notifier, child) => DynamicVideoPlayerOverlay(
         notifier: notifier,
@@ -154,9 +166,11 @@ class TweetGalleryVideo extends ConsumerWidget {
 class TweetFullscreenVideo extends ConsumerStatefulWidget {
   const TweetFullscreenVideo({
     required this.tweet,
+    this.mediaData,
   });
 
   final BlueskyPostData tweet;
+  final VideoMediaData? mediaData;
 
   @override
   ConsumerState<TweetFullscreenVideo> createState() => _FullscreenVideoState();
@@ -186,22 +200,26 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
   @override
   Widget build(BuildContext context) {
     final orientation = MediaQuery.of(context).orientation;
-    final mediaData = widget.tweet.media?.single as VideoMediaData?;
-    if (mediaData == null) {
+    final videoData = widget.mediaData ??
+        (widget.tweet.media?.firstWhere(
+          (m) => m.type == MediaType.video,
+        ) as VideoMediaData?);
+
+    if (videoData == null) {
       return const SizedBox();
     }
-    final arguments = _videoArguments(mediaData);
 
+    final arguments = _videoArguments(videoData);
     final state = ref.watch(videoPlayerProvider(arguments));
     final notifier = ref.watch(videoPlayerProvider(arguments).notifier);
 
-    final int quarterTurns;
-
-    if (mediaData.aspectRatioDouble > 1) {
-      quarterTurns = orientation == Orientation.portrait ? 1 : 0;
-    } else {
-      quarterTurns = orientation == Orientation.portrait ? 0 : 1;
-    }
+    final quarterTurns = videoData.aspectRatioDouble > 1
+        ? orientation == Orientation.portrait
+            ? 1
+            : 0
+        : orientation == Orientation.portrait
+            ? 0
+            : 1;
 
     return Stack(
       children: [
@@ -211,7 +229,7 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
           quarterTurns: quarterTurns,
           child: Center(
             child: AspectRatio(
-              aspectRatio: mediaData.aspectRatioDouble,
+              aspectRatio: videoData.aspectRatioDouble,
               child: state.maybeMap(
                 data: (data) => DynamicVideoPlayerOverlay(
                   notifier: notifier,
@@ -221,13 +239,13 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
                   child: VideoPlayer(notifier.controller),
                 ),
                 loading: (_) => MediaThumbnail(
-                  thumbnail: mediaData.thumbnail,
+                  thumbnail: videoData.thumbnail,
                   center: const MediaThumbnailIcon(
                     icon: CircularProgressIndicator(),
                   ),
                 ),
                 orElse: () => MediaThumbnail(
-                  thumbnail: mediaData.thumbnail,
+                  thumbnail: videoData.thumbnail,
                   center: const MediaThumbnailIcon(
                     icon: Icon(Icons.play_arrow_rounded),
                   ),

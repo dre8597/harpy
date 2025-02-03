@@ -6,7 +6,6 @@ import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
-import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/api/bluesky/handle_posts.dart';
 import 'package:harpy/components/components.dart';
@@ -48,7 +47,6 @@ abstract class TimelineNotifier<T extends Object>
   @protected
   final Ref ref;
 
-  @protected
   TimelineFilter? filter;
 
   void _initialize() {
@@ -111,7 +109,10 @@ abstract class TimelineNotifier<T extends Object>
         if (clearPrevious) {
           state = const TimelineState.noData();
         } else {
-          state = state.copyWith(loadingMore: false);
+          state = TimelineState.data(
+            tweets: state.tweets,
+            cursor: state.cursor,
+          );
         }
       } else {
         if (clearPrevious) {
@@ -121,8 +122,7 @@ abstract class TimelineNotifier<T extends Object>
             customData: buildCustomData(BuiltList.of(response.posts)),
           );
         } else {
-          // Deduplicate posts based on both id and uri to ensure uniqueness
-          final existingPosts = state.tweets.toSet();
+          final existingPosts = state.tweets;
           final newPosts = response.posts.where(
             (post) => !existingPosts.any(
               (existing) => existing.id == post.id || existing.uri == post.uri,
@@ -130,10 +130,11 @@ abstract class TimelineNotifier<T extends Object>
           );
 
           final allTweets = [...state.tweets, ...newPosts];
-          state = state.copyWith(
+
+          state = TimelineState.data(
             tweets: BuiltList.of(allTweets),
             cursor: response.cursor,
-            loadingMore: false,
+            customData: buildCustomData(BuiltList.of(allTweets)),
           );
         }
       }
@@ -164,10 +165,13 @@ abstract class TimelineNotifier<T extends Object>
         if (!mounted) return;
 
         if (response.posts.isEmpty) {
-          state = currentState.copyWith(loadingMore: false);
+          state = TimelineState.data(
+            tweets: currentState.tweets,
+            cursor: cursor,
+          );
         } else {
           // Enhanced deduplication using both id and uri
-          final existingPosts = currentState.tweets.toSet();
+          final existingPosts = currentState.tweets;
           final newPosts = response.posts
               .where(
                 (post) => !existingPosts.any(
@@ -177,14 +181,13 @@ abstract class TimelineNotifier<T extends Object>
               )
               .toList();
 
-          // Sort posts by creation date to maintain chronological order
-          final allTweets = [...currentState.tweets, ...newPosts]
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // Append new posts to the end without sorting
+          final allTweets = [...currentState.tweets, ...newPosts];
 
-          state = state.copyWith(
+          state = TimelineState.data(
             tweets: BuiltList.of(allTweets),
             cursor: response.cursor,
-            loadingMore: false,
+            customData: buildCustomData(BuiltList.of(allTweets)),
           );
         }
       } catch (error, stackTrace) {
@@ -212,7 +215,7 @@ abstract class TimelineNotifier<T extends Object>
 
       if (response.posts.isNotEmpty) {
         // Enhanced deduplication using both id and uri
-        final existingPosts = state.tweets.toSet();
+        final existingPosts = state.tweets;
         final newPosts = response.posts
             .where(
               (post) => !existingPosts.any(

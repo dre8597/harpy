@@ -6,8 +6,8 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final userTimelineProvider = StateNotifierProvider.autoDispose
-    .family<UserTimelineNotifier, TimelineState, String>(
+final userTimelineProvider =
+    StateNotifierProvider.autoDispose.family<UserTimelineNotifier, TimelineState, String>(
   (ref, userId) {
     ref.cacheFor(const Duration(minutes: 5));
 
@@ -40,21 +40,12 @@ class UserTimelineNotifier extends TimelineNotifier {
   @override
   Future<TimelineResponse> request({String? cursor}) async {
     final blueskyApi = ref.read(blueskyApiProvider);
-
     final feed = await blueskyApi.feed.getAuthorFeed(
       actor: _userId,
       cursor: cursor,
       limit: 100,
     );
-
-    final response = TimelineResponse(
-      feed.data.feed.map(BlueskyPostData.fromFeedView).toList(),
-      feed.data.cursor,
-    );
-    state = TimelineState.data(
-      tweets: BuiltList.of(response.posts),
-      cursor: response.posts.length < 100 ? null : cursor,
-    );
-    return response;
+    final posts = feed.data.feed.map(BlueskyPostData.fromFeedView).toList();
+    return TimelineResponse(posts, feed.data.cursor);
   }
 }

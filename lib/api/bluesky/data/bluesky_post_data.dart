@@ -1,7 +1,6 @@
-import 'package:bluesky/atproto.dart' as at;
 import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:bluesky/core.dart';
-import 'package:connectivity_plus_platform_interface/src/enums.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/bluesky/data/models.dart';
 import 'package:harpy/api/bluesky/data/translation_data.dart';
@@ -10,6 +9,7 @@ import 'package:harpy/api/twitter/media_type.dart';
 import 'package:harpy/components/settings/media/preferences/media_preferences.dart';
 
 part 'bluesky_post_data.freezed.dart';
+
 part 'bluesky_post_data.g.dart';
 
 /// JSON converter for AtUri type
@@ -57,119 +57,78 @@ class BlueskyPostData with _$BlueskyPostData {
 
   const BlueskyPostData._();
 
-  factory BlueskyPostData.fromJson(Map<String, dynamic> json) =>
-      _$BlueskyPostDataFromJson(json);
+  factory BlueskyPostData.fromJson(Map<String, dynamic> json) => _$BlueskyPostDataFromJson(json);
 
-  /// Creates a [BlueskyPostData] from a Bluesky FeedView.
+  /// Improved factory that creates a [BlueskyPostData] from a Bluesky [bsky.FeedView] and
+  /// handles both image and video embeds.
   factory BlueskyPostData.fromFeedView(bsky.FeedView post) {
     final embed = post.post.embed;
-    final postRecord = post.post.record;
-    final author = post.post.author;
-    final viewer = post.post.viewer;
-    final labels = post.post.labels
-            ?.map(
-              (l) => Label(
-                val: l.value,
-                src: l.src,
-                uri: l.uri,
-                cts: l.createdAt,
-                neg: l.isNegate,
-              ),
-            )
-            .toList() ??
-        <Label>[];
+    List<BlueskyMediaData>? mediaData;
 
-    // Extract external URLs from record facets
-    final externalUrls = postRecord.facets
-        ?.where((f) => f.features.any((feat) => feat is bsky.FacetLink))
-        .map(
-          (f) => (f.features.firstWhere((feat) => feat is bsky.FacetLink)
-                  as bsky.FacetLink)
-              .uri,
-        )
-        .toList();
-
-    // Handle reply references
-    final reply = post.reply;
-    String? parentId;
-    String? rootId;
-    if (reply != null) {
-      if (reply.parent is at.StrongRef) {
-        parentId = (reply.parent as at.StrongRef).cid;
-      }
-      if (reply.root is at.StrongRef) {
-        rootId = (reply.root as at.StrongRef).cid;
-      }
-    }
-
-    // Handle repost
-    BlueskyPostData? repostData;
-    if (post.reason is bsky.ReasonRepost) {
-      final repost = post.reason as bsky.ReasonRepost;
-      if (repost.by is bsky.FeedView) {
-        repostData = BlueskyPostData.fromFeedView(repost.by as bsky.FeedView);
-      }
-    }
-
-    // Handle quote post
-    BlueskyPostData? quoteData;
-    if (embed is bsky.EmbedView) {
-      final embedView = embed;
-      embedView.maybeWhen(
-        record: (data) {
-          if (data.record is bsky.FeedView) {
-            quoteData =
-                BlueskyPostData.fromFeedView(data.record as bsky.FeedView);
-          }
+    if (embed != null) {
+      // Map on embed using the provided union-like API
+      embed.map(
+        images: (images) {
+          mediaData =
+              images.data.images.map(BlueskyMediaData.fromImage).cast<BlueskyMediaData>().toList();
         },
-        orElse: () {},
+        video: (video) {
+          mediaData = [BlueskyMediaData.fromVideo(video)];
+        },
+        external: (_) {},
+        record: (_) {},
+        recordWithMedia: (_) {},
+        unknown: (_) {},
       );
     }
 
-    // Handle media
-    List<BlueskyMediaData>? mediaData;
-    if (embed is bsky.EmbedImages) {
-      final images = (embed as bsky.EmbedImages).images;
-      mediaData = images.map(BlueskyMediaData.fromImage).toList();
-    }
+    // Extract mentions from facets
+    final mentions = post.post.record.facets
+        ?.where((f) => f.features.any((feat) => feat is bsky.FacetMention))
+        .map((f) {
+      final mention =
+          f.features.firstWhere((feat) => feat is bsky.FacetMention) as bsky.FacetMention;
+      return mention.did;
+    }).toList();
+
+    // Extract tags from facets
+    final tags = post.post.record.facets
+        ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
+        .map((f) {
+      final tag = f.features.firstWhere((feat) => feat is bsky.FacetTag) as bsky.FacetTag;
+      return tag.tag;
+    }).toList();
 
     return BlueskyPostData(
       id: post.post.cid,
-      text: postRecord.text,
+      text: post.post.record.text,
       uri: post.post.uri,
-      author: author.displayName ?? author.handle,
-      handle: author.handle,
-      authorDid: author.did,
-      authorAvatar: author.avatar ?? '',
+      author: post.post.author.displayName ?? post.post.author.handle,
+      handle: post.post.author.handle,
+      authorDid: post.post.author.did,
+      authorAvatar: post.post.author.avatar ?? '',
       createdAt: post.post.indexedAt,
-      parentPostId: parentId,
-      rootPostId: rootId,
-      repostOf: repostData,
-      quoteOf: quoteData,
+      parentPostId: post.post.record.reply?.parent.cid,
+      rootPostId: post.post.record.reply?.root.cid,
       media: mediaData,
-      tags: postRecord.facets
-          ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
-          .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetTag)
-                    as bsky.FacetTag)
-                .tag,
+      tags: tags,
+      mentions: mentions,
+      replyCount: post.post.replyCount ?? 0,
+      repostCount: post.post.repostCount ?? 0,
+      likeCount: post.post.likeCount ?? 0,
+      isReposted: post.post.viewer.repost != null,
+      isLiked: post.post.viewer.like != null,
+      labels: post.post.labels
+          ?.map(
+            (l) => Label(
+              val: l.value,
+              src: l.src,
+              uri: l.uri,
+              cts: l.createdAt,
+              neg: l.isNegate,
+            ),
           )
           .toList(),
-      mentions: postRecord.facets
-          ?.where((f) => f.features.any((feat) => feat is bsky.FacetMention))
-          .map(
-            (f) => (f.features.firstWhere((feat) => feat is bsky.FacetMention)
-                    as bsky.FacetMention)
-                .did,
-          )
-          .toList(),
-      replyCount: post.post.replyCount,
-      repostCount: post.post.repostCount,
-      likeCount: post.post.likeCount,
-      isReposted: viewer.repost != null,
-      isLiked: viewer.like != null,
-      labels: labels,
-      externalUrls: externalUrls,
     );
   }
 }
@@ -183,15 +142,27 @@ class BlueskyMediaData with _$BlueskyMediaData implements MediaData {
     String? thumb,
     @Default(MediaType.image) MediaType type,
     double? aspectRatio,
+    Duration? duration,
+    @Default([]) List<String> variants,
   }) = _BlueskyMediaData;
+
+  factory BlueskyMediaData.fromUEmbedViewMediaVideo(bsky.UEmbedViewMediaVideo video) {
+    return BlueskyMediaData(
+      alt: video.data.alt ?? '',
+      url: video.data.playlist,
+      thumb: video.data.thumbnail,
+      type: MediaType.video,
+      aspectRatio: (video.data.aspectRatio?.width ?? 1) / (video.data.aspectRatio?.height ?? 1),
+      variants: [video.data.playlist], // Add video URL as the only variant
+    );
+  }
 
   const BlueskyMediaData._();
 
-  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) =>
-      _$BlueskyMediaDataFromJson(json);
+  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) => _$BlueskyMediaDataFromJson(json);
 
-  factory BlueskyMediaData.fromImage(bsky.Image image) {
-    final imageRef = image.image.ref.toString();
+  /// Converts an image embed into a [BlueskyMediaData] object.
+  factory BlueskyMediaData.fromImage(bsky.EmbedViewImagesView image) {
     final ratio = image.aspectRatio;
     double? aspectRatioValue;
     if (ratio != null) {
@@ -199,29 +170,60 @@ class BlueskyMediaData with _$BlueskyMediaData implements MediaData {
     }
     return BlueskyMediaData(
       alt: image.alt,
-      url: imageRef,
-      thumb:
-          imageRef, // Use same URL for thumb since Bluesky doesn't provide thumbnails yet
+      url: image.fullsize,
+      thumb: image.thumbnail,
       aspectRatio: aspectRatioValue,
+      variants: [],
     );
   }
 
+  /// Converts a video embed into a [BlueskyMediaData] object.
+  factory BlueskyMediaData.fromVideo(bsky.UEmbedViewVideo video) {
+    return BlueskyMediaData(
+      alt: video.data.alt ?? '',
+      url: video.data.playlist,
+      thumb: video.data.thumbnail,
+      type: MediaType.video,
+      aspectRatio: (video.data.aspectRatio?.width ?? 1) / (video.data.aspectRatio?.height ?? 1),
+      variants: [video.data.playlist], // Add video URL as the only variant
+      duration: const Duration(), // TODO: Get actual duration when available
+    );
+  }
+
+  /// Returns the appropriate URL based on media preferences and connectivity.
   @override
   String appropriateUrl(
     MediaPreferences mediaPreferences,
     ConnectivityResult connectivity,
   ) {
-    return bestUrl;
+    return url;
   }
 
+  /// Returns the aspect ratio of the media.
   @override
   double get aspectRatioDouble => aspectRatio ?? 1.0;
 
+  /// Returns the best URL (simply the URL in this implementation).
   @override
   String get bestUrl => url;
 
-  @override
-  MediaType get type => MediaType.image;
+  /// Convert this BlueskyMediaData to VideoMediaData if it's a video
+  VideoMediaData? toVideoMediaData() {
+    if (type != MediaType.video) return null;
+
+    final thumbnailData = ImageMediaData(
+      baseUrl: thumb ?? url,
+      aspectRatioDouble: aspectRatioDouble,
+    );
+
+    return VideoMediaData(
+      aspectRatioDouble: aspectRatioDouble,
+      duration: duration,
+      variants: variants.isNotEmpty ? variants : [url],
+      thumbnail: thumbnailData,
+      type: type,
+    );
+  }
 }
 
 /// Represents an embedded record in a post
@@ -237,6 +239,5 @@ class EmbedRecord with _$EmbedRecord {
 
   const EmbedRecord._();
 
-  factory EmbedRecord.fromJson(Map<String, dynamic> json) =>
-      _$EmbedRecordFromJson(json);
+  factory EmbedRecord.fromJson(Map<String, dynamic> json) => _$EmbedRecordFromJson(json);
 }
