@@ -42,20 +42,17 @@ BuiltList<BlueskyPostData> _isolateHandlePosts(List<dynamic> arguments) {
   for (final post in postDataList) {
     if (post.parentPostId != null && postsById.containsKey(post.parentPostId)) {
       final parent = postsById[post.parentPostId!]!;
-      // Create or update the parent's replies list
-      final updatedReplies = [...?parent.replies, post];
+      // Create or update the parent's replies list, maintaining chronological order
+      final updatedReplies = [...?parent.replies, post]
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       postsById[post.parentPostId!] = parent.copyWith(replies: updatedReplies);
     } else {
       rootPosts.add(post);
     }
   }
 
-  // Sort the root posts so that posts with the most recent reply (or the post itself) are first.
-  rootPosts.sort((a, b) {
-    final targetA = (a.replies?.isNotEmpty ?? false) ? a.replies!.first : a;
-    final targetB = (b.replies?.isNotEmpty ?? false) ? b.replies!.first : b;
-    return targetB.createdAt.compareTo(targetA.createdAt);
-  });
+  // Sort root posts by their own creation date, not by their replies
+  rootPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   return BuiltList.of(rootPosts);
 }

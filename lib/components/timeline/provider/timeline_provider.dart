@@ -49,7 +49,6 @@ abstract class TimelineNotifier<T extends Object>
   final Ref ref;
 
   @protected
-
   TimelineFilter? filter;
 
   void _initialize() {
@@ -167,14 +166,21 @@ abstract class TimelineNotifier<T extends Object>
         if (response.posts.isEmpty) {
           state = currentState.copyWith(loadingMore: false);
         } else {
-          // Deduplicate posts by comparing post ids
-          final existingPostIds =
-              currentState.tweets.map((post) => post.id).toSet();
+          // Enhanced deduplication using both id and uri
+          final existingPosts = currentState.tweets.toSet();
           final newPosts = response.posts
-              .where((post) => !existingPostIds.contains(post.id))
+              .where(
+                (post) => !existingPosts.any(
+                  (existing) =>
+                      existing.id == post.id || existing.uri == post.uri,
+                ),
+              )
               .toList();
 
-          final allTweets = [...state.tweets, ...newPosts];
+          // Sort posts by creation date to maintain chronological order
+          final allTweets = [...currentState.tweets, ...newPosts]
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
           state = state.copyWith(
             tweets: BuiltList.of(allTweets),
             cursor: response.cursor,
@@ -205,13 +211,21 @@ abstract class TimelineNotifier<T extends Object>
       final response = await request();
 
       if (response.posts.isNotEmpty) {
-        // Deduplicate posts by comparing post ids
-        final existingPostIds = state.tweets.map((post) => post.id).toSet();
+        // Enhanced deduplication using both id and uri
+        final existingPosts = state.tweets.toSet();
         final newPosts = response.posts
-            .where((post) => !existingPostIds.contains(post.id))
+            .where(
+              (post) => !existingPosts.any(
+                (existing) =>
+                    existing.id == post.id || existing.uri == post.uri,
+              ),
+            )
             .toList();
 
-        final allTweets = [...state.tweets, ...newPosts];
+        // Sort all posts by creation date
+        final allTweets = [...state.tweets, ...newPosts]
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
         state = TimelineState.data(
           tweets: BuiltList.of(allTweets),
           cursor: response.cursor,

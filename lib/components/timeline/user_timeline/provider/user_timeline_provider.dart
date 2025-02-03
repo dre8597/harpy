@@ -1,3 +1,4 @@
+import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
@@ -43,12 +44,17 @@ class UserTimelineNotifier extends TimelineNotifier {
     final feed = await blueskyApi.feed.getAuthorFeed(
       actor: _userId,
       cursor: cursor,
-      limit: 50,
+      limit: 100,
     );
 
-    return TimelineResponse(
+    final response = TimelineResponse(
       feed.data.feed.map(BlueskyPostData.fromFeedView).toList(),
       feed.data.cursor,
     );
+    state = TimelineState.data(
+      tweets: BuiltList.of(response.posts),
+      cursor: response.posts.length < 100 ? null : cursor,
+    );
+    return response;
   }
 }

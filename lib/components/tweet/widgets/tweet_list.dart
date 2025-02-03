@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
@@ -58,7 +60,7 @@ class TweetList extends StatelessWidget {
             delegate: _TweetListBuilderDelegate(
               _itemBuilder,
               onLayoutFinished: onLayoutFinished,
-              childCount: tweets.length * 2 - 1,
+              childCount: max(tweets.length * 2 - 1, 0),
             ),
           ),
         ),

@@ -118,7 +118,8 @@ TweetDelegates defaultTweetDelegates(
     },
     onOpenTweetExternally: (ref) {
       HapticFeedback.lightImpact();
-      ref.read(launcherProvider)(tweet.uri.toString(), alwaysOpenExternally: true);
+      ref.read(launcherProvider)(tweet.uri.toString(),
+          alwaysOpenExternally: true);
     },
     onCopyText: (ref) {
       HapticFeedback.lightImpact();

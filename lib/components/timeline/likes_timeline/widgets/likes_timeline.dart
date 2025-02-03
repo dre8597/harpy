@@ -13,7 +13,7 @@ class LikesTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     return Timeline(
       listKey: const PageStorageKey('likes_timeline'),
-      provider: likesTimelineProvider(user.handle),
+      provider: likesTimelineProvider(user.id),
     );
   }
 }

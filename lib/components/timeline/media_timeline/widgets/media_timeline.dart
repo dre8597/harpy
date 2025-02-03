@@ -35,7 +35,7 @@ class _MediaTimelineState extends ConsumerState<MediaTimeline> {
     _initializeController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+      ref.read(widget.provider.notifier).load(clearPrevious: true);
     });
   }
 

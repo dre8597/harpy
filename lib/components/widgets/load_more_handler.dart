@@ -15,6 +15,7 @@ class LoadMoreHandler extends StatefulWidget {
     required this.onLoadMore,
     this.listen = true,
     this.extentTrigger,
+    this.scrollThreshold = 0.5,
   });
 
   final Widget child;
@@ -28,17 +29,22 @@ class LoadMoreHandler extends StatefulWidget {
   /// Defaults to half of the scrollable's viewport size.
   final double? extentTrigger;
 
+  /// The scroll threshold (0.0 to 1.0) that determines when to load more content.
+  /// A value of 0.5 means the user needs to scroll through 50% of the current
+  /// content before more content is loaded.
+  final double scrollThreshold;
+
   @override
   State<LoadMoreHandler> createState() => _LoadMoreHandlerState();
 }
 
 class _LoadMoreHandlerState extends State<LoadMoreHandler> {
   bool _loading = false;
+  bool _canLoadMore = true;
 
   @override
   void initState() {
     super.initState();
-
     widget.controller.addListener(_scrollListener);
   }
 
@@ -57,8 +63,6 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
       widget.controller.addListener(_scrollListener);
     }
 
-    // When re-enabling the listener, we want to query the current scroll extent
-    // to potentially call the callback.
     if (!oldWidget.listen && widget.listen) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollListener());
     }
@@ -71,23 +75,32 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
 
     final position = widget.controller.positions.first;
 
-    if (position.extentAfter <=
-        (widget.extentTrigger ?? position.viewportDimension / 2)) {
-      // _loadMore();
+    // Calculate the scroll progress (0.0 to 1.0)
+    final scrollProgress = position.pixels / position.maxScrollExtent;
+
+    // Only allow loading more if we've scrolled past the threshold
+    if (scrollProgress >= widget.scrollThreshold) {
+      _canLoadMore = true;
+    }
+
+    if (_canLoadMore &&
+        position.extentAfter <=
+            (widget.extentTrigger ?? position.viewportDimension / 2)) {
+      _loadMore();
     }
   }
 
   Future<void> _loadMore() async {
-    if (_loading) return;
+    if (_loading || !_canLoadMore) return;
 
     try {
       if (mounted) setState(() => _loading = true);
       await widget.onLoadMore();
+      // Reset the load more flag until we scroll past threshold again
+      _canLoadMore = false;
     } finally {
       if (mounted) {
         setState(() => _loading = false);
-        // After loading more, re-trigger the listener in case the scroll extent is
-        // still below the extent trigger.
         _scrollListener();
       }
     }
@@ -96,8 +109,18 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
   bool _onNotification(ScrollNotification notification) {
     if (!mounted) return false;
 
-    if (notification.metrics.extentAfter <=
-        (widget.extentTrigger ?? notification.metrics.viewportDimension / 2)) {
+    // Calculate scroll progress for notification-based scrolling
+    final scrollProgress =
+        notification.metrics.pixels / notification.metrics.maxScrollExtent;
+
+    if (scrollProgress >= widget.scrollThreshold) {
+      _canLoadMore = true;
+    }
+
+    if (_canLoadMore &&
+        notification.metrics.extentAfter <=
+            (widget.extentTrigger ??
+                notification.metrics.viewportDimension / 2)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _loadMore();
       });

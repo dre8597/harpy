@@ -1,3 +1,4 @@
+import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
@@ -6,10 +7,10 @@ import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:bluesky/atproto.dart';
-import 'package:bluesky/core.dart';
+import 'package:atproto_core/atproto_core.dart' as core;
 
-final likesTimelineProvider =
-    StateNotifierProvider.autoDispose.family<LikesTimelineNotifier, TimelineState, String>(
+final likesTimelineProvider = StateNotifierProvider.autoDispose
+    .family<LikesTimelineNotifier, TimelineState, String>(
   (ref, userId) {
     ref.cacheFor(const Duration(minutes: 15));
 
@@ -36,6 +37,25 @@ class LikesTimelineNotifier extends TimelineNotifier {
   @override
   TimelineFilter? currentFilter() => null;
 
+  /// Validates a batch of post URIs to ensure they are accessible
+  Future<List<core.AtUri>> _validatePosts(
+    List<core.AtUri> uris,
+    bsky.Bluesky blueskyApi,
+  ) async {
+    try {
+      final response = await blueskyApi.feed.getPosts(uris: uris);
+      // Only return URIs for posts that were successfully fetched
+      return response.data.posts.map((post) => post.uri).toList();
+    } catch (e, stack) {
+      log.warning(
+        'Error validating posts batch, skipping invalid posts',
+        e,
+        stack,
+      );
+      return [];
+    }
+  }
+
   @override
   Future<TimelineResponse> request({String? cursor}) async {
     final blueskyApi = ref.read(blueskyApiProvider);
@@ -43,7 +63,7 @@ class LikesTimelineNotifier extends TimelineNotifier {
     try {
       // Get the user's likes using the listRecords endpoint
       final response = await blueskyApi.atproto.repo.listRecords(
-        collection: NSID.parse('app.bsky.feed.like'),
+        collection: core.NSID.parse('app.bsky.feed.like'),
         repo: _userId,
         cursor: cursor,
         limit: 50,
@@ -51,19 +71,40 @@ class LikesTimelineNotifier extends TimelineNotifier {
 
       if (!mounted) return TimelineResponse([], null);
 
-      // Extract the liked post URIs and fetch their details
+      // Extract the liked post URIs
       final likedPostUris = response.data.records
           .map((record) => record.value['subject']['uri'] as String?)
           .whereType<String>()
-          .map(AtUri.parse)
+          .map(core.AtUri.parse)
           .toList();
 
       if (likedPostUris.isEmpty) {
         return TimelineResponse([], response.data.cursor);
       }
 
-      // Fetch the actual posts using getPosts
-      final postsResponse = await blueskyApi.feed.getPosts(uris: [likedPostUris.first]);
+      // Process URIs in smaller batches to handle potential invalid posts
+      final validatedUris = <core.AtUri>[];
+      const batchSize = 25;
+
+      for (var i = 0; i < likedPostUris.length; i += batchSize) {
+        final end = (i + batchSize < likedPostUris.length)
+            ? i + batchSize
+            : likedPostUris.length;
+        final batch = likedPostUris.sublist(i, end);
+
+        if (!mounted) return TimelineResponse([], null);
+
+        final validBatch = await _validatePosts(batch, blueskyApi);
+        validatedUris.addAll(validBatch);
+      }
+
+      if (validatedUris.isEmpty) {
+        return TimelineResponse([], response.data.cursor);
+      }
+
+      // Fetch the validated posts
+      final postsResponse =
+          await blueskyApi.feed.getPosts(uris: validatedUris.sublist(0, 4));
 
       if (!mounted) return TimelineResponse([], null);
 
@@ -81,7 +122,9 @@ class LikesTimelineNotifier extends TimelineNotifier {
         feedViews,
         response.data.cursor,
       );
-//TODO: Finish figuring out how to properly map all likes
+
+      state = TimelineState.data(
+          tweets: BuiltList.from(processedPosts.posts), cursor: cursor);
       return processedPosts;
     } catch (e, stack) {
       log.severe('Error fetching likes timeline', e, stack);

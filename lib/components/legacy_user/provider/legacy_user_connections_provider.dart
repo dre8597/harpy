@@ -35,8 +35,7 @@ class LegacyUserConnectionsNotifier
         authorDids.map((authorDid) async {
           final blueskyApi = _ref.read(blueskyApiProvider);
           try {
-            final profile =
-                await blueskyApi.actor.getProfile(actor: authorDid);
+            final profile = await blueskyApi.actor.getProfile(actor: authorDid);
             final connections = <LegacyUserConnection>[];
 
             if (profile.data.viewer.following != null) {

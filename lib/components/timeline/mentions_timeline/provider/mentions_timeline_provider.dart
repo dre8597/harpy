@@ -42,7 +42,7 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
     final posts = feed.data.notifications
         .where(
           (notification) =>
-              notification.reason == bsky.NotificationReason.mention,
+              notification.reason == bsky.NotificationReason.follow,
         )
         .map(
           (notification) => BlueskyPostData(
