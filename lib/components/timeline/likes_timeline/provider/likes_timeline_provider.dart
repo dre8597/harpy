@@ -1,13 +1,10 @@
-import 'package:built_collection/built_collection.dart';
+import 'package:bluesky/bluesky.dart' as bsky;
+import 'package:bluesky/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
-import 'package:bluesky/bluesky.dart' as bsky;
-import 'package:bluesky/atproto.dart';
-import 'package:atproto_core/atproto_core.dart' as core;
 
 final likesTimelineProvider = StateNotifierProvider.autoDispose
     .family<LikesTimelineNotifier, TimelineState, String>(
@@ -38,8 +35,8 @@ class LikesTimelineNotifier extends TimelineNotifier {
   TimelineFilter? currentFilter() => null;
 
   /// Validates a batch of post URIs to ensure they are accessible
-  Future<List<core.AtUri>> _validatePosts(
-    List<core.AtUri> uris,
+  Future<List<AtUri>> _validatePosts(
+    List<AtUri> uris,
     bsky.Bluesky blueskyApi,
   ) async {
     try {
@@ -63,7 +60,7 @@ class LikesTimelineNotifier extends TimelineNotifier {
     try {
       // Get the user's likes using the listRecords endpoint
       final response = await blueskyApi.atproto.repo.listRecords(
-        collection: core.NSID.parse('app.bsky.feed.like'),
+        collection: NSID.parse('app.bsky.feed.like'),
         repo: _userId,
         cursor: cursor,
         limit: 50,
@@ -75,7 +72,7 @@ class LikesTimelineNotifier extends TimelineNotifier {
       final likedPostUris = response.data.records
           .map((record) => record.value['subject']['uri'] as String?)
           .whereType<String>()
-          .map(core.AtUri.parse)
+          .map(AtUri.parse)
           .toList();
 
       if (likedPostUris.isEmpty) {
@@ -83,7 +80,7 @@ class LikesTimelineNotifier extends TimelineNotifier {
       }
 
       // Process URIs in smaller batches to handle potential invalid posts
-      final validatedUris = <core.AtUri>[];
+      final validatedUris = <AtUri>[];
       const batchSize = 25;
 
       for (var i = 0; i < likedPostUris.length; i += batchSize) {
@@ -123,8 +120,6 @@ class LikesTimelineNotifier extends TimelineNotifier {
         response.data.cursor,
       );
 
-      state = TimelineState.data(
-          tweets: BuiltList.from(processedPosts.posts), cursor: cursor);
       return processedPosts;
     } catch (e, stack) {
       log.severe('Error fetching likes timeline', e, stack);
