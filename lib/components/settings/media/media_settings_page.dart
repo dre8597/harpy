@@ -138,6 +138,20 @@ class _MediaSettingsList extends ConsumerWidget {
               groupValue: media.autoplayVideos,
               onChanged: mediaNotifier.setAutoplayVideos,
             ),
+            HarpyRadioDialogTile(
+              leading: const Icon(CupertinoIcons.arrow_down_circle),
+              title: const Text('preload videos'),
+              dialogTitle: const Text(
+                'change when videos should be preloaded',
+              ),
+              entries: const {
+                0: Text('always preload'),
+                1: Text('only on wifi'),
+                2: Text('never preload'),
+              },
+              groupValue: media.preloadVideos,
+              onChanged: mediaNotifier.setPreloadVideos,
+            ),
           ],
         ),
         VerticalSpacer.normal,
@@ -164,8 +178,7 @@ class _MediaDownloadSettings extends ConsumerStatefulWidget {
   _MediaDownloadSettingsState createState() => _MediaDownloadSettingsState();
 }
 
-class _MediaDownloadSettingsState
-    extends ConsumerState<_MediaDownloadSettings> {
+class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> {
   @override
   void initState() {
     super.initState();

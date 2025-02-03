@@ -6,8 +6,7 @@ import 'package:harpy/core/preferences/preferences.dart';
 
 part 'media_preferences.freezed.dart';
 
-final mediaPreferencesProvider =
-    StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
+final mediaPreferencesProvider = StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
   (ref) => MediaPreferencesNotifier(
     preferences: ref.watch(preferencesProvider(null)),
   ),
@@ -27,6 +26,7 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
             startVideoPlaybackMuted: preferences.getBool(
               'startVideoPlaybackMuted',
             ),
+            preloadVideos: preferences.getInt('preloadVideos', 1),
             hidePossiblySensitive: preferences.getBool(
               'hidePossiblySensitive',
             ),
@@ -46,6 +46,7 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
     setAutoplayGifs(1);
     setAutoplayVideos(2);
     setStartVideoPlaybackMuted(false);
+    setPreloadVideos(1);
     setHidePossiblySensitive(false);
     setOpenLinksExternally(false);
     setShowDownloadDialog(true);
@@ -76,6 +77,11 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
   void setStartVideoPlaybackMuted(bool value) {
     state = state.copyWith(startVideoPlaybackMuted: value);
     _preferences.setBool('startVideoPlaybackMuted', value);
+  }
+
+  void setPreloadVideos(int value) {
+    state = state.copyWith(preloadVideos: value);
+    _preferences.setInt('preloadVideos', value);
   }
 
   void setHidePossiblySensitive(bool value) {
@@ -133,6 +139,13 @@ class MediaPreferences with _$MediaPreferences {
     /// Whether video playback should start with volume 0 by default.
     required bool startVideoPlaybackMuted,
 
+    /// Whether videos should be preloaded when they become visible.
+    ///
+    /// 0: always preload
+    /// 1: only preload when using wifi
+    /// 2: never preload
+    required int preloadVideos,
+
     /// Whether possibly sensitive (NSFW) media should be hidden by default.
     required bool hidePossiblySensitive,
 
@@ -154,18 +167,19 @@ class MediaPreferences with _$MediaPreferences {
   /// Whether gifs should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayGifs(ConnectivityResult connectivity) =>
-      autoplayGifs == 0 ||
-      autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayGifs == 0 || autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether videos should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayVideos(ConnectivityResult connectivity) =>
-      autoplayVideos == 0 ||
-      autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayVideos == 0 || autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether the best media quality should be used, taking the connectivity
   /// into account.
   bool shouldUseBestMediaQuality(ConnectivityResult connectivity) =>
-      bestMediaQuality == 0 ||
-      bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
+      bestMediaQuality == 0 || bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
+
+  /// Whether videos should be preloaded, taking the connectivity into account.
+  bool shouldPreloadVideos(ConnectivityResult connectivity) =>
+      preloadVideos == 0 || preloadVideos == 1 && connectivity == ConnectivityResult.wifi;
 }

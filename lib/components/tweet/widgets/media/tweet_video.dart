@@ -73,6 +73,12 @@ class TweetVideo extends ConsumerWidget {
 
     return VisibilityChangeListener(
       detectorKey: ObjectKey(heroTag),
+      onVisibilityChanged: (visible) {
+        if (visible && mediaPreferences.shouldPreloadVideos(connectivity)) {
+          // Start preloading when video becomes visible and allowed by preferences
+          notifier.preload();
+        }
+      },
       child: MediaAutoplay(
         state: state,
         notifier: notifier,
@@ -100,12 +106,20 @@ class TweetVideo extends ConsumerWidget {
               data: (data) => overlayBuilder(
                 data,
                 notifier,
-                OverflowBox(
-                  maxHeight: double.infinity,
-                  child: AspectRatio(
-                    aspectRatio: videoData.aspectRatioDouble,
-                    child: VideoPlayer(notifier.controller),
-                  ),
+                Stack(
+                  children: [
+                    OverflowBox(
+                      maxHeight: double.infinity,
+                      child: AspectRatio(
+                        aspectRatio: videoData.aspectRatioDouble,
+                        child: VideoPlayer(notifier.controller),
+                      ),
+                    ),
+                    if (data.isBuffering)
+                      const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                  ],
                 ),
               ),
               loading: (_) => MediaThumbnail(
@@ -115,6 +129,16 @@ class TweetVideo extends ConsumerWidget {
                   icon: const CircularProgressIndicator(),
                   compact: compact,
                 ),
+              ),
+              error: (error) => MediaThumbnail(
+                thumbnail: videoData.thumbnail,
+                duration: videoData.duration,
+                center: MediaThumbnailIcon(
+                  icon: const Icon(Icons.error_outline),
+                  compact: compact,
+                ),
+                onTap: notifier.initialize,
+                onLongPress: onVideoLongPress,
               ),
               orElse: () => MediaThumbnail(
                 thumbnail: videoData.thumbnail,
@@ -201,9 +225,9 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
   Widget build(BuildContext context) {
     final orientation = MediaQuery.of(context).orientation;
     final videoData = widget.mediaData ??
-        (widget.tweet.media?.firstWhere(
+        widget.tweet.media?.firstWhereOrNull(
           (m) => m.type == MediaType.video,
-        ) as VideoMediaData?);
+        )?.toVideoMediaData();
 
     if (videoData == null) {
       return const SizedBox();

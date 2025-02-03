@@ -31,8 +31,7 @@ class _MediaAutoplayState extends ConsumerState<MediaAutoplay> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _visibilityChange ??= VisibilityChange.of(context)
-      ?..addCallback(_onVisibilityChanged);
+    _visibilityChange ??= VisibilityChange.of(context)?..addCallback(_onVisibilityChanged);
 
     assert(_visibilityChange != null);
   }
@@ -52,10 +51,8 @@ class _MediaAutoplayState extends ConsumerState<MediaAutoplay> {
       // initializing the video
       await Future<void>.delayed(const Duration(seconds: 1));
 
-      if (mounted &&
-          _visible &&
-          widget.state is VideoPlayerStateUninitialized) {
-        await widget.notifier.initialize(volume: 0);
+      if (mounted && _visible && widget.state is VideoPlayerStateUninitialized) {
+        await widget.notifier.initialize();
       }
     }
   }

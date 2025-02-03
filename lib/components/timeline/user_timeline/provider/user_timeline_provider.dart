@@ -45,6 +45,7 @@ class UserTimelineNotifier extends TimelineNotifier {
       cursor: cursor,
       limit: 100,
     );
+
     final posts = feed.data.feed.map(BlueskyPostData.fromFeedView).toList();
     return TimelineResponse(posts, feed.data.cursor);
   }
