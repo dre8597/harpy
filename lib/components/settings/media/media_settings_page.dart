@@ -51,6 +51,8 @@ class _MediaSettingsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final onBackground = theme.colorScheme.onSurface;
+
     final media = ref.watch(mediaPreferencesProvider);
     final mediaNotifier = ref.watch(mediaPreferencesProvider.notifier);
 
@@ -79,7 +81,10 @@ class _MediaSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(CupertinoIcons.crop),
-            title: const Text('crop tweet image'),
+            title: Text(
+              'crop tweet image',
+              style: TextStyle(color: onBackground),
+            ),
             subtitle: const Text('reduces height'),
             value: media.cropImage,
             borderRadius: theme.shape.borderRadius,
@@ -90,7 +95,10 @@ class _MediaSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(CupertinoIcons.eye_slash_fill),
-            title: const Text('hide possibly sensitive media'),
+            title: Text(
+              'hide possibly sensitive media',
+              style: TextStyle(color: onBackground),
+            ),
             value: media.hidePossiblySensitive,
             borderRadius: theme.shape.borderRadius,
             onChanged: mediaNotifier.setHidePossiblySensitive,
@@ -100,7 +108,10 @@ class _MediaSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(CupertinoIcons.link),
-            title: const Text('open links externally'),
+            title: Text(
+              'open links externally',
+              style: TextStyle(color: onBackground),
+            ),
             value: media.openLinksExternally,
             borderRadius: theme.shape.borderRadius,
             onChanged: mediaNotifier.setOpenLinksExternally,
@@ -108,11 +119,17 @@ class _MediaSettingsList extends ConsumerWidget {
         ),
         VerticalSpacer.normal,
         ExpansionCard(
-          title: const Text('autoplay'),
+          title: Text(
+            'autoplay',
+            style: TextStyle(color: onBackground),
+          ),
           children: [
             HarpyRadioDialogTile(
               leading: const Icon(CupertinoIcons.play_circle),
-              title: const Text('autoplay gifs'),
+              title: Text(
+                'autoplay gifs',
+                style: TextStyle(color: onBackground),
+              ),
               dialogTitle: const Text(
                 'change when gifs should automatically play',
               ),
@@ -126,7 +143,10 @@ class _MediaSettingsList extends ConsumerWidget {
             ),
             HarpyRadioDialogTile(
               leading: const Icon(CupertinoIcons.play_circle),
-              title: const Text('autoplay videos'),
+              title: Text(
+                'autoplay videos',
+                style: TextStyle(color: onBackground),
+              ),
               dialogTitle: const Text(
                 'change when videos should automatically play',
               ),
@@ -140,7 +160,10 @@ class _MediaSettingsList extends ConsumerWidget {
             ),
             HarpyRadioDialogTile(
               leading: const Icon(CupertinoIcons.arrow_down_circle),
-              title: const Text('preload videos'),
+              title: Text(
+                'preload videos',
+                style: TextStyle(color: onBackground),
+              ),
               dialogTitle: const Text(
                 'change when videos should be preloaded',
               ),
@@ -158,7 +181,10 @@ class _MediaSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(CupertinoIcons.volume_off),
-            title: const Text('start video playback muted'),
+            title: Text(
+              'start video playback muted',
+              style: TextStyle(color: onBackground),
+            ),
             value: media.startVideoPlaybackMuted,
             borderRadius: theme.shape.borderRadius,
             onChanged: mediaNotifier.setStartVideoPlaybackMuted,
@@ -178,7 +204,8 @@ class _MediaDownloadSettings extends ConsumerStatefulWidget {
   _MediaDownloadSettingsState createState() => _MediaDownloadSettingsState();
 }
 
-class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> {
+class _MediaDownloadSettingsState
+    extends ConsumerState<_MediaDownloadSettings> {
   @override
   void initState() {
     super.initState();
@@ -190,22 +217,30 @@ class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> 
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final media = ref.watch(mediaPreferencesProvider);
     final mediaNotifier = ref.watch(mediaPreferencesProvider.notifier);
     final downloadPath = ref.watch(downloadPathProvider);
+    final onBackground = theme.colorScheme.onSurface;
 
     return ExpansionCard(
       title: const Text('download'),
       children: [
         RbySwitchTile(
           leading: const Icon(CupertinoIcons.arrow_down_to_line),
-          title: const Text('show download dialog'),
+          title: Text(
+            'show download dialog',
+            style: TextStyle(color: onBackground),
+          ),
           value: media.showDownloadDialog,
           onChanged: mediaNotifier.setShowDownloadDialog,
         ),
         RbyListTile(
           leading: const Icon(CupertinoIcons.folder),
-          title: const Text('image download location'),
+          title: Text(
+            'image download location',
+            style: TextStyle(color: onBackground),
+          ),
           subtitle: Text(downloadPath.imageFullPath ?? ''),
           onTap: () => showDialog<void>(
             context: context,
@@ -216,7 +251,10 @@ class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> 
         ),
         RbyListTile(
           leading: const Icon(CupertinoIcons.folder),
-          title: const Text('gif download location'),
+          title: Text(
+            'gif download location',
+            style: TextStyle(color: onBackground),
+          ),
           subtitle: Text(downloadPath.gifFullPath ?? ''),
           onTap: () => showDialog<void>(
             context: context,
@@ -225,7 +263,10 @@ class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> 
         ),
         RbyListTile(
           leading: const Icon(CupertinoIcons.folder),
-          title: const Text('video download location'),
+          title: Text(
+            'video download location',
+            style: TextStyle(color: onBackground),
+          ),
           subtitle: Text(downloadPath.videoFullPath ?? ''),
           onTap: () => showDialog<void>(
             context: context,

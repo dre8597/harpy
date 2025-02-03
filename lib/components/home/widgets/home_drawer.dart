@@ -317,9 +317,7 @@ class _Entries extends ConsumerWidget {
           final result = await showDialog<bool>(
             context: context,
             builder: (context) => Theme(
-              data: Theme.of(context).copyWith(
-                extensions: {...Theme.of(context).extensions.values},
-              ),
+              data: Theme.of(context),
               child: const LogoutDialog(),
             ),
           );

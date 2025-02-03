@@ -100,6 +100,7 @@ class HarpyTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
       ),
+
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colors.alternateCardColor,
         actionTextColor: colors.primary,

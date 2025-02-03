@@ -261,7 +261,6 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   @override
   void dispose() {
     WakelockPlus.disable();
-    _controller.removeListener(_controllerListener);
     _controller.dispose();
     super.dispose();
   }
