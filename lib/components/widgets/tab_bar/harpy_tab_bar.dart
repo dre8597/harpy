@@ -145,11 +145,12 @@ class _HarpyTapBarState extends ConsumerState<HarpyTabBar> {
           children: [
             for (int i = 0; i < widget.tabs.length; i++) ...[
               _buildTab(theme, i),
-              if (i != widget.tabs.length - 1) HorizontalSpacer.small,
+              if (i != widget.tabs.length - 1)
+                SizedBox(width: theme.spacing.small),
             ],
             if (widget.endWidgets != null) ...[
-              for (Widget widget in widget.endWidgets!) ...[
-                HorizontalSpacer.small,
+              for (final Widget widget in widget.endWidgets!) ...[
+                SizedBox(width: theme.spacing.small),
                 widget,
               ],
             ],

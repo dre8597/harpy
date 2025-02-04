@@ -31,7 +31,7 @@ class LegacyUserConnectionsCount extends StatelessWidget {
                 : null,
             onTap: () => context.pushNamed(
               FollowingPage.name,
-              params: {'handle': user.handle},
+              pathParameters: {'authorDid': user.id},
             ),
           ),
         ),
@@ -47,7 +47,7 @@ class LegacyUserConnectionsCount extends StatelessWidget {
                 : null,
             onTap: () => context.pushNamed(
               FollowersPage.name,
-              params: {'handle': user.handle},
+              pathParameters: {'authorDid': user.id},
             ),
           ),
         ),

@@ -1,55 +1,73 @@
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:logging/logging.dart';
 
 /// Provides the [LegacyUserConnection] for a list of users.
 ///
 /// Connections are mapped to the user handle.
-final legacyUserConnectionsProvider = StateNotifierProvider.autoDispose.family<
+final legacyUserConnectionsProvider = StateNotifierProvider<
     LegacyUserConnectionsNotifier,
-    BuiltMap<String, BuiltSet<LegacyUserConnection>>,
-    BuiltList<String>>(
-  (ref, handles) => LegacyUserConnectionsNotifier(
+    BuiltMap<String, BuiltSet<LegacyUserConnection>>>(
+  (ref) => LegacyUserConnectionsNotifier(
     ref: ref,
-    handles: handles,
-    twitterApi: ref.watch(twitterApiV1Provider),
   ),
-  name: 'UserConnectionsProvider',
+  name: 'legacyUserConnectionsProvider',
 );
 
 class LegacyUserConnectionsNotifier
-    extends StateNotifier<BuiltMap<String, BuiltSet<LegacyUserConnection>>>
-    with LoggerMixin {
+    extends StateNotifier<BuiltMap<String, BuiltSet<LegacyUserConnection>>> {
   LegacyUserConnectionsNotifier({
     required Ref ref,
-    required BuiltList<String> handles,
-    required TwitterApi twitterApi,
-  })  : assert(handles.isNotEmpty),
-        _ref = ref,
-        _handles = handles,
-        _twitterApi = twitterApi,
+  })  : _ref = ref,
         super(BuiltMap());
 
   final Ref _ref;
-  final BuiltList<String> _handles;
-  final TwitterApi _twitterApi;
+  final log = Logger('LegacyUserConnectionsNotifier');
 
-  Future<void> load() async {
-    state = await _twitterApi.userService
-        .friendshipsLookup(screenNames: _handles.toList())
-        .then(_mapConnections)
-        .handleError(logErrorHandler)
-        .then(
-          (value) =>
-              value ?? BuiltMap<String, BuiltSet<LegacyUserConnection>>(),
-        );
+  Future<void> load(List<String> authorDids) async {
+    try {
+      final mappedConnections = <String, BuiltSet<LegacyUserConnection>>{};
+
+      await Future.wait(
+        authorDids.map((authorDid) async {
+          final blueskyApi = _ref.read(blueskyApiProvider);
+          try {
+            final profile = await blueskyApi.actor.getProfile(actor: authorDid);
+            final connections = <LegacyUserConnection>[];
+
+            if (profile.data.viewer.following != null) {
+              connections.add(LegacyUserConnection.following);
+            }
+
+            if (profile.data.viewer.blocking != null) {
+              connections.add(LegacyUserConnection.blocking);
+            }
+
+            if (profile.data.viewer.isMuted) {
+              connections.add(LegacyUserConnection.muting);
+            }
+
+            mappedConnections[authorDid] = connections.toBuiltSet();
+          } catch (e, st) {
+            log.warning('error loading profile for $authorDid', e, st);
+          }
+        }),
+      );
+
+      state = BuiltMap(mappedConnections);
+    } catch (e, st) {
+      log.warning('error loading user connections', e, st);
+      _ref
+          .read(messageServiceProvider)
+          .showText('error loading user connections');
+    }
   }
 
   Future<void> follow(String handle) async {
+    final blueskyApi = _ref.read(blueskyApiProvider);
     log.fine('follow $handle');
 
     state = state.rebuild(
@@ -59,10 +77,13 @@ class LegacyUserConnectionsNotifier
       ),
     );
 
-    await _twitterApi.userService
-        .friendshipsCreate(screenName: handle)
-        .handleError((e, st) {
-      twitterErrorHandler(_ref, e, st);
+    try {
+      final profile = await blueskyApi.actor.getProfile(actor: handle);
+      await blueskyApi.graph.follow(did: profile.data.did);
+    } catch (e, st) {
+      log.warning('error following user', e, st);
+      _ref.read(messageServiceProvider).showText('error following user');
+
       if (!mounted) return;
 
       // assume still not following
@@ -72,7 +93,7 @@ class LegacyUserConnectionsNotifier
           LegacyUserConnection.following,
         ),
       );
-    });
+    }
   }
 
   Future<void> unfollow(String handle) async {
@@ -85,10 +106,16 @@ class LegacyUserConnectionsNotifier
       ),
     );
 
-    await _twitterApi.userService
-        .friendshipsDestroy(screenName: handle)
-        .handleError((e, st) {
-      twitterErrorHandler(_ref, e, st);
+    try {
+      final blueskyApi = _ref.read(blueskyApiProvider);
+
+      final profile = await blueskyApi.actor.getProfile(actor: handle);
+      await blueskyApi.atproto.repo
+          .deleteRecord(uri: profile.data.viewer.following!);
+    } catch (e, st) {
+      log.warning('error unfollowing user', e, st);
+      _ref.read(messageServiceProvider).showText('error unfollowing user');
+
       if (!mounted) return;
 
       // assume still following
@@ -98,44 +125,28 @@ class LegacyUserConnectionsNotifier
           LegacyUserConnection.following,
         ),
       );
-    });
-  }
-}
-
-BuiltSet<LegacyUserConnection> _addOrCreateConnection(
-  BuiltSet<LegacyUserConnection>? connections,
-  LegacyUserConnection connection,
-) {
-  return connections?.rebuild(
-        (builder) => builder.add(connection),
-      ) ??
-      {connection}.toBuiltSet();
-}
-
-BuiltSet<LegacyUserConnection> _removeOrCreateConnection(
-  BuiltSet<LegacyUserConnection>? connections,
-  LegacyUserConnection connection,
-) {
-  return connections?.rebuild((builder) => builder.remove(connection)) ??
-      BuiltSet();
-}
-
-BuiltMap<String, BuiltSet<LegacyUserConnection>> _mapConnections(
-  List<Friendship> friendships,
-) {
-  final mappedConnections = <String, BuiltSet<LegacyUserConnection>>{};
-
-  for (final friendship in friendships) {
-    if (friendship.screenName != null) {
-      final connections = <LegacyUserConnection>{};
-
-      if (friendship.connections != null) {
-        connections.addAll(friendship.connections!.map(parseUserConnection));
-      }
-
-      mappedConnections[friendship.screenName!] = connections.toBuiltSet();
     }
   }
 
-  return BuiltMap(mappedConnections);
+  BuiltSet<LegacyUserConnection> _addOrCreateConnection(
+    BuiltSet<LegacyUserConnection>? connections,
+    LegacyUserConnection connection,
+  ) {
+    if (connections == null) {
+      return BuiltSet<LegacyUserConnection>({connection});
+    } else {
+      return connections.rebuild((builder) => builder.add(connection));
+    }
+  }
+
+  BuiltSet<LegacyUserConnection> _removeOrCreateConnection(
+    BuiltSet<LegacyUserConnection>? connections,
+    LegacyUserConnection connection,
+  ) {
+    if (connections == null) {
+      return BuiltSet<LegacyUserConnection>();
+    } else {
+      return connections.rebuild((builder) => builder.remove(connection));
+    }
+  }
 }

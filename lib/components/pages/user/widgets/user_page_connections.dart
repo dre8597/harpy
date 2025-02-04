@@ -12,7 +12,7 @@ class UserPageConnections extends StatelessWidget {
   });
 
   final UserData user;
-  final RelationshipData? relationship;
+  final BlueskyRelationshipData? relationship;
   final bool isAuthenticatedUser;
 
   @override
@@ -34,7 +34,7 @@ class UserPageConnections extends StatelessWidget {
                 onTap: enableTap
                     ? () => context.pushNamed(
                           FollowingPage.name,
-                          params: {'handle': user.handle},
+                          pathParameters: {'authorDid': user.id},
                         )
                     : null,
               ),
@@ -52,7 +52,7 @@ class UserPageConnections extends StatelessWidget {
                 onTap: enableTap
                     ? () => context.pushNamed(
                           FollowersPage.name,
-                          params: {'handle': user.handle},
+                          pathParameters: {'authorDid': user.id},
                         )
                     : null,
               ),

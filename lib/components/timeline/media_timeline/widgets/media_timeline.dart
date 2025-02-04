@@ -27,31 +27,29 @@ class MediaTimeline extends ConsumerStatefulWidget {
 
 class _MediaTimelineState extends ConsumerState<MediaTimeline> {
   ScrollController? _controller;
-  bool _disposeController = false;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(homeTimelineProvider.notifier).loadInitial();
+      ref.read(widget.provider.notifier).load(clearPrevious: true);
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (_controller == null) {
-      _controller = PrimaryScrollController.of(context) ?? ScrollController();
-      _disposeController = PrimaryScrollController.of(context) == null;
-    }
+  void _initializeController() {
+    _controller = ScrollController();
+    _ownsController = true;
   }
 
   @override
   void dispose() {
-    if (_disposeController) _controller?.dispose();
-
+    if (_ownsController) {
+      _controller?.dispose();
+    }
+    _controller = null;
     super.dispose();
   }
 
@@ -68,7 +66,7 @@ class _MediaTimelineState extends ConsumerState<MediaTimeline> {
       child: LoadMoreHandler(
         controller: _controller!,
         listen: timelineState.canLoadMore,
-        onLoadMore: timelineNotifier.loadOlder,
+        onLoadMore: timelineNotifier.load,
         child: CustomScrollView(
           key: const PageStorageKey('media_timeline'),
           controller: _controller,

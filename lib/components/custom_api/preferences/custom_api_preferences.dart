@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 part 'custom_api_preferences.freezed.dart';
 
@@ -19,8 +19,10 @@ class CustomApiPreferencesNotifier extends StateNotifier<CustomApiPreferences> {
   })  : _preferences = preferences,
         super(
           CustomApiPreferences(
-            customKey: preferences.getString('customKey', ''),
-            customSecret: preferences.getString('customSecret', ''),
+            customKey: preferences.getString('customKey'),
+            customSecret: preferences.getString('customSecret'),
+            customBlueskyService:
+                preferences.getString('customBlueskyService', 'bsky.social'),
           ),
         );
 
@@ -38,17 +40,23 @@ class CustomApiPreferencesNotifier extends StateNotifier<CustomApiPreferences> {
       ..setString('customKey', key)
       ..setString('customSecret', secret);
   }
+
+  void setCustomBlueskyService(String service) {
+    state = state.copyWith(customBlueskyService: service);
+    _preferences.setString('customBlueskyService', service);
+  }
 }
 
 @freezed
 class CustomApiPreferences with _$CustomApiPreferences {
-  factory CustomApiPreferences({
+  const factory CustomApiPreferences({
     required String customKey,
     required String customSecret,
+    required String customBlueskyService,
   }) = _CustomApiPreferences;
 
-  CustomApiPreferences._();
+  const CustomApiPreferences._();
 
-  late final hasCustomApiKeyAndSecret =
+  bool get hasCustomApiKeyAndSecret =>
       customKey.isNotEmpty && customSecret.isNotEmpty;
 }

@@ -2,7 +2,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 part 'media_preferences.freezed.dart';
 
@@ -21,23 +21,21 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
         super(
           MediaPreferences(
             bestMediaQuality: preferences.getInt('bestMediaQuality', 2),
-            cropImage: preferences.getBool('cropImage', false),
+            cropImage: preferences.getBool('cropImage'),
             autoplayGifs: preferences.getInt('autoplayMedia', 1),
             autoplayVideos: preferences.getInt('autoplayVideos', 2),
             startVideoPlaybackMuted: preferences.getBool(
               'startVideoPlaybackMuted',
-              false,
             ),
+            preloadVideos: preferences.getInt('preloadVideos', 1),
             hidePossiblySensitive: preferences.getBool(
               'hidePossiblySensitive',
-              false,
             ),
             openLinksExternally: preferences.getBool(
               'openLinksExternally',
-              false,
             ),
             showDownloadDialog: preferences.getBool('showDownloadDialog', true),
-            downloadPathData: preferences.getString('downloadPathData', ''),
+            downloadPathData: preferences.getString('downloadPathData'),
           ),
         );
 
@@ -49,6 +47,7 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
     setAutoplayGifs(1);
     setAutoplayVideos(2);
     setStartVideoPlaybackMuted(false);
+    setPreloadVideos(1);
     setHidePossiblySensitive(false);
     setOpenLinksExternally(false);
     setShowDownloadDialog(true);
@@ -79,6 +78,11 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
   void setStartVideoPlaybackMuted(bool value) {
     state = state.copyWith(startVideoPlaybackMuted: value);
     _preferences.setBool('startVideoPlaybackMuted', value);
+  }
+
+  void setPreloadVideos(int value) {
+    state = state.copyWith(preloadVideos: value);
+    _preferences.setInt('preloadVideos', value);
   }
 
   void setHidePossiblySensitive(bool value) {
@@ -136,6 +140,13 @@ class MediaPreferences with _$MediaPreferences {
     /// Whether video playback should start with volume 0 by default.
     required bool startVideoPlaybackMuted,
 
+    /// Whether videos should be preloaded when they become visible.
+    ///
+    /// 0: always preload
+    /// 1: only preload when using wifi
+    /// 2: never preload
+    required int preloadVideos,
+
     /// Whether possibly sensitive (NSFW) media should be hidden by default.
     required bool hidePossiblySensitive,
 
@@ -171,4 +182,9 @@ class MediaPreferences with _$MediaPreferences {
   bool shouldUseBestMediaQuality(ConnectivityResult connectivity) =>
       bestMediaQuality == 0 ||
       bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
+
+  /// Whether videos should be preloaded, taking the connectivity into account.
+  bool shouldPreloadVideos(ConnectivityResult connectivity) =>
+      preloadVideos == 0 ||
+      preloadVideos == 1 && connectivity == ConnectivityResult.wifi;
 }

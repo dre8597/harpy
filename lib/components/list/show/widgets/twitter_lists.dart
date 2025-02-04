@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/list_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -15,26 +16,26 @@ class TwitterLists extends ConsumerWidget {
   });
 
   final String handle;
-  final ValueChanged<TwitterListData>? onListSelected;
+  final ValueChanged<BlueskyListData>? onListSelected;
 
   Widget _itemBuilder(
     BuildContext context,
     int index,
-    BuiltList<TwitterListData> lists,
+    BuiltList<BlueskyListData> lists,
   ) {
     if (index.isEven) {
       final list = lists[index ~/ 2];
 
       return TwitterListCard(
         // key is used for the SliverChildDelegate's indexCallback
-        key: ValueKey(list.id),
+        key: ValueKey(list.cid),
         list: list,
         onSelected: onListSelected != null
             ? () => onListSelected!(list)
             : () => context.pushNamed(
                   ListTimelinePage.name,
-                  params: {'listId': list.id},
-                  queryParams: {'name': list.name},
+                  pathParameters: {'listId': list.cid},
+                  queryParameters: {'name': list.name},
                 ),
         onLongPress: () => _showListActionBottomSheet(
           context,
@@ -46,10 +47,10 @@ class TwitterLists extends ConsumerWidget {
     }
   }
 
-  int? _indexCallback(Key key, BuiltList<TwitterListData> lists) {
+  int? _indexCallback(Key key, BuiltList<BlueskyListData> lists) {
     if (key is ValueKey<String>) {
       final index = lists.indexWhere(
-        (list) => list.id == key.value,
+        (list) => list.cid == key.value,
       );
 
       if (index != -1) return index * 2;
@@ -61,7 +62,7 @@ class TwitterLists extends ConsumerWidget {
   List<Widget> _buildLists({
     required BuildContext context,
     required String title,
-    required BuiltList<TwitterListData> lists,
+    required BuiltList<BlueskyListData> lists,
     required bool hasMore,
     required bool loadingMore,
     required VoidCallback onLoadMore,
@@ -152,7 +153,7 @@ class TwitterLists extends ConsumerWidget {
 
 void _showListActionBottomSheet(
   BuildContext context, {
-  required TwitterListData list,
+  required BlueskyListData list,
 }) {
   showRbyBottomSheet<void>(
     context,
@@ -165,11 +166,11 @@ void _showListActionBottomSheet(
           Navigator.of(context).pop();
           context.pushNamed(
             ListMembersPage.name,
-            params: {'listId': list.id},
-            queryParams: {'name': list.name},
+            pathParameters: {'listId': list.cid},
+            queryParameters: {'name': list.name},
           );
         },
-      )
+      ),
     ],
   );
 }

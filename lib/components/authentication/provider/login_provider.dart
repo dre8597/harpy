@@ -1,19 +1,19 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:bluesky/atproto.dart';
+import 'package:bluesky/bluesky.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
-import 'package:twitter_webview_auth/twitter_webview_auth.dart';
 
-/// Handles login.
+import 'package:rby/rby.dart';
+
+/// Handles login using Bluesky authentication.
 ///
-/// Authentication logic is split between
-/// * [authenticationProvider]
-/// * [loginProvider]
-/// * [logoutProvider]
+/// Authentication logic used to be split between Twitter and Bluesky, but is now
+/// updated to exclusively use Bluesky authentication via loginWithBluesky.
 final loginProvider = Provider(
   (ref) => _Login(
     ref: ref,
@@ -32,101 +32,76 @@ class _Login with LoggerMixin {
   final Ref _ref;
   final Environment _environment;
 
-  /// Initializes a web based twitter authentication.
+  /// Initializes a Bluesky authentication.
   ///
   /// Navigates to
   /// * [HomePage] on successful authentication
-  /// * [SetupPage] on successful authentication if the setup has not yet been
-  ///   completed
+  /// * [SetupPage] on successful authentication if the setup has not yet been completed
   /// * [LoginPage] when authentication was not successful.
-  Future<void> login() async {
-    if (!_environment.validateAppConfig()) {
-      _ref
-          .read(messageServiceProvider)
-          .showText('invalid twitter key / secret');
-      return;
-    }
+  Future<void> loginWithBluesky({
+    required String identifier,
+    required String password,
+  }) async {
+    log.fine('logging in with Bluesky');
 
-    log.fine('logging in');
+    final environment = _ref.read(environmentProvider);
+    log.fine(
+      'Using AES key: ${environment.aesKey.substring(0, 10)}...',
+    ); // Only log part of the key for security
 
     _ref.read(authenticationStateProvider.notifier).state =
         const AuthenticationState.awaitingAuthentication();
 
-    final key = _ref.read(consumerKeyProvider);
-    final secret = _ref.read(consumerSecretProvider);
+    try {
+      final service = _ref.read(blueskyServiceProvider);
 
-    final result = await TwitterAuth(
-      consumerKey: key,
-      consumerSecret: secret,
-      callbackUrl: 'harpy://',
-    ).authenticateWithTwitter(
-      webviewNavigation: _webviewNavigation,
-    );
+      // Create session
+      final session = await createSession(
+        service: service,
+        identifier: identifier,
+        password: password,
+      );
 
-    await result.when(
-      success: (token, secret, userId) async {
-        log.fine('successfully authenticated');
+      // Store credentials and session data
+      await _ref.read(authPreferencesProvider.notifier).setBlueskyAuth(
+            handle: identifier,
+            password: password,
+          );
 
-        _ref.read(authPreferencesProvider.notifier).setAuth(
-              token: token,
-              secret: secret,
-              userId: userId,
-            );
+      await _ref.read(authPreferencesProvider.notifier).setBlueskySession(
+            accessJwt: session.data.accessJwt,
+            refreshJwt: session.data.refreshJwt,
+            did: session.data.did,
+          );
 
-        await _ref
-            .read(authenticationProvider)
-            .onLogin(_ref.read(authPreferencesProvider));
+      log.fine('successfully authenticated with Bluesky');
 
-        if (_ref.read(authenticationStateProvider).isAuthenticated) {
-          if (_ref.read(setupPreferencesProvider).performedSetup) {
-            _ref.read(routerProvider).goNamed(
-              HomePage.name,
-              queryParams: {'transition': 'fade'},
-            );
-          } else {
-            _ref.read(routerProvider).goNamed(SetupPage.name);
-          }
-        } else {
-          _ref.read(routerProvider).goNamed(LoginPage.name);
-        }
-      },
-      failure: (e, st) {
-        log.warning(
-          'login failed\n\n'
-          'If this issue is persistent, see\n'
-          'https://github.com/robertodoering/harpy/wiki/Troubleshooting',
-          e,
-          st,
-        );
+      // Get authenticated instance
+      final bluesky = Bluesky.fromSession(
+        session.data,
+        service: service,
+      );
 
-        _ref.read(messageServiceProvider).showSnackbar(
-              const SnackBar(
-                content: Text('authentication failed, please try again'),
-              ),
-            );
+      await _ref.read(blueskyApiProvider.notifier).setBlueskySession(bluesky);
 
-        _ref.read(authenticationStateProvider.notifier).state =
-            const AuthenticationState.unauthenticated();
+      // Get user profile
+      final profile = await bluesky.actor.getProfile(actor: identifier);
 
-        _ref.read(routerProvider).goNamed(LoginPage.name);
-      },
-      cancelled: () {
-        log.fine('login cancelled by user');
+      final userData = UserData.fromBlueskyActorProfile(profile.data);
+      _ref.read(authenticationStateProvider.notifier).state =
+          AuthenticationState.authenticated(user: userData);
 
-        _ref.read(authenticationStateProvider.notifier).state =
-            const AuthenticationState.unauthenticated();
-
-        _ref.read(routerProvider).goNamed(LoginPage.name);
-      },
-    );
-  }
-
-  /// Used by [TwitterAuth] to navigate to the login webview page.
-  Future<Uri?> _webviewNavigation(TwitterLoginWebview webview) async {
-    return _ref.read(routerProvider).navigator?.push<Uri?>(
-          SlidePageRoute(
-            builder: (_) => LoginWebview(webview: webview),
-          ),
-        );
+      // Navigate based on setup status
+      if (_ref.read(setupPreferencesProvider).performedSetup) {
+        _ref.read(routerProvider).goNamed(HomePage.name);
+      } else {
+        _ref.read(routerProvider).goNamed(SetupPage.name);
+      }
+    } catch (e) {
+      log.warning('error authenticating with Bluesky', e);
+      _ref.read(authenticationStateProvider.notifier).state =
+          const AuthenticationState.unauthenticated();
+      _ref.read(messageServiceProvider).showText('authentication failed');
+    }
   }
 }

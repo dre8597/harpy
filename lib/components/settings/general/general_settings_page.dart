@@ -52,6 +52,7 @@ class _GeneralSettingsList extends ConsumerWidget {
     final theme = Theme.of(context);
     final general = ref.watch(generalPreferencesProvider);
     final generalNotifier = ref.watch(generalPreferencesProvider.notifier);
+    final onBackground = theme.colorScheme.onSurface;
 
     return SliverList(
       delegate: SliverChildListDelegate.fixed([
@@ -80,7 +81,10 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(Icons.speed),
-            title: const Text('performance mode'),
+            title: Text(
+              'performance mode',
+              style: TextStyle(color: onBackground),
+            ),
             subtitle: const Text('reduces animations and effects'),
             value: general.performanceMode,
             borderRadius: theme.shape.borderRadius,
@@ -91,7 +95,10 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(Icons.access_time),
-            title: const Text('always use 24-hour time format'),
+            title: Text(
+              'always use 24-hour time format',
+              style: TextStyle(color: onBackground),
+            ),
             value: general.alwaysUse24HourFormat,
             borderRadius: theme.shape.borderRadius,
             onChanged: generalNotifier.setAlwaysUse24HourFormat,
@@ -101,7 +108,10 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(FeatherIcons.feather),
-            title: const Text('floating compose button'),
+            title: Text(
+              'floating compose button',
+              style: TextStyle(color: onBackground),
+            ),
             subtitle: const Text(
               'display a floating compose button in the home screen',
             ),
@@ -114,7 +124,10 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: HarpyRadioDialogTile(
             leading: const Icon(CupertinoIcons.square_list),
-            title: const Text('restore home timeline position on app start'),
+            title: Text(
+              'restore home timeline position on app start',
+              style: TextStyle(color: onBackground),
+            ),
             dialogTitle: const Text(
               'change how the app behaves when opening the home timeline',
             ),
@@ -132,7 +145,10 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(CupertinoIcons.refresh),
-            title: const Text('restore home timeline position on refresh'),
+            title: Text(
+              'restore home timeline position on refresh',
+              style: TextStyle(color: onBackground),
+            ),
             subtitle: const Text(
               'restores your position in the home timeline after a refresh',
             ),
@@ -147,14 +163,20 @@ class _GeneralSettingsList extends ConsumerWidget {
           children: [
             RbySwitchTile(
               leading: const Icon(CupertinoIcons.rectangle),
-              title: const Text('automatically hide app bar'),
+              title: Text(
+                'automatically hide app bar',
+                style: TextStyle(color: onBackground),
+              ),
               subtitle: const Text('when scrolling down'),
               value: general.hideHomeAppBar,
               onChanged: generalNotifier.setHideHomeAppbar,
             ),
             RbySwitchTile(
               leading: const Icon(CupertinoIcons.rectangle_dock),
-              title: const Text('bottom app bar'),
+              title: Text(
+                'bottom app bar',
+                style: TextStyle(color: onBackground),
+              ),
               subtitle: const Text('position the app bar at the bottom'),
               value: general.bottomAppBar,
               onChanged: generalNotifier.setBottomAppBar,

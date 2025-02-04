@@ -25,18 +25,18 @@ class HarpyThemeData with _$HarpyThemeData {
     required Brightness brightness,
     required String name,
   }) {
-    final colorScheme = palette.toColorScheme(brightness: brightness)!;
+    final colorScheme = palette.toColorScheme(brightness: brightness);
 
     return HarpyThemeData(
       name: name,
-      backgroundColors: [colorScheme.background.value],
+      backgroundColors: [colorScheme.surface.value],
       primaryColor: colorScheme.primary.value,
       secondaryColor: colorScheme.tertiary.value,
       cardColor: brightness == Brightness.dark
           ? Color(palette.neutral.get(30)).withOpacity(.3).value
           : Color(palette.neutral.get(80)).withOpacity(.3).value,
-      statusBarColor: colorScheme.background.withOpacity(0).value,
-      navBarColor: colorScheme.background.withOpacity(0).value,
+      statusBarColor: colorScheme.surface.withOpacity(0).value,
+      navBarColor: colorScheme.surface.withOpacity(0).value,
     );
   }
 

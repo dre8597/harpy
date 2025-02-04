@@ -29,7 +29,7 @@ void main() {
       verify(
         () => container.read(routerProvider).goNamed(
               LoginPage.name,
-              queryParams: any(named: 'queryParams'),
+              queryParameters: any(named: 'queryParams'),
             ),
       ).called(1);
     });
@@ -58,7 +58,7 @@ void main() {
       verify(
         () => container.read(routerProvider).goNamed(
               HomePage.name,
-              queryParams: any(named: 'queryParams'),
+              queryParameters: any(named: 'queryParams'),
             ),
       ).called(1);
     });

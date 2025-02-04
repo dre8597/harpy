@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
 typedef TweetDelegatesCreator = TweetDelegates Function(
-  LegacyTweetData tweet,
+  BlueskyPostData tweet,
   TweetNotifier notifier,
 );
 
@@ -19,7 +20,7 @@ class TweetCard extends ConsumerStatefulWidget {
     this.index,
   }) : super(key: ObjectKey(tweet));
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetCardConfig config;
   final TweetDelegatesCreator createDelegates;
   final Color? color;
@@ -34,7 +35,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
   void initState() {
     super.initState();
 
-    final provider = tweetProvider(widget.tweet.originalId);
+    final provider = tweetProvider(widget.tweet.id);
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (mounted) ref.read(provider.notifier).initialize(widget.tweet);
@@ -44,7 +45,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = tweetProvider(widget.tweet.originalId);
+    final provider = tweetProvider(widget.tweet.id);
     final state = ref.watch(provider);
     final notifier = ref.watch(provider.notifier);
 
@@ -67,7 +68,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => delegates.onShowTweet?.call(ref),
-        child: tweet.replies.isEmpty
+        child: tweet.replies?.isEmpty ?? true
             ? child
             : Column(
                 children: [

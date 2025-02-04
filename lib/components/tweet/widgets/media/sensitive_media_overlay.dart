@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -11,7 +12,7 @@ class SensitiveMediaOverlay extends ConsumerStatefulWidget {
     required this.child,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final Widget child;
 
   @override
@@ -33,7 +34,8 @@ class _SensitiveMediaOverlayState extends ConsumerState<SensitiveMediaOverlay> {
         Positioned.fill(
           child: RbyAnimatedSwitcher(
             child: media.hidePossiblySensitive &&
-                    widget.tweet.possiblySensitive &&
+                    widget.tweet.labels?.any((label) => label.val == 'warn') ==
+                        true &&
                     _showOverlay
                 ? GestureDetector(
                     onTap: () => setState(() => _showOverlay = false),

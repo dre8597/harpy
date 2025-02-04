@@ -89,7 +89,7 @@ class _HarpyTabState extends ConsumerState<HarpyTab>
 
     _foregroundColorAnimation = ColorTween(
       begin: widget.selectedForegroundColor ?? theme.colorScheme.primary,
-      end: theme.colorScheme.onBackground,
+      end: theme.colorScheme.onSurface,
     ).animate(_animationController);
   }
 
@@ -134,7 +134,7 @@ class _HarpyTabState extends ConsumerState<HarpyTab>
                 color: _foregroundColorAnimation.value,
               ),
               child: DefaultTextStyle(
-                style: theme.textTheme.subtitle1!.copyWith(
+                style: theme.textTheme.titleMedium!.copyWith(
                   color: _foregroundColorAnimation.value,
                 ),
                 child: SizedBox(

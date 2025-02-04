@@ -39,8 +39,8 @@ class _FontSelectionPageState extends State<FontSelectionPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) => _onWillPop(),
       child: HarpyScaffold(
         child: ScrollDirectionListener(
           child: ScrollToTop(

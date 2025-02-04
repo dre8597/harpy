@@ -1,9 +1,10 @@
 import 'dart:async';
 
+import 'package:bluesky/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -100,9 +101,15 @@ class _TopRow extends ConsumerWidget {
     final authentication = ref.watch(authenticationStateProvider);
 
     return TweetCardTopRow(
-      tweet: LegacyTweetData(
+      tweet: BlueskyPostData(
+        authorAvatar: authentication.user?.profileImage?.mini?.toString() ?? '',
+        authorDid: authentication.user?.handle ?? '',
         createdAt: DateTime.now(),
-        user: authentication.user!,
+        id: '',
+        uri: const AtUri(''),
+        text: '',
+        author: authentication.user!.name,
+        handle: authentication.user?.handle ?? '',
       ),
       delegates: const TweetDelegates(),
       innerPadding: theme.spacing.small,

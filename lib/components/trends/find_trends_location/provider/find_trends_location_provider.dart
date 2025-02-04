@@ -1,10 +1,9 @@
+import 'package:bluesky/bluesky.dart';
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
-import 'package:location/location.dart' as location;
 import 'package:rby/rby.dart';
 
 part 'find_trends_location_provider.freezed.dart';
@@ -12,7 +11,7 @@ part 'find_trends_location_provider.freezed.dart';
 final findTrendsLocationProvider = StateNotifierProvider.autoDispose<
     FindTrendsLocationNotifier, FindTrendsLocationState>(
   (ref) => FindTrendsLocationNotifier(
-    twitterApi: ref.watch(twitterApiV1Provider),
+    blueskyApi: ref.watch(blueskyApiProvider),
   ),
   name: 'FindTrendsLocationProvider',
 );
@@ -20,126 +19,94 @@ final findTrendsLocationProvider = StateNotifierProvider.autoDispose<
 class FindTrendsLocationNotifier extends StateNotifier<FindTrendsLocationState>
     with LoggerMixin {
   FindTrendsLocationNotifier({
-    required TwitterApi twitterApi,
-  })  : _twitterApi = twitterApi,
+    required Bluesky blueskyApi,
+  })  : _blueskyApi = blueskyApi,
         super(const FindTrendsLocationState.initial());
 
-  final TwitterApi _twitterApi;
+  final Bluesky _blueskyApi;
 
   Future<void> search({
-    required String latitude,
-    required String longitude,
+    required String query,
   }) async {
-    log.fine('finding trends at lat: $latitude, long: $longitude');
+    log.fine('searching for feed generators with query: $query');
 
     state = const FindTrendsLocationState.loading();
 
-    final closest = await _twitterApi.trendsService
-        .closest(lat: latitude, long: longitude)
-        .handleError(logErrorHandler);
-
-    if (closest != null) {
-      final locations = <TrendsLocationData>[];
-
-      for (final location in closest) {
-        if (location.woeid != null &&
-            location.name != null &&
-            location.placeType?.name != null) {
-          locations.add(
-            TrendsLocationData(
-              woeid: location.woeid!,
-              name: location.name!,
-              placeType: location.placeType!.name!,
-              country: location.country ?? '',
-            ),
-          );
-        }
-      }
-
-      if (!locations.contains(TrendsLocationData.worldwide())) {
-        locations.insert(0, TrendsLocationData.worldwide());
-      }
-
-      log.fine('found ${locations.length} closest trends locations');
-
-      state = FindTrendsLocationState.data(
-        locations: locations.toBuiltList(),
+    try {
+      final generators = await _blueskyApi.unspecced.getPopularFeedGenerators(
+        query: query,
+        limit: 25,
       );
-    } else {
-      log.info('error finding closest trends locations');
 
+      if (generators.data.feeds.isNotEmpty) {
+        final feedGenerators = generators.data.feeds
+            .map(
+              (feed) => TrendsLocationData(
+                woeid: feed.hashCode,
+                name: feed.displayName,
+                placeType: 'feed',
+                country: feed.description ?? '',
+              ),
+            )
+            .toList();
+
+        log.fine('found ${feedGenerators.length} feed generators');
+
+        state = FindTrendsLocationState.data(
+          locations: feedGenerators.toBuiltList(),
+        );
+      } else {
+        log.info('no feed generators found');
+        state = const FindTrendsLocationState.error();
+      }
+    } catch (e, st) {
+      log.warning('error searching feed generators', e, st);
       state = const FindTrendsLocationState.error();
     }
   }
 
   Future<void> nearby() async {
-    log.fine('finding nearby locations');
+    log.fine('finding popular feed generators');
 
     state = const FindTrendsLocationState.loading();
 
-    final geo = location.Location();
-
     try {
-      if (!await _requestService(geo)) {
-        log.info('location service request not granted');
-        state = const FindTrendsLocationState.serviceDisabled();
-        return;
-      }
-
-      if (!await _requestPermission(geo)) {
-        log.info('location permission not granted');
-        state = const FindTrendsLocationState.permissionDenied();
-        return;
-      }
-
-      final locationData = await geo.getLocation();
-
-      log.fine('got location data: $locationData');
-
-      await search(
-        latitude: '${locationData.latitude}',
-        longitude: '${locationData.longitude}',
+      final popular = await _blueskyApi.unspecced.getPopularFeedGenerators(
+        limit: 25,
       );
-    } catch (e, st) {
-      log.warning('unable to get current position', e, st);
 
+      if (popular.data.feeds.isNotEmpty) {
+        final feedGenerators = popular.data.feeds
+            .map(
+              (feed) => TrendsLocationData(
+                woeid: feed.hashCode,
+                name: feed.displayName,
+                placeType: 'feed',
+                country: feed.description ?? '',
+              ),
+            )
+            .toList();
+
+        log.fine('found ${feedGenerators.length} popular feed generators');
+
+        state = FindTrendsLocationState.data(
+          locations: feedGenerators.toBuiltList(),
+        );
+      } else {
+        log.info('no popular feed generators found');
+        state = const FindTrendsLocationState.error();
+      }
+    } catch (e, st) {
+      log.warning('error getting popular feed generators', e, st);
       state = const FindTrendsLocationState.error();
     }
-  }
-
-  /// Requests to enable the location service if it not enabled.
-  Future<bool> _requestService(location.Location geo) async {
-    var service = await geo.serviceEnabled();
-
-    if (!service) {
-      service = await geo.requestService();
-
-      if (!service) return false;
-    }
-
-    return true;
-  }
-
-  /// Requests permissions to use the location service.
-  Future<bool> _requestPermission(location.Location geo) async {
-    var permission = await geo.hasPermission();
-
-    if (permission == location.PermissionStatus.denied) {
-      permission = await geo.requestPermission();
-    }
-
-    if (permission == location.PermissionStatus.denied ||
-        permission == location.PermissionStatus.deniedForever) {
-      return false;
-    }
-
-    return true;
   }
 }
 
 @freezed
 class FindTrendsLocationState with _$FindTrendsLocationState {
   const factory FindTrendsLocationState.initial() = _Initial;
+
   const factory FindTrendsLocationState.loading() = _Loading;
 
   const factory FindTrendsLocationState.data({
@@ -147,6 +114,8 @@ class FindTrendsLocationState with _$FindTrendsLocationState {
   }) = _Data;
 
   const factory FindTrendsLocationState.error() = _Error;
+
   const factory FindTrendsLocationState.serviceDisabled() = _ServiceDisabled;
+
   const factory FindTrendsLocationState.permissionDenied() = _PermissionDenied;
 }

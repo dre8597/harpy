@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -16,7 +17,7 @@ class RetweetButton extends ConsumerStatefulWidget {
     this.foregroundColor,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onRetweet;
   final TweetActionCallback? onUnretweet;
   final TweetActionCallback? onShowRetweeters;
@@ -32,7 +33,9 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
   Future<void> _showMenu() async {
     final renderBox = context.findRenderObject()! as RenderBox;
     final overlay =
-        Overlay.of(context)!.context.findRenderObject()! as RenderBox;
+        Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final theme = Theme.of(context);
+    final onBackground = theme.colorScheme.onSurface;
 
     final position = RelativeRect.fromRect(
       Rect.fromPoints(
@@ -55,26 +58,35 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
         RbyPopupMenuListTile(
           value: 0,
           leading: const Icon(FeatherIcons.repeat),
-          title: Text(widget.tweet.retweeted ? 'unretweet' : 'retweet'),
+          title: Text(
+            widget.tweet.isReposted ? 'unretweet' : 'retweet',
+            style: TextStyle(color: onBackground),
+          ),
         ),
         if (widget.onComposeQuote != null)
-          const RbyPopupMenuListTile(
+          RbyPopupMenuListTile(
             value: 1,
-            leading: Icon(FeatherIcons.feather),
-            title: Text('quote tweet'),
+            leading: const Icon(FeatherIcons.feather),
+            title: Text(
+              'quote tweet',
+              style: TextStyle(color: onBackground),
+            ),
           ),
         if (widget.onShowRetweeters != null)
-          const RbyPopupMenuListTile(
+          RbyPopupMenuListTile(
             value: 2,
-            leading: Icon(FeatherIcons.users),
-            title: Text('view retweeters'),
+            leading: const Icon(FeatherIcons.users),
+            title: Text(
+              'view retweeters',
+              style: TextStyle(color: onBackground),
+            ),
           ),
       ],
     );
 
     if (mounted) {
       if (result == 0) {
-        widget.tweet.retweeted
+        widget.tweet.isReposted
             ? widget.onUnretweet?.call(ref)
             : widget.onRetweet?.call(ref);
       } else if (result == 1) {
@@ -93,8 +105,8 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
     final iconSize = iconTheme.size! + widget.sizeDelta;
 
     return TweetActionButton(
-      active: widget.tweet.retweeted,
-      value: widget.tweet.retweetCount,
+      active: widget.tweet.isReposted,
+      value: widget.tweet.repostCount,
       iconBuilder: (_) => Icon(FeatherIcons.repeat, size: iconSize - 1),
       iconAnimationBuilder: (animation, child) => RotationTransition(
         turns: CurvedAnimation(curve: Curves.easeOutBack, parent: animation),

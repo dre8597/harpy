@@ -1,10 +1,20 @@
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
+
+/// A class to handle paginated user data from Bluesky
+class PaginatedUsers {
+  PaginatedUsers({
+    required this.users,
+    required this.cursor,
+  });
+
+  final List<UserData> users;
+  final String? cursor;
+}
 
 /// Implementation for a [PaginatedNotifierMixin] to handle [PaginatedUsers]
 /// responses.
@@ -25,16 +35,14 @@ abstract class PaginatedUsersNotifier
   Future<void> onInitialResponse(PaginatedUsers response) async {
     log.fine('received initial paginated users response');
 
-    final users = response.users?.map(UserData.fromV1).toBuiltList();
+    final users = response.users.toBuiltList();
 
-    if (users == null || users.isEmpty) {
+    if (users.isEmpty) {
       state = const PaginatedState.noData();
     } else {
-      final cursor = int.tryParse(response.nextCursorStr ?? '');
-
       state = PaginatedState.data(
         data: users,
-        cursor: cursor,
+        cursor: response.cursor != null ? 1 : null,
       );
     }
   }
@@ -46,14 +54,11 @@ abstract class PaginatedUsersNotifier
   ) async {
     log.fine('received loading more paginated users response');
 
-    final users =
-        response.users?.map(UserData.fromV1) ?? const Iterable.empty();
-
-    final cursor = int.tryParse(response.nextCursorStr ?? '');
+    final users = response.users;
 
     state = PaginatedState.data(
       data: data.rebuild((builder) => builder.addAll(users)),
-      cursor: cursor,
+      cursor: response.cursor != null ? (state.data?.length ?? 0) + 1 : null,
     );
   }
 }

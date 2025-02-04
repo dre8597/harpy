@@ -11,7 +11,7 @@ final connectivityProvider =
 class ConnectivityNotifier extends StateNotifier<ConnectivityResult> {
   ConnectivityNotifier() : super(ConnectivityResult.mobile) {
     Connectivity().onConnectivityChanged.listen(
-          (connectivity) => state = connectivity,
+          (connectivity) => state = connectivity.first,
           onError: logErrorHandler,
         );
   }
@@ -19,7 +19,7 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityResult> {
   Future<void> initialize() async {
     await Connectivity()
         .checkConnectivity()
-        .then((value) => state = value)
+        .then((value) => state = value.first)
         .handleError(logErrorHandler);
   }
 }

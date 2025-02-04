@@ -23,7 +23,8 @@ class MessageService {
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? showSnackbar(
     SnackBar snackBar,
   ) {
-    final context = _ref.read(routerProvider).navigator?.context;
+    final context =
+        _ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
     assert(context != null);
 
     if (context != null) {

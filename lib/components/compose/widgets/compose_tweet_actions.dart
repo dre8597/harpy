@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -85,12 +85,12 @@ class _PostTweetButtonState extends ConsumerState<_PostTweetButton> {
   Future<void> _showDialog(ComposeState state) async {
     FocusScope.of(context).unfocus();
 
-    final sentTweet = await showDialog<LegacyTweetData>(
+    final sentTweet = await showDialog<BlueskyPostData>(
       context: context,
       barrierDismissible: false,
       builder: (context) => PostTweetDialog(
         text: widget.controller.text,
-        attachmentUrl: state.quotedTweet?.tweetUrl,
+        attachmentUrl: state.quotedTweet?.media?.firstOrNull?.url,
         inReplyToStatusId: state.parentTweet?.id,
         media: state.media,
         mediaType: state.type,

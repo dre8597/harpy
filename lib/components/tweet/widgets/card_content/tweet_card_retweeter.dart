@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -12,7 +13,7 @@ class TweetCardRetweeter extends ConsumerWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onRetweeterTap;
   final TweetCardElementStyle style;
 
@@ -21,7 +22,7 @@ class TweetCardRetweeter extends ConsumerWidget {
     final theme = Theme.of(context);
     final display = ref.watch(displayPreferencesProvider);
 
-    final textStyle = theme.textTheme.bodyText2!;
+    final textStyle = theme.textTheme.bodyMedium!;
 
     return GestureDetector(
       onTap: () => onRetweeterTap?.call(ref),
@@ -39,7 +40,7 @@ class TweetCardRetweeter extends ConsumerWidget {
             Flexible(
               child: FittedBox(
                 child: Text(
-                  '${tweet.retweeter!.name} retweeted',
+                  '${tweet.author} retweeted',
                   textDirection: TextDirection.ltr,
                   maxLines: 1,
                   style: textStyle

@@ -79,8 +79,8 @@ class _ListMembersButton extends ConsumerWidget {
       onTap: state is! TimelineStateLoading
           ? () => context.pushNamed(
                 ListMembersPage.name,
-                params: {'listId': listId},
-                queryParams: {'name': listName},
+                pathParameters: {'listId': listId},
+                queryParameters: {'name': listName},
               )
           : null,
     );
@@ -116,8 +116,8 @@ class _FilterButton extends ConsumerWidget {
       onTap: enable
           ? () => context.pushNamed(
                 ListTimelineFilter.name,
-                params: {'listId': listId},
-                queryParams: {'name': listName},
+                pathParameters: {'listId': listId},
+                queryParameters: {'name': listName},
               )
           : null,
     );

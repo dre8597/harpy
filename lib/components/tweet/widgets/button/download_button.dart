@@ -12,8 +12,8 @@ class DownloadButton extends ConsumerWidget {
     this.foregroundColor,
   });
 
-  final LegacyTweetData tweet;
-  final MediaData media;
+  final BlueskyPostData tweet;
+  final BlueskyMediaData media;
   final MediaActionCallback? onDownload;
   final double sizeDelta;
   final Color? foregroundColor;

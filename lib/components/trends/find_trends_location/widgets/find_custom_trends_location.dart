@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
-import 'package:tuple/tuple.dart';
 
 /// Content for the [FindTrendsLocationDialog] for entering custom coordinates.
 class FindCustomTrendsLocation extends StatefulWidget {
@@ -9,7 +8,7 @@ class FindCustomTrendsLocation extends StatefulWidget {
     required this.onSearch,
   });
 
-  final ValueChanged<Tuple2<String, String>> onSearch;
+  final ValueChanged<String> onSearch;
 
   @override
   State<FindCustomTrendsLocation> createState() =>
@@ -19,13 +18,10 @@ class FindCustomTrendsLocation extends StatefulWidget {
 class _FindCustomTrendsLocationState extends State<FindCustomTrendsLocation> {
   final _form = GlobalKey<FormState>();
 
-  String _latitude = '';
-  String _longitude = '';
+  String _query = '';
 
   bool get _validate =>
-      _latitude.isNotEmpty &&
-      _longitude.isNotEmpty &&
-      (_form.currentState?.validate() ?? false);
+      _query.isNotEmpty && (_form.currentState?.validate() ?? false);
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +56,7 @@ class _FindCustomTrendsLocationState extends State<FindCustomTrendsLocation> {
                       textInputAction: TextInputAction.next,
                       onEditingComplete: FocusScope.of(context).nextFocus,
                       validator: _latitudeValidator,
-                      onChanged: (value) => setState(() => _latitude = value),
+                      onChanged: (value) => setState(() => _query = value),
                     ),
                     VerticalSpacer.normal,
                     TextFormField(
@@ -76,7 +72,7 @@ class _FindCustomTrendsLocationState extends State<FindCustomTrendsLocation> {
                       textInputAction: TextInputAction.done,
                       onEditingComplete: FocusScope.of(context).unfocus,
                       validator: _longitudeValidator,
-                      onChanged: (value) => setState(() => _longitude = value),
+                      onChanged: (value) => setState(() => _query = value),
                     ),
                     VerticalSpacer.normal,
                   ],
@@ -85,9 +81,7 @@ class _FindCustomTrendsLocationState extends State<FindCustomTrendsLocation> {
             ),
             RbyButton.elevated(
               label: const Text('confirm'),
-              onTap: _validate
-                  ? () => widget.onSearch(Tuple2(_latitude, _longitude))
-                  : null,
+              onTap: _validate ? () => widget.onSearch(_query) : null,
             ),
           ],
         ),

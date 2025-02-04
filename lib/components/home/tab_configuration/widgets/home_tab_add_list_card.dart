@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/list_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -30,9 +31,9 @@ class HomeTabAddListCard extends ConsumerWidget {
               )
           : () => context.pushNamed(
                 ListShowPage.name,
-                params: {'handle': authentication.user!.handle},
+                pathParameters: {'authorDid': authentication.user!.id},
                 // ignore: avoid_types_on_closure_parameters
-                extra: (TwitterListData list) {
+                extra: (BlueskyListData list) {
                   HapticFeedback.lightImpact();
                   Navigator.of(context).pop();
                   notifier.addList(list: list);

@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
+import 'package:rby/rby.dart' hide Preferences;
 
 part 'theme_preferences.freezed.dart';
 
@@ -28,10 +29,11 @@ class ThemePreferencesNotifier extends StateNotifier<ThemePreferences>
   })  : _preferences = preferences,
         super(
           ThemePreferences(
-            lightThemeId: preferences.getInt('lightThemeId', isFree ? 0 : 1),
-            darkThemeId: preferences.getInt('darkThemeId', 0),
-            customThemes:
-                preferences.getStringList('customThemes', []).toBuiltList(),
+            lightThemeId: preferences.getInt('lightThemeId'),
+            darkThemeId: preferences.getInt('darkThemeId'),
+            customThemes: BuiltList<String>.of(
+              preferences.getStringList('customThemes', []),
+            ),
           ),
         );
 

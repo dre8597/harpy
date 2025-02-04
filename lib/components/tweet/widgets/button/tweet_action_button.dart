@@ -99,7 +99,7 @@ class _TweetActionButtonState extends State<TweetActionButton>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final textStyle = theme.textTheme.button!.copyWith(
+    final textStyle = theme.textTheme.labelLarge!.copyWith(
       fontSize: widget.iconSize - 4,
       height: 1,
       color: widget.active ? widget.activeColor : widget.foregroundColor,
@@ -143,16 +143,16 @@ class _TweetActionButtonState extends State<TweetActionButton>
         : null;
 
     final style = ButtonStyle(
-      backgroundColor: MaterialStateProperty.all(Colors.transparent),
-      foregroundColor: MaterialStateProperty.resolveWith(
-        (states) => states.contains(MaterialState.disabled)
-            ? (widget.foregroundColor ?? theme.colorScheme.onBackground)
+      backgroundColor: WidgetStateProperty.all(Colors.transparent),
+      foregroundColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.disabled)
+            ? (widget.foregroundColor ?? theme.colorScheme.onSurface)
                 .withOpacity(.5)
-            : widget.foregroundColor ?? theme.colorScheme.onBackground,
+            : widget.foregroundColor ?? theme.colorScheme.onSurface,
       ),
-      overlayColor: MaterialStateProperty.all(theme.highlightColor),
-      elevation: MaterialStateProperty.all(0),
-      padding: MaterialStateProperty.all(
+      overlayColor: WidgetStateProperty.all(theme.highlightColor),
+      elevation: WidgetStateProperty.all(0),
+      padding: WidgetStateProperty.all(
         theme.spacing.edgeInsets + EdgeInsetsDirectional.all(widget.sizeDelta),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 
 enum TweetCardElement {
@@ -32,19 +33,20 @@ enum TweetCardActionElement {
 }
 
 extension TweetCardElementExtension on TweetCardElement {
-  bool shouldBuild(LegacyTweetData tweet, TweetCardConfig config) {
+  //TODO: Update this work with Bluesky data instead
+  bool shouldBuild(BlueskyPostData tweet, TweetCardConfig config) {
     if (config.elements.contains(this)) {
       switch (this) {
         case TweetCardElement.retweeter:
-          return tweet.isRetweet;
+          return tweet.isReposted;
         case TweetCardElement.text:
-          return tweet.hasText;
+          return tweet.text.isNotEmpty;
         case TweetCardElement.quote:
-          return tweet.quote != null;
+          return tweet.quoteOf != null;
         case TweetCardElement.media:
-          return tweet.media.isNotEmpty;
+          return tweet.media?.isNotEmpty ?? false;
         case TweetCardElement.linkPreview:
-          return tweet.previewUrl != null;
+          return tweet.externalUrls?.isNotEmpty ?? false;
         case TweetCardElement.topRow:
         case TweetCardElement.translation:
         case TweetCardElement.pinned:

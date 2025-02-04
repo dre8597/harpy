@@ -25,7 +25,7 @@ class VideoPlayerProgressIndicator extends StatelessWidget {
         // ignore: non_directional
         padding: EdgeInsets.only(top: compact ? 12 : 24),
         colors: VideoProgressColors(
-          playedColor: theme.colorScheme.primary.withOpacity(.7),
+          playedColor: theme.colorScheme.primary.withAlpha(179),
           bufferedColor: theme.colorScheme.primary.withOpacity(.3),
         ),
       ),

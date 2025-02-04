@@ -1,9 +1,11 @@
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
+import 'package:logging/logging.dart';
 
 final mentionsTimelineProvider = StateNotifierProvider.autoDispose<
     MentionsTimelineNotifier, TimelineState<bool>>(
@@ -12,7 +14,6 @@ final mentionsTimelineProvider = StateNotifierProvider.autoDispose<
 
     return MentionsTimelineNotifier(
       ref: ref,
-      twitterApi: ref.watch(twitterApiV1Provider),
     );
   },
   name: 'MentionsTimelineProvider',
@@ -21,25 +22,54 @@ final mentionsTimelineProvider = StateNotifierProvider.autoDispose<
 class MentionsTimelineNotifier extends TimelineNotifier<bool> {
   MentionsTimelineNotifier({
     required super.ref,
-    required super.twitterApi,
   });
 
   @override
-  Future<List<Tweet>> request({String? sinceId, String? maxId}) {
-    return twitterApi.timelineService.mentionsTimeline(
-      count: 200,
-      maxId: maxId,
-      sinceId: sinceId,
+  final log = Logger('MentionsTimelineNotifier');
+
+  @override
+  TimelineFilter? currentFilter() => null;
+
+  @override
+  Future<TimelineResponse> request({String? cursor}) async {
+    final blueskyApi = ref.read(blueskyApiProvider);
+
+    final feed = await blueskyApi.notification.listNotifications(
+      cursor: cursor,
+      limit: 50,
     );
+
+    final posts = feed.data.notifications
+        .where(
+          (notification) =>
+              notification.reason == bsky.NotificationReason.follow,
+        )
+        .map(
+          (notification) => BlueskyPostData(
+            id: notification.cid,
+            uri: notification.uri,
+            text: notification.reason.value,
+            author: notification.author.displayName ?? '',
+            handle: notification.author.handle,
+            createdAt: notification.indexedAt,
+            authorDid: notification.author.did,
+            authorAvatar: notification.author.avatar ?? '',
+          ),
+        )
+        .toList();
+
+    return TimelineResponse(posts, feed.data.cursor);
   }
 
   @override
-  bool? buildCustomData(BuiltList<LegacyTweetData> tweets) {
-    final newId = int.tryParse(tweets.first.originalId);
+  bool? buildCustomData(BuiltList<BlueskyPostData> posts) {
+    if (posts.isEmpty) return false;
+
+    final newId = int.tryParse(posts.first.id) ?? 0;
     final lastId =
         ref.read(tweetVisibilityPreferencesProvider).lastViewedMention;
 
-    return newId != null && lastId < newId;
+    return lastId < newId;
   }
 
   void updateViewedMentions() {
@@ -49,20 +79,16 @@ class MentionsTimelineNotifier extends TimelineNotifier<bool> {
 
     if (currentState is TimelineStateData<bool> &&
         currentState.tweets.isNotEmpty) {
-      final id = int.tryParse(currentState.tweets.first.originalId);
-
-      if (id != null) {
-        ref.read(tweetVisibilityPreferencesProvider).lastViewedMention = id;
-
-        state = currentState.copyWith(customData: false);
-      }
+      final id = int.tryParse(currentState.tweets.first.id) ?? 0;
+      ref.read(tweetVisibilityPreferencesProvider).lastViewedMention = id;
+      state = currentState.copyWith(customData: false);
     }
   }
 }
 
 extension MentionsTimelineStateExtension on TimelineState<bool> {
   bool get hasNewMentions => maybeMap(
-        data: (data) => data.customData as bool? ?? false,
+        data: (data) => data.customData ?? false,
         orElse: () => false,
       );
 }

@@ -76,7 +76,7 @@ class _HarpyLogo extends StatelessWidget {
           height: 100,
           child: FlareAnimation.harpyTitle(
             animation: 'show',
-            color: theme.colorScheme.onBackground,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(
@@ -112,7 +112,7 @@ class _SummaryCard extends ConsumerWidget {
             leading: const Icon(Icons.history),
             title: Text(
               'version $version',
-              style: theme.textTheme.subtitle1,
+              style: theme.textTheme.bodyMedium,
             ),
             borderRadius: BorderRadius.only(
               topLeft: theme.shape.radius,
@@ -137,7 +137,7 @@ class _SummaryCard extends ConsumerWidget {
             onTap: isAuthenticated
                 ? () => context.pushNamed(
                       UserPage.name,
-                      params: {'handle': 'harpy_app'},
+                      pathParameters: {'authorDid': 'harpy_app'},
                     )
                 : () => launcher('https://twitter.com/harpy_app'),
           ),
@@ -163,7 +163,7 @@ class _DonationCard extends ConsumerWidget {
             child: Text(
               'if you like harpy, please consider supporting the '
               'development with a donation',
-              style: theme.textTheme.subtitle2,
+              style: theme.textTheme.bodyMedium,
             ),
           ),
           RbyListTile(
@@ -218,7 +218,7 @@ class _ProCard extends ConsumerWidget {
                   const TextSpan(text: ' in the play store'),
                 ],
               ),
-              style: theme.textTheme.subtitle2,
+              style: theme.textTheme.bodyMedium,
             ),
           ),
           RbyListTile(

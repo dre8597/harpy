@@ -49,7 +49,7 @@ const _unprotectedRoutes = [
 // - when the location doesn't exist, redirect to the home page
 // - otherwise don't redirect
 String? handleRedirect(Ref ref, GoRouterState state) {
-  if (state.subloc == SplashPage.path) return null;
+  if (state.matchedLocation == SplashPage.path) return null;
 
   // handle redirect when uninitialized
   final coldDeeplink = _handleColdDeeplink(ref, state);
@@ -60,7 +60,7 @@ String? handleRedirect(Ref ref, GoRouterState state) {
   if (unauthenticated != null) return unauthenticated;
 
   if (!locationHasRouteMatch(
-    location: state.location,
+    location: state.uri.toString(),
     routes: ref.read(routesProvider),
   )) {
     // handle the location if it's a twitter path that can be mapped to a harpy
@@ -70,7 +70,7 @@ String? handleRedirect(Ref ref, GoRouterState state) {
 
     // if the location doesn't exist, launch it and navigate to home instead
     final launcher = ref.watch(launcherProvider);
-    launcher('https://twitter.com${state.location}');
+    launcher('https://twitter.com${state.uri}');
     return '/';
   }
 
@@ -86,7 +86,7 @@ String? _handleColdDeeplink(Ref ref, GoRouterState state) {
   return !isInitialized
       ? '${SplashPage.path}'
           '?transition=fade'
-          '&redirect=${state.location}'
+          '&redirect=${state.uri}'
       : null;
 }
 
@@ -96,7 +96,8 @@ String? _handleUnauthenticated(Ref ref, GoRouterState state) {
   final isAuthenticated = ref.read(authenticationStateProvider).isAuthenticated;
 
   return !isAuthenticated &&
-          !_unprotectedRoutes.any((path) => state.subloc.startsWith(path))
+          !_unprotectedRoutes
+              .any((path) => state.matchedLocation.startsWith(path))
       ? LoginPage.path
       : null;
 }
@@ -126,7 +127,7 @@ String? _handleUnauthenticated(Ref ref, GoRouterState state) {
 /// - /$handle/status/$id:          tweet detail page
 /// - /$handle/status/$id/retweets: tweet retweeters
 String? _mapTwitterPath(GoRouterState state) {
-  final uri = Uri.tryParse(state.location);
+  final uri = Uri.tryParse(state.uri.toString());
 
   if (uri == null) return null;
 

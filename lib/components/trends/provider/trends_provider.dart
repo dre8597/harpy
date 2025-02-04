@@ -1,12 +1,25 @@
 import 'dart:convert';
 
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
+
+/// A class to represent a trending topic in Bluesky
+class Trend {
+  Trend({
+    required this.name,
+    required this.url,
+    required this.postCount,
+  });
+
+  final String name;
+  final String url;
+  final int postCount;
+}
 
 final trendsProvider = StateNotifierProvider.autoDispose<TrendsNotifier,
     AsyncValue<BuiltList<Trend>>>(
@@ -15,7 +28,7 @@ final trendsProvider = StateNotifierProvider.autoDispose<TrendsNotifier,
 
     return TrendsNotifier(
       ref: ref,
-      twitterApi: ref.watch(twitterApiV1Provider),
+      blueskyApi: ref.watch(blueskyApiProvider),
       userLocation: ref.watch(userTrendsLocationProvider),
     );
   },
@@ -26,17 +39,17 @@ class TrendsNotifier extends StateNotifier<AsyncValue<BuiltList<Trend>>>
     with LoggerMixin {
   TrendsNotifier({
     required Ref ref,
-    required TwitterApi twitterApi,
+    required bsky.Bluesky blueskyApi,
     required TrendsLocationData userLocation,
   })  : _ref = ref,
-        _twitterApi = twitterApi,
+        _blueskyApi = blueskyApi,
         _trendsLocationData = userLocation,
         super(const AsyncValue.loading()) {
     load();
   }
 
   final Ref _ref;
-  final TwitterApi _twitterApi;
+  final bsky.Bluesky _blueskyApi;
   final TrendsLocationData _trendsLocationData;
 
   Future<void> load() async {
@@ -45,15 +58,21 @@ class TrendsNotifier extends StateNotifier<AsyncValue<BuiltList<Trend>>>
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
       () async {
-        final trends = await _twitterApi.trendsService
-            .place(id: _trendsLocationData.woeid)
-            .then((trends) => trends.first.trends ?? <Trend>[])
-            .then(
-              (trends) => trends
-                ..sort(
-                  (o1, o2) => (o2.tweetVolume ?? 0) - (o1.tweetVolume ?? 0),
-                ),
-            );
+        final popular = await _blueskyApi.unspecced.getPopularFeedGenerators(
+          limit: 25,
+        );
+
+        final trends = popular.data.feeds
+            .map(
+              (feed) => Trend(
+                name: feed.displayName,
+                url:
+                    'https://bsky.app/profile/${feed.createdBy.handle}/feed/${feed.uri.rkey}',
+                postCount: feed.likeCount,
+              ),
+            )
+            .toList()
+          ..sort((a, b) => b.postCount.compareTo(a.postCount));
 
         return trends.toBuiltList();
       },

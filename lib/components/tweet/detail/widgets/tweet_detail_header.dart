@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -14,10 +15,10 @@ class TweetDetailHeader extends StatelessWidget {
   });
 
   /// The original tweet that is a reply to [parent].
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
 
   /// The parent of [tweet] which is displayed in a [TweetCard].
-  final LegacyTweetData? parent;
+  final BlueskyPostData? parent;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +39,7 @@ class TweetDetailHeader extends StatelessWidget {
                   VerticalSpacer.normal,
                   TweetListInfoMessage(
                     icon: const Icon(CupertinoIcons.reply),
-                    text: Text('${tweet.user.name} replied'),
+                    text: Text('${tweet.author} replied'),
                   ),
                   VerticalSpacer.normal,
                 ],

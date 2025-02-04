@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 
 /// Builds the top row for the [TweetCardContent].
@@ -20,7 +21,7 @@ class TweetCardTopRow extends ConsumerWidget {
     required this.config,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetDelegates delegates;
 
   final double outerPadding;
@@ -80,7 +81,7 @@ class TweetCardTopRow extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (name && tweet.user.name.isNotEmpty)
+                          if (name && tweet.author.isNotEmpty)
                             TweetCardName(
                               tweet: tweet,
                               onUserTap: delegates.onShowUser,
@@ -96,7 +97,7 @@ class TweetCardTopRow extends ConsumerWidget {
                             ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

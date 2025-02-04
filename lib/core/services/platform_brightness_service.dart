@@ -2,11 +2,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+void updateBrightnessProvider(Ref ref, Brightness brightness) {
+  ref.read(platformBrightnessProvider.notifier).state = brightness;
+}
+
 final platformBrightnessProvider = StateProvider(
   (ref) {
     final observer = _PlatformBrightnessObserver(
       onBrightnessChanged: (brightness) {
-        ref.read(platformBrightnessProvider.notifier).state = brightness;
+        updateBrightnessProvider(ref, brightness);
       },
     );
 

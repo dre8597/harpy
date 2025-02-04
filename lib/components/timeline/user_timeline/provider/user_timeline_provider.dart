@@ -1,9 +1,8 @@
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:logging/logging.dart';
 
 final userTimelineProvider = StateNotifierProvider.autoDispose
     .family<UserTimelineNotifier, TimelineState, String>(
@@ -12,7 +11,6 @@ final userTimelineProvider = StateNotifierProvider.autoDispose
 
     return UserTimelineNotifier(
       ref: ref,
-      twitterApi: ref.watch(twitterApiV1Provider),
       userId: userId,
     );
   },
@@ -22,14 +20,14 @@ final userTimelineProvider = StateNotifierProvider.autoDispose
 class UserTimelineNotifier extends TimelineNotifier {
   UserTimelineNotifier({
     required super.ref,
-    required super.twitterApi,
     required String userId,
   }) : _userId = userId {
-    // TODO: remove when refactoring timelines
-    if (!isTest) loadInitial();
+    load();
   }
 
   final String _userId;
+  @override
+  final log = Logger('UserTimelineNotifier');
 
   @override
   TimelineFilter? currentFilter() {
@@ -38,13 +36,28 @@ class UserTimelineNotifier extends TimelineNotifier {
   }
 
   @override
-  Future<List<Tweet>> request({String? sinceId, String? maxId}) {
-    return twitterApi.timelineService.userTimeline(
-      userId: _userId,
-      count: 200,
-      sinceId: sinceId,
-      maxId: maxId,
-      excludeReplies: filter?.excludes.replies,
-    );
+  Future<TimelineResponse> request({String? cursor}) async {
+    final blueskyApi = ref.read(blueskyApiProvider);
+
+    try {
+      final feed = await blueskyApi.feed.getAuthorFeed(
+        actor: _userId,
+        cursor: cursor,
+        limit: 100,
+      );
+
+      if (!mounted) return TimelineResponse([], null);
+
+      // Process the posts using the timeline helper for proper filtering
+      final processedPosts = await handleTimelinePosts(
+        feed.data.feed,
+        feed.data.cursor,
+      );
+
+      return processedPosts;
+    } catch (e, stack) {
+      log.severe('Error fetching user timeline', e, stack);
+      rethrow;
+    }
   }
 }

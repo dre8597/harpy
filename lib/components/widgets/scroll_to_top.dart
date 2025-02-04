@@ -12,8 +12,8 @@ import 'package:rby/rby.dart';
 /// A [ScrollDirectionListener] must be built above this widget to provide the
 /// current [ScrollDirection].
 ///
-/// If no [controller] is provided, a [PrimaryScrollController] must be
-/// available to be used.
+/// If no [controller] is provided, a new ScrollController will be created and
+/// managed by this widget.
 class ScrollToTop extends ConsumerStatefulWidget {
   const ScrollToTop({
     required this.child,
@@ -34,26 +34,76 @@ class ScrollToTop extends ConsumerStatefulWidget {
 class _ScrollToTopState extends ConsumerState<ScrollToTop> {
   ScrollController? _controller;
   bool _show = false;
+  bool _isAttached = false;
+  bool _ownsController = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    _initializeController();
+  }
 
-    _controller ??= (widget.controller ?? PrimaryScrollController.of(context))
-      ?..addListener(_scrollListener);
+  void _initializeController() {
+    if (widget.controller != null) {
+      _controller = widget.controller;
+      _ownsController = false;
+    } else {
+      _controller = ScrollController();
+      _ownsController = true;
+    }
+    _tryAttachController();
+  }
+
+  void _tryAttachController() {
+    if (_isAttached || _controller == null) return;
+
+    if (_controller!.hasClients) {
+      _controller!.addListener(_scrollListener);
+      _isAttached = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(ScrollToTop oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      _detachController();
+
+      // If we were using our own controller, dispose it
+      if (_ownsController) {
+        _controller?.dispose();
+      }
+
+      // Initialize with new controller
+      _initializeController();
+    }
+  }
+
+  void _detachController() {
+    if (_controller != null && _isAttached) {
+      _controller!.removeListener(_scrollListener);
+      _isAttached = false;
+    }
   }
 
   @override
   void dispose() {
+    _detachController();
+    // Only dispose the controller if we created it
+    if (_ownsController) {
+      _controller?.dispose();
+    }
+    _controller = null;
     super.dispose();
-
-    _controller?.removeListener(_scrollListener);
   }
 
   void _scrollListener() {
-    if (_controller == null) return;
-    if (!mounted) return;
-    assert(_controller!.hasClients);
+    if (!mounted || _controller == null || !_controller!.hasClients) {
+      _detachController();
+      return;
+    }
+
     if (_controller!.positions.length != 1) return;
 
     final mediaQuery = MediaQuery.of(context);
@@ -66,7 +116,8 @@ class _ScrollToTopState extends ConsumerState<ScrollToTop> {
   }
 
   void _scrollToTop() {
-    if (_controller == null) return;
+    if (!mounted || _controller == null || !_controller!.hasClients) return;
+    if (_controller!.positions.length != 1) return;
 
     final mediaQuery = MediaQuery.of(context);
     final animationOffsetLimit = mediaQuery.size.height * 5;

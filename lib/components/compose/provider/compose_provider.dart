@@ -23,8 +23,8 @@ class ComposeNotifier extends StateNotifier<ComposeState> {
   final Ref _ref;
 
   void initialize({
-    LegacyTweetData? parentTweet,
-    LegacyTweetData? quotedTweet,
+    BlueskyPostData? parentTweet,
+    BlueskyPostData? quotedTweet,
   }) {
     state = ComposeState(
       parentTweet: parentTweet,
@@ -114,8 +114,8 @@ class ComposeNotifier extends StateNotifier<ComposeState> {
 @freezed
 class ComposeState with _$ComposeState {
   factory ComposeState({
-    LegacyTweetData? parentTweet,
-    LegacyTweetData? quotedTweet,
+    BlueskyPostData? parentTweet,
+    BlueskyPostData? quotedTweet,
     BuiltList<PlatformFile>? media,
     MediaType? type,
   }) = _ComposeState;

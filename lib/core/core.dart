@@ -2,6 +2,8 @@ export 'converter/built_list_converter.dart';
 export 'harpy_theme/harpy_theme.dart';
 export 'harpy_theme/harpy_theme_data.dart';
 export 'harpy_theme/predefined_themes.dart';
+// Theme exports
+export 'harpy_theme/theme_extensions.dart';
 export 'logger/provider_logger.dart';
 export 'misc/environment.dart';
 export 'misc/error_handler.dart';

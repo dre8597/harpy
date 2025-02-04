@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
+//TODO: Make a forked version with all code updated to latest version
 class HarpyPhotoGallery extends StatelessWidget {
   const HarpyPhotoGallery({
     required this.builder,
@@ -63,7 +64,7 @@ Widget borderRadiusFlightShuttleBuilder(
     animation: animation,
     builder: (_, __) => ClipRRect(
       clipBehavior: Clip.hardEdge,
-      borderRadius: tween.evaluate(animation),
+      borderRadius: tween.evaluate(animation) ?? BorderRadius.zero,
       child: hero.child,
     ),
   );
@@ -75,9 +76,7 @@ PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState actual) {
     case PhotoViewScaleState.covering:
     case PhotoViewScaleState.originalSize:
     case PhotoViewScaleState.zoomedOut:
-      return PhotoViewScaleState.zoomOne;
-    case PhotoViewScaleState.zoomOne:
-    case PhotoViewScaleState.zoomTwo:
+      return PhotoViewScaleState.zoomedIn;
     case PhotoViewScaleState.zoomedIn:
       return PhotoViewScaleState.initial;
   }

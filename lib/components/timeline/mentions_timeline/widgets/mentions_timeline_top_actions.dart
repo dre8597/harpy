@@ -11,7 +11,7 @@ class MentionsTimelineTopActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final state = ref.read(mentionsTimelineProvider);
+    final state = ref.watch(mentionsTimelineProvider);
     final notifier = ref.read(mentionsTimelineProvider.notifier);
 
     return SliverToBoxAdapter(

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 
 class Replybutton extends ConsumerWidget {
@@ -10,7 +11,7 @@ class Replybutton extends ConsumerWidget {
     this.sizeDelta = 0,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onComposeReply;
   final double sizeDelta;
 

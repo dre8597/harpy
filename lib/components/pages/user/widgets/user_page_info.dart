@@ -124,7 +124,7 @@ class _Handle extends ConsumerWidget {
           child: Text(
             handle,
             textDirection: TextDirection.ltr,
-            style: theme.textTheme.subtitle1,
+            style: theme.textTheme.titleMedium,
           ),
         ),
       ),
@@ -148,7 +148,7 @@ class _MutedButton extends StatelessWidget {
     return RbyButton.text(
       icon: Icon(
         CupertinoIcons.volume_off,
-        color: theme.colorScheme.onBackground,
+        color: theme.colorScheme.onSurface,
         size: theme.iconTheme.size! - 2,
       ),
       onTap: () => showDialog<void>(
@@ -182,7 +182,7 @@ class _RelationshipButton extends StatelessWidget {
   });
 
   final UserData user;
-  final RelationshipData relationship;
+  final BlueskyRelationshipData relationship;
   final UserPageNotifier notifier;
 
   String _resolveLabel() {
@@ -190,7 +190,8 @@ class _RelationshipButton extends StatelessWidget {
       return 'blocked';
     } else if (relationship.following) {
       return 'following';
-    } else if (relationship.followingRequested) {
+    } else if (relationship.following) {
+      //TODO: handle pending
       return 'pending';
     } else if (user.isProtected) {
       return 'request';
@@ -202,8 +203,9 @@ class _RelationshipButton extends StatelessWidget {
   Color? _resolveColor(ThemeData theme) {
     if (relationship.blocking) {
       return theme.colorScheme.error;
-    } else if (!relationship.following && !relationship.followingRequested) {
-      return theme.colorScheme.onBackground;
+    } else if (!relationship.following) {
+      //TODO: handle pending
+      return theme.colorScheme.onSurface;
     }
 
     return null;
@@ -233,7 +235,7 @@ class _RelationshipButton extends StatelessWidget {
 
   void _toggleFollow() {
     HapticFeedback.lightImpact();
-    if (relationship.following || relationship.followingRequested) {
+    if (relationship.following) {
       notifier.unfollow();
     } else {
       notifier.follow();

@@ -1,9 +1,10 @@
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:harpy/api/api.dart';
-import 'package:harpy/core/core.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
+import 'package:harpy/api/bluesky/data/list_data.dart';
+import 'package:logging/logging.dart';
+
 import 'package:rby/rby.dart';
 
 part 'list_show_provider.freezed.dart';
@@ -13,83 +14,90 @@ final listShowProvider = StateNotifierProvider.autoDispose
   (ref, handle) => ListShowNotifier(
     handle: handle,
     ref: ref,
-    twitterApi: ref.watch(twitterApiV1Provider),
   ),
   name: 'ListShowProvider',
 );
 
+/// A notifier that provides list data for a user.
+/// Uses the app.bsky.graph.getLists endpoint to fetch lists owned by or followed by a user.
 class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
   ListShowNotifier({
     required String handle,
     required Ref ref,
-    required TwitterApi twitterApi,
   })  : _handle = handle,
         _ref = ref,
-        _twitterApi = twitterApi,
         super(const ListShowState.loading()) {
     load();
   }
 
-  final String _handle;
-
   final Ref _ref;
-  final TwitterApi _twitterApi;
+  final String _handle;
+  @override
+  final log = Logger('ListShowNotifier');
 
   Future<void> load() async {
-    log.fine('loading lists');
+    final blueskyApi = _ref.read(blueskyApiProvider);
 
+    log.fine('loading lists');
     state = const ListShowState.loading();
 
-    PaginatedTwitterLists? paginatedOwnerships;
-    PaginatedTwitterLists? paginatedSubscriptions;
-
-    final responses = await Future.wait([
-      _twitterApi.listsService.ownerships(screenName: _handle),
-      _twitterApi.listsService.subscriptions(screenName: _handle),
-    ]).handleError((e, st) => twitterErrorHandler(_ref, e, st));
-
-    if (responses != null && responses.length == 2) {
-      paginatedOwnerships = responses[0];
-      paginatedSubscriptions = responses[1];
-    }
-
-    BuiltList<TwitterListData>? ownerships;
-    BuiltList<TwitterListData>? subscriptions;
-    String? ownershipsCursor;
-    String? subscriptionsCursor;
-
-    if (paginatedOwnerships != null) {
-      ownerships =
-          paginatedOwnerships.lists!.map(TwitterListData.fromV1).toBuiltList();
-
-      ownershipsCursor = paginatedOwnerships.nextCursorStr;
-    }
-
-    if (paginatedSubscriptions != null) {
-      subscriptions = paginatedSubscriptions.lists!
-          .map(TwitterListData.fromV1)
+    try {
+      // Get lists owned by the user
+      final ownedLists = await blueskyApi.graph.getLists(actor: _handle);
+      final ownerships = ownedLists.data.lists
+          .map(
+            (list) => BlueskyListData(
+              uri: list.uri.toString(),
+              cid: list.cid,
+              name: list.name,
+              purpose: list.purpose,
+              creatorDid: list.createdBy.did,
+              description: list.description,
+              avatar: list.avatar?.toString(),
+              membersCount: 0,
+              isPrivate: list.purpose == 'app.bsky.graph.defs#modlist',
+              isOwner: list.createdBy.handle == _handle,
+              createdAt: list.indexedAt,
+            ),
+          )
           .toBuiltList();
 
-      subscriptionsCursor = paginatedSubscriptions.nextCursorStr;
-    }
-
-    if (ownerships != null && subscriptions != null) {
-      log.fine(
-        'found ${ownerships.length} ownerships & '
-        '${subscriptions.length} subscriptions',
-      );
+      // Get lists the user is subscribed to
+      final subscribedLists = await blueskyApi.graph
+          .getLists(actor: _handle, cursor: ownedLists.data.cursor);
+      final subscriptions = subscribedLists.data.lists
+          .where(
+            (list) => list.createdBy.handle != _handle,
+          ) // Filter out owned lists
+          .map(
+            (list) => BlueskyListData(
+              uri: list.uri.toString(),
+              cid: list.cid,
+              name: list.name,
+              purpose: list.purpose,
+              creatorDid: list.createdBy.did,
+              description: list.description,
+              avatar: list.avatar?.toString(),
+              membersCount: 0,
+              isPrivate: list.purpose == 'app.bsky.graph.defs#modlist',
+              isMember: list.createdBy.handle != _handle,
+              createdAt: list.indexedAt,
+            ),
+          )
+          .toBuiltList();
 
       if (ownerships.isNotEmpty || subscriptions.isNotEmpty) {
         state = ListShowState.data(
           ownerships: ownerships,
           subscriptions: subscriptions,
-          ownershipsCursor: ownershipsCursor,
-          subscriptionsCursor: subscriptionsCursor,
+          ownershipsCursor: ownedLists.data.cursor,
+          subscriptionsCursor: subscribedLists.data.cursor,
         );
       } else {
         state = const ListShowState.noData();
       }
-    } else {
+    } catch (e, st) {
+      log.warning('error loading lists', e, st);
       state = const ListShowState.error();
     }
   }
@@ -103,16 +111,31 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
         subscriptions: currentState.subscriptions,
       );
 
-      final paginatedOwnerships = await _twitterApi.listsService
-          .ownerships(
-            screenName: _handle,
-            cursor: currentState.ownershipsCursor,
-          )
-          .handleError((e, st) => twitterErrorHandler(_ref, e, st));
+      try {
+        final blueskyApi = _ref.read(blueskyApiProvider);
 
-      if (paginatedOwnerships != null) {
-        final newOwnerships =
-            paginatedOwnerships.lists!.map(TwitterListData.fromV1).toList();
+        final response = await blueskyApi.graph.getLists(
+          actor: _handle,
+          cursor: currentState.ownershipsCursor,
+        );
+
+        final newOwnerships = response.data.lists
+            .map(
+              (list) => BlueskyListData(
+                uri: list.uri.toString(),
+                cid: list.cid,
+                name: list.name,
+                purpose: list.purpose,
+                creatorDid: list.createdBy.did,
+                description: list.description,
+                avatar: list.avatar?.toString(),
+                membersCount: 0,
+                isPrivate: list.purpose == 'app.bsky.graph.defs#modlist',
+                isOwner: list.createdBy.handle == _handle,
+                createdAt: list.indexedAt,
+              ),
+            )
+            .toList();
 
         final ownerships =
             currentState.ownerships.followedBy(newOwnerships).toBuiltList();
@@ -120,10 +143,11 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
         state = ListShowState.data(
           ownerships: ownerships,
           subscriptions: currentState.subscriptions,
-          ownershipsCursor: paginatedOwnerships.nextCursorStr,
+          ownershipsCursor: response.data.cursor,
           subscriptionsCursor: currentState.subscriptionsCursor,
         );
-      } else {
+      } catch (e, st) {
+        log.warning('error loading more ownerships', e, st);
         state = ListShowState.data(
           ownerships: currentState.ownerships,
           subscriptions: currentState.subscriptions,
@@ -143,27 +167,47 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
         subscriptions: currentState.subscriptions,
       );
 
-      final paginatedSubscriptions = await _twitterApi.listsService
-          .subscriptions(
-            screenName: _handle,
-            cursor: currentState.subscriptionsCursor,
-          )
-          .handleError((e, st) => twitterErrorHandler(_ref, e, st));
+      try {
+        final blueskyApi = _ref.read(blueskyApiProvider);
 
-      if (paginatedSubscriptions != null) {
-        final newSubscriptions =
-            paginatedSubscriptions.lists!.map(TwitterListData.fromV1);
+        final response = await blueskyApi.graph.getLists(
+          actor: _handle,
+          cursor: currentState.subscriptionsCursor,
+        );
 
-        final subscriptions =
-            state.subscriptions.followedBy(newSubscriptions).toBuiltList();
+        final newSubscriptions = response.data.lists
+            .where(
+              (list) => list.createdBy.handle != _handle,
+            ) // Filter out owned lists
+            .map(
+              (list) => BlueskyListData(
+                uri: list.uri.toString(),
+                cid: list.cid,
+                name: list.name,
+                purpose: list.purpose,
+                creatorDid: list.createdBy.did,
+                description: list.description,
+                avatar: list.avatar?.toString(),
+                membersCount: 0,
+                isPrivate: list.purpose == 'app.bsky.graph.defs#modlist',
+                isMember: list.createdBy.handle != _handle,
+                createdAt: list.indexedAt,
+              ),
+            )
+            .toList();
+
+        final subscriptions = currentState.subscriptions
+            .followedBy(newSubscriptions)
+            .toBuiltList();
 
         state = ListShowState.data(
           ownerships: currentState.ownerships,
           subscriptions: subscriptions,
           ownershipsCursor: currentState.ownershipsCursor,
-          subscriptionsCursor: paginatedSubscriptions.nextCursorStr,
+          subscriptionsCursor: response.data.cursor,
         );
-      } else {
+      } catch (e, st) {
+        log.warning('error loading more subscriptions', e, st);
         state = ListShowState.data(
           ownerships: currentState.ownerships,
           subscriptions: currentState.subscriptions,
@@ -180,8 +224,8 @@ class ListShowState with _$ListShowState {
   const factory ListShowState.loading() = _Loading;
 
   const factory ListShowState.data({
-    required BuiltList<TwitterListData> ownerships,
-    required BuiltList<TwitterListData> subscriptions,
+    required BuiltList<BlueskyListData> ownerships,
+    required BuiltList<BlueskyListData> subscriptions,
     required String? ownershipsCursor,
     required String? subscriptionsCursor,
   }) = _Data;
@@ -189,13 +233,13 @@ class ListShowState with _$ListShowState {
   const factory ListShowState.noData() = _NoData;
 
   const factory ListShowState.loadingMoreOwnerships({
-    required BuiltList<TwitterListData> ownerships,
-    required BuiltList<TwitterListData> subscriptions,
+    required BuiltList<BlueskyListData> ownerships,
+    required BuiltList<BlueskyListData> subscriptions,
   }) = _LoadingMoreOwnerships;
 
   const factory ListShowState.loadingMoreSubscriptions({
-    required BuiltList<TwitterListData> ownerships,
-    required BuiltList<TwitterListData> subscriptions,
+    required BuiltList<BlueskyListData> ownerships,
+    required BuiltList<BlueskyListData> subscriptions,
   }) = _LoadingMoreSubscriptions;
 
   const factory ListShowState.error() = _Error;
@@ -203,16 +247,17 @@ class ListShowState with _$ListShowState {
 
 extension ListShowStateExtension on ListShowState {
   bool get loadingMoreOwnerships => this is _LoadingMoreOwnerships;
+
   bool get loadingMoreSubscriptions => this is _LoadingMoreSubscriptions;
 
-  BuiltList<TwitterListData> get ownerships => maybeMap(
+  BuiltList<BlueskyListData> get ownerships => maybeMap(
         data: (value) => value.ownerships,
         loadingMoreOwnerships: (value) => value.ownerships,
         loadingMoreSubscriptions: (value) => value.ownerships,
         orElse: BuiltList.new,
       );
 
-  BuiltList<TwitterListData> get subscriptions => maybeMap(
+  BuiltList<BlueskyListData> get subscriptions => maybeMap(
         data: (value) => value.subscriptions,
         loadingMoreOwnerships: (value) => value.subscriptions,
         loadingMoreSubscriptions: (value) => value.subscriptions,
@@ -220,12 +265,14 @@ extension ListShowStateExtension on ListShowState {
       );
 
   bool get hasMoreOwnerships => maybeMap(
-        data: (value) => value.ownershipsCursor != '0',
+        data: (value) => value.ownershipsCursor != null,
         orElse: () => false,
       );
 
   bool get hasMoreSubscriptions => maybeMap(
-        data: (value) => value.subscriptionsCursor != '0',
+        data: (value) =>
+            value.subscriptionsCursor != null &&
+            value.subscriptionsCursor != '0',
         orElse: () => false,
       );
 }

@@ -1,40 +1,40 @@
-import 'package:harpy/api/api.dart';
-import 'package:harpy/core/core.dart';
+// import 'package:harpy/api/api.dart';
+// import 'package:harpy/core/core.dart';
 
-/// Parses hashtags and user mentions from the [text].
-EntitiesData parseEntities(String text) {
-  final hashtags = <TagData>[];
-  final userMentions = <UserMentionData>[];
+// /// Parses hashtags and user mentions from the [text].
+// EntitiesData parseEntities(String text) {
+//   final hashtags = <TagData>[];
+//   final userMentions = <UserMentionData>[];
 
-  // search for hashtags in text, ensure we correctly remove the
-  //  start (valid characters are # and ＃)
-  for (final match in hashtagRegex.allMatches(text)) {
-    final hashtag = match.group(0);
+//   // search for hashtags in text, ensure we correctly remove the
+//   //  start (valid characters are # and ＃)
+//   for (final match in hashtagRegex.allMatches(text)) {
+//     final hashtag = match.group(0);
 
-    if (hashtag != null) {
-      hashtags.add(
-        TagData(
-          text: hashtag.replaceFirst(RegExp('#|＃'), ''),
-        ),
-      );
-    }
-  }
+//     if (hashtag != null) {
+//       hashtags.add(
+//         TagData(
+//           text: hashtag.replaceFirst(RegExp('#|＃'), ''),
+//         ),
+//       );
+//     }
+//   }
 
-  // search for mentions in text
-  for (final match in mentionRegex.allMatches(text)) {
-    final mention = match.group(0);
+//   // search for mentions in text
+//   for (final match in mentionRegex.allMatches(text)) {
+//     final mention = match.group(0);
 
-    if (mention != null) {
-      userMentions.add(
-        UserMentionData(
-          handle: mention.replaceFirst('@', ''),
-        ),
-      );
-    }
-  }
+//     if (mention != null) {
+//       userMentions.add(
+//         UserMentionData(
+//           handle: mention.replaceFirst('@', ''),
+//         ),
+//       );
+//     }
+//   }
 
-  return EntitiesData(
-    hashtags: hashtags,
-    userMentions: userMentions,
-  );
-}
+//   return EntitiesData(
+//     hashtags: hashtags,
+//     userMentions: userMentions,
+//   );
+// }

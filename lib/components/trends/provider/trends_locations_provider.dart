@@ -1,7 +1,7 @@
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -12,7 +12,7 @@ final trendsLocationsProvider = StateNotifierProvider.autoDispose<
     ref.cacheFor(const Duration(minutes: 5));
 
     return TrendsLocationsNotifier(
-      twitterApi: ref.watch(twitterApiV1Provider),
+      ref: ref,
     );
   },
   name: 'TrendsLocationsProvider',
@@ -22,41 +22,36 @@ class TrendsLocationsNotifier
     extends StateNotifier<AsyncValue<BuiltList<TrendsLocationData>>>
     with LoggerMixin {
   TrendsLocationsNotifier({
-    required TwitterApi twitterApi,
-  })  : _twitterApi = twitterApi,
+    required Ref ref,
+  })  : _blueskyApi = ref.read(blueskyApiProvider),
         super(const AsyncValue.loading()) {
     load();
   }
 
-  final TwitterApi _twitterApi;
+  final bsky.Bluesky _blueskyApi;
 
   Future<void> load() async {
-    log.fine('loading trends locations');
+    log.fine('loading popular feed generators');
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final locations = await _twitterApi.trendsService.available().then(
-            (locations) => locations
-                .where(
-                  (location) =>
-                      location.placeType?.code == 12 &&
-                      location.woeid != null &&
-                      location.name != null &&
-                      location.placeType?.name != null,
-                )
-                .map(
-                  (location) => TrendsLocationData(
-                    name: location.name!,
-                    woeid: location.woeid!,
-                    placeType: location.placeType!.name!,
-                    country: location.country ?? '',
-                  ),
-                )
-                .toList()
-              ..sort((a, b) => a.name.compareTo(b.name)),
-          );
+      final popular = await _blueskyApi.unspecced.getPopularFeedGenerators(
+        limit: 25,
+      );
 
-      return locations.toBuiltList();
+      final feedGenerators = popular.data.feeds
+          .map(
+            (feed) => TrendsLocationData(
+              woeid: feed.hashCode,
+              name: feed.displayName,
+              placeType: 'feed',
+              country: feed.description ?? '',
+            ),
+          )
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+
+      return feedGenerators.toBuiltList();
     });
   }
 }

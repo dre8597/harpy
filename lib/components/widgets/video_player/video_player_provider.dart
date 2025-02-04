@@ -1,11 +1,14 @@
+import 'dart:convert';
+
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/components/components.dart';
+import 'package:http/http.dart' as http;
 import 'package:rby/rby.dart';
 import 'package:video_player/video_player.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 part 'video_player_provider.freezed.dart';
 
@@ -45,11 +48,6 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         _ref = ref,
         super(const VideoPlayerState.uninitialized()) {
     _quality = urls.keys.first;
-
-    _controller = VideoPlayerController.network(
-      urls[_quality]!,
-      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-    );
   }
 
   final BuiltMap<String, String> _urls;
@@ -58,126 +56,223 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   final Ref _ref;
 
   late String _quality;
+  VideoPlayerController? _controller;
+  bool _isPreloaded = false;
 
-  late VideoPlayerController _controller;
-  VideoPlayerController get controller => _controller;
+  VideoPlayerController get controller => _controller!;
 
   void _controllerListener() {
-    if (!mounted) return;
-    Wakelock.toggle(enable: _controller.value.isPlaying);
+    if (!mounted || _controller == null) return;
 
-    if (!_controller.value.isInitialized) {
+    WakelockPlus.toggle(enable: _controller!.value.isPlaying);
+
+    if (!_controller!.value.isInitialized) {
       state = const VideoPlayerState.uninitialized();
-    } else if (_controller.value.hasError) {
-      state = VideoPlayerState.error(_controller.value.errorDescription!);
+    } else if (_controller!.value.hasError) {
+      state = VideoPlayerState.error(_controller!.value.errorDescription!);
     } else {
       state = VideoPlayerState.data(
         quality: _quality,
         qualities: _urls,
-        isBuffering: _controller.value.isBuffering,
-        isPlaying: _controller.value.isPlaying,
-        isMuted: _controller.value.volume == 0,
-        isFinished: _controller.value.duration != Duration.zero &&
-            _controller.value.position >=
-                _controller.value.duration - const Duration(milliseconds: 800),
-        position: _controller.value.position,
-        duration: _controller.value.duration,
+        isBuffering: _controller!.value.isBuffering,
+        isPlaying: _controller!.value.isPlaying,
+        isMuted: _controller!.value.volume == 0,
+        isFinished: _controller!.value.duration != Duration.zero &&
+            _controller!.value.position >=
+                _controller!.value.duration - const Duration(milliseconds: 800),
+        position: _controller!.value.position,
+        duration: _controller!.value.duration,
+        isPreloaded: _isPreloaded,
       );
     }
   }
 
-  /// Starts loading the video and then plays it.
-  Future<void> initialize({double volume = 1}) async {
-    state = const VideoPlayerState.loading();
+  Future<void> preload() async {
+    if (!mounted || _isPreloaded) return;
 
-    final startVideoPlaybackMuted =
-        _ref.read(mediaPreferencesProvider).startVideoPlaybackMuted;
+    try {
+      state = const VideoPlayerState.loading();
+      final didUrl = Uri.parse(_urls[_quality]!);
 
-    if (startVideoPlaybackMuted) {
-      volume = 0;
+      final response = await http.get(didUrl);
+
+      if (response.statusCode == 200) {
+        final videoUrlBytes = response.bodyBytes;
+        final m3u8Data = utf8.decode(videoUrlBytes);
+
+        // Check if this is an M3U8 playlist
+        if (m3u8Data.trim().startsWith('#EXTM3U')) {
+          // Parse the M3U8 playlist to extract stream URLs
+          final regex =
+              RegExp(r'^#EXT-X-STREAM-INF:.*?\n(.*?)$', multiLine: true);
+          final matches = regex.allMatches(m3u8Data);
+
+          String? streamUrl;
+          if (matches.isNotEmpty) {
+            // Get the stream URL for the selected quality
+            streamUrl = matches.elementAt(0).group(1);
+
+            if (streamUrl != null) {
+              // Resolve relative URL against the base URL
+              final baseUrl = didUrl;
+              final fullStreamUrl = baseUrl.resolve(streamUrl).toString();
+
+              _controller = VideoPlayerController.networkUrl(
+                Uri.parse(fullStreamUrl),
+                videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+              );
+            }
+          }
+
+          if (streamUrl == null) {
+            throw Exception('No valid stream URL found in M3U8 playlist');
+          }
+        } else {
+          // Not an M3U8 playlist, treat as direct video URL
+          final videoUrl = utf8.decode(videoUrlBytes);
+          _controller = VideoPlayerController.networkUrl(
+            Uri.parse(videoUrl),
+            videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          );
+        }
+        if (_controller == null) {
+          throw Exception('Failed to resolve video URL');
+        }
+        await _controller!.initialize();
+        _controller!.addListener(_controllerListener);
+
+        final startMuted =
+            _ref.read(mediaPreferencesProvider).startVideoPlaybackMuted;
+        await _controller!.setVolume(startMuted ? 0.0 : 1.0);
+        await _controller!.setLooping(_loop);
+
+        _isPreloaded = true;
+        _controllerListener();
+      } else {
+        throw Exception('Failed to resolve video URL: ${response.statusCode}');
+      }
+    } catch (e, stackTrace) {
+      if (!mounted) return;
+      logErrorHandler(e, stackTrace);
+      state = VideoPlayerState.error(e.toString());
+    }
+  }
+
+  Future<void> initialize() async {
+    if (!mounted) return;
+
+    if (!_isPreloaded) {
+      await preload();
     }
 
-    await _controller
-        .initialize()
-        .then((_) => _controller.addListener(_controllerListener))
-        .then((_) => _controller.setVolume(volume))
-        .then((_) => _controller.setLooping(_loop))
-        .then((_) => _onInitialized?.call())
-        .then((_) => togglePlayback())
-        .handleError(logErrorHandler);
+    if (mounted && state is VideoPlayerStateData) {
+      await togglePlayback();
+      _onInitialized?.call();
+    }
   }
 
-  Future<void> togglePlayback() {
-    return _controller.value.isPlaying
-        ? _controller.pause()
-        : _controller.play();
+  Future<void> togglePlayback() async {
+    if (!mounted || _controller == null) return;
+    return _controller!.value.isPlaying
+        ? _controller!.pause()
+        : _controller!.play();
   }
 
-  Future<void> pause() {
-    return _controller.pause();
+  Future<void> pause() async {
+    if (!mounted || _controller == null) return;
+    return _controller!.pause();
   }
 
-  Future<void> toggleMute() {
-    return _controller.value.volume == 0
-        ? _controller.setVolume(1)
-        : _controller.setVolume(0);
+  Future<void> toggleMute() async {
+    if (!mounted || _controller == null) return;
+    return _controller!.value.volume == 0
+        ? _controller!.setVolume(1)
+        : _controller!.setVolume(0);
   }
 
   Future<void> forward() async {
-    final position = await _controller.position;
+    if (!mounted || _controller == null) return;
+    final position = await _controller!.position;
 
     if (position != null) {
-      return _controller.seekTo(position + const Duration(seconds: 5));
+      return _controller!.seekTo(position + const Duration(seconds: 5));
     }
   }
 
   Future<void> rewind() async {
-    final position = await _controller.position;
+    if (!mounted || _controller == null) return;
+    final position = await _controller!.position;
 
     if (position != null) {
-      return _controller.seekTo(position - const Duration(seconds: 5));
+      return _controller!.seekTo(position - const Duration(seconds: 5));
     }
   }
 
   Future<void> changeQuality(String quality) async {
-    if (_quality == quality) return;
+    if (mounted || _quality == quality || _controller == null) return;
 
     final url = _urls[quality];
 
     if (url != null) {
-      final position = await _controller.position;
-      final volume = _controller.value.volume;
-      final isPlaying = _controller.value.isPlaying;
-      final isLooping = _controller.value.isLooping;
+      final position = await _controller!.position;
+      final volume = _controller!.value.volume;
+      final isPlaying = _controller!.value.isPlaying;
+      final isLooping = _controller!.value.isLooping;
 
       final oldController = _controller;
+      oldController!.removeListener(_controllerListener);
 
-      final controller = VideoPlayerController.network(
-        url,
-        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-      );
+      try {
+        final controller =
+            VideoPlayerController.networkUrl(Uri.dataFromString(url));
 
-      _quality = quality;
+        _quality = quality;
 
-      await controller
-          .initialize()
-          .then((_) => controller.seekTo(position ?? Duration.zero))
-          .then((_) => controller.setVolume(volume))
-          .then((_) => isPlaying ? controller.play() : controller.pause())
-          .then((_) => controller.setLooping(isLooping))
-          .then((_) => controller.addListener(_controllerListener))
-          .handleError(logErrorHandler);
+        await controller.initialize().then((_) {
+          if (!mounted) {
+            controller.seekTo(position ?? Duration.zero);
+          }
+        }).then((_) {
+          if (!mounted) {
+            controller.setVolume(volume);
+          }
+        }).then((_) {
+          if (!mounted) {
+            isPlaying ? controller.play() : controller.pause();
+          }
+        }).then((_) {
+          if (!mounted) {
+            controller.setLooping(isLooping);
+          }
+        }).then((_) {
+          if (!mounted) {
+            controller.addListener(_controllerListener);
+          }
+        }).handleError((error, stackTrace) {
+          if (!mounted) {
+            logErrorHandler(error, stackTrace);
+          }
+        });
 
-      _controller = controller;
+        if (!mounted) {
+          _controller = controller;
+        }
 
-      await oldController.dispose().handleError(logErrorHandler);
+        await oldController.dispose().handleError(
+              logErrorHandler,
+            );
+      } catch (e, stackTrace) {
+        if (!mounted) {
+          logErrorHandler(e, stackTrace);
+        }
+      }
     }
   }
 
   @override
   void dispose() {
-    Wakelock.disable();
-    _controller.dispose();
+    WakelockPlus.disable();
+    _controller?.dispose();
     super.dispose();
   }
 }
@@ -189,7 +284,7 @@ class VideoPlayerState with _$VideoPlayerState {
 
   const factory VideoPlayerState.loading() = VideoPlayerStateLoading;
 
-  const factory VideoPlayerState.error(String error) = VideoPlayerStateError;
+  const factory VideoPlayerState.error(String message) = VideoPlayerStateError;
 
   const factory VideoPlayerState.data({
     required String quality,
@@ -200,5 +295,6 @@ class VideoPlayerState with _$VideoPlayerState {
     required bool isFinished,
     required Duration position,
     required Duration duration,
+    @Default(false) bool isPreloaded,
   }) = VideoPlayerStateData;
 }

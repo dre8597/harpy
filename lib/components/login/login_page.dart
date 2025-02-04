@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/login/bluesky_login_form.dart';
 import 'package:rby/rby.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   bool _loginStarted = false;
+  bool _showLoginForm = false;
 
   @override
   void initState() {
@@ -26,19 +28,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ChangelogDialog.maybeShow(ref);
   }
 
-  Future<void> _startLogin(ThemeData theme) async {
+  Future<void> _startLogin() async {
     HapticFeedback.mediumImpact().ignore();
-    setState(() => _loginStarted = true);
+    setState(() {
+      _loginStarted = true;
+    });
 
-    await Future<void>.delayed(theme.animation.long);
-    await ref.read(loginProvider).login();
+    // Wait for the slide animation to complete
+    await Future<void>.delayed(const Duration(milliseconds: 1000));
 
-    setState(() => _loginStarted = false);
+    if (mounted) {
+      setState(() {
+        _showLoginForm = true;
+      });
+    }
+  }
+
+  void _handleBlueskyLogin(String identifier, String password) {
+    ref.read(loginProvider).loginWithBluesky(
+          identifier: identifier,
+          password: password,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
     final authenticationState = ref.watch(authenticationStateProvider);
 
@@ -49,14 +63,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: CircularProgressIndicator(),
         ),
         authenticated: (_) => const SizedBox(),
-        unauthenticated: () => AnimatedSlide(
-          duration: theme.animation.long,
-          curve: Curves.easeInCubic,
-          offset: _loginStarted ? const Offset(0, -1) : Offset.zero,
-          child: Stack(
-            children: [
-              const _AboutButton(),
-              Column(
+        unauthenticated: () => Stack(
+          children: [
+            AnimatedSlide(
+              duration: const Duration(milliseconds: 1000),
+              curve: Curves.easeInCubic,
+              offset: _loginStarted ? const Offset(0, -1) : Offset.zero,
+              child: Column(
                 children: [
                   Expanded(
                     child: OverflowBox(
@@ -68,8 +81,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             constraints: BoxConstraints(
                               maxHeight: mediaQuery.size.height * .5,
                             ),
-                            child: Column(
-                              children: const [
+                            child: const Column(
+                              children: [
                                 Expanded(child: _HarpyTitle()),
                                 Expanded(child: _HarpyLogo()),
                               ],
@@ -81,12 +94,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  _LoginButton(onTap: () => _startLogin(theme)),
+                  _LoginButton(onTap: _startLogin),
                   const SizedBox(height: 32),
                 ],
               ),
-            ],
-          ),
+            ),
+            const _AboutButton(),
+            if (_showLoginForm)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: BlueskyLoginForm(
+                        onLogin: _handleBlueskyLogin,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -105,10 +133,8 @@ class _AboutButton extends ConsumerWidget {
           switch (value) {
             case 0:
               context.pushNamed(AboutPage.name);
-              break;
             case 1:
               context.pushNamed(CustomApiPage.name);
-              break;
           }
         },
         itemBuilder: (_) => const [
@@ -145,7 +171,7 @@ class _HarpyTitle extends StatelessWidget {
           // ignore: non_directional
           alignment: Alignment.bottomCenter,
           animation: 'show',
-          color: theme.colorScheme.onBackground,
+          color: theme.colorScheme.onSurface,
         ),
       ),
     );
@@ -181,7 +207,7 @@ class _LoginButton extends StatelessWidget {
       duration: const Duration(milliseconds: 1200),
       curve: Curves.elasticOut,
       child: RbyButton.elevated(
-        label: const Text('login with Twitter'),
+        label: const Text('login with Bluesky'),
         onTap: onTap,
       ),
     );

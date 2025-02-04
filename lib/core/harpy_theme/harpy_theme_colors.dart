@@ -43,7 +43,7 @@ class HarpyThemeColors {
   late final Color solidCardColor2;
   late final Color onPrimary;
   late final Color onSecondary;
-  late final Color onBackground;
+  late final Color onSurface;
   late final Color onError;
 
   late final SystemUiOverlayStyle systemUiOverlayStyle;
@@ -138,7 +138,7 @@ class HarpyThemeColors {
       baseLuminance: secondary.computeLuminance(),
     );
 
-    onBackground = _calculateBestContrastColor(
+    onSurface = _calculateBestContrastColor(
       colors: [Colors.white, Colors.black],
       baseLuminance: _backgroundLuminance,
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 
 class TweetCardAvatar extends ConsumerWidget {
@@ -10,7 +11,7 @@ class TweetCardAvatar extends ConsumerWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onUserTap;
   final TweetCardElementStyle style;
 
@@ -23,11 +24,10 @@ class TweetCardAvatar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final display = ref.watch(displayPreferencesProvider);
-
     return GestureDetector(
       onTap: () => onUserTap?.call(ref),
       child: HarpyCircleAvatar(
-        imageUrl: tweet.user.profileImage?.bigger?.toString() ?? '',
+        imageUrl: tweet.authorAvatar,
         radius: defaultRadius(display.fontSizeDelta) + style.sizeDelta,
       ),
     );

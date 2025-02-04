@@ -1,12 +1,13 @@
 import 'dart:convert';
 
-import 'package:android_path_provider/android_path_provider.dart';
+// import 'package:android_path_provider/android_path_provider.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
+
 import 'package:rby/rby.dart';
 
 part 'download_path_provider.freezed.dart';
@@ -202,10 +203,10 @@ BuiltList<DownloadPathEntry> _defaultEntries(BuiltList<String> mediaPaths) {
 Future<BuiltList<String>?> _mediaPaths() async {
   // The order determines the display order and fallback behavior.
   // The first in the list is always used as the default download path.
-  return Future.wait([
-    AndroidPathProvider.picturesPath,
-    AndroidPathProvider.downloadsPath,
-    AndroidPathProvider.dcimPath,
-    AndroidPathProvider.moviesPath,
-  ]).then(BuiltList.of).handleError(logErrorHandler);
+  return const [
+    'Pictures',
+    'DCIM',
+    'Movies',
+    'Download',
+  ].toBuiltList();
 }

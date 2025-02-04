@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/translation_notifier.dart';
 import 'package:harpy/components/components.dart';
 
 class TweetCardContent extends ConsumerWidget {
@@ -14,7 +16,7 @@ class TweetCardContent extends ConsumerWidget {
     this.index,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetNotifier notifier;
   final TweetDelegates delegates;
   final double outerPadding;
@@ -24,10 +26,6 @@ class TweetCardContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = Localizations.localeOf(context);
-    final translateLanguage =
-        ref.watch(languagePreferencesProvider).activeTranslateLanguage(locale);
-
     final text = TweetCardElement.text.shouldBuild(tweet, config);
     final translation = TweetCardElement.translation.shouldBuild(tweet, config);
     final media = TweetCardElement.media.shouldBuild(tweet, config);
@@ -35,7 +33,7 @@ class TweetCardContent extends ConsumerWidget {
     final linkPreview = TweetCardElement.linkPreview.shouldBuild(tweet, config);
     final details = TweetCardElement.details.shouldBuild(tweet, config);
     final actionsRow = TweetCardElement.actionsRow.shouldBuild(tweet, config);
-
+    final isTranslatable = ref.watch(translationNotifierProvider(tweet));
     final content = {
       TweetCardElement.topRow: TweetCardTopRow(
         tweet: tweet,
@@ -46,12 +44,17 @@ class TweetCardContent extends ConsumerWidget {
       ),
       if (text)
         TweetCardElement.text: TweetCardText(
-          tweet: tweet,
+          post: tweet,
           style: TweetCardElement.text.style(config),
         ),
-      if (translation && tweet.translatable(translateLanguage))
+      if (translation &&
+          isTranslatable.when(
+            data: (data) => details,
+            loading: () => false,
+            error: (error, stackTrace) => false,
+          ))
         TweetCardElement.translation: TweetCardTranslation(
-          tweet: tweet,
+          post: tweet,
           outerPadding: outerPadding,
           innerPadding: innerPadding,
           requireBottomInnerPadding: media || quote || details,
@@ -66,7 +69,7 @@ class TweetCardContent extends ConsumerWidget {
         ),
       if (quote)
         TweetCardElement.quote: TweetCardQuote(
-          tweet: tweet,
+          post: tweet,
           index: index,
         ),
       if (linkPreview)

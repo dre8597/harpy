@@ -1,31 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/post_translation_provider.dart';
 import 'package:harpy/components/components.dart';
 
 class TranslateButton extends ConsumerWidget {
   const TranslateButton({
-    required this.tweet,
-    required this.onTranslate,
+    required this.post,
     this.sizeDelta = 0,
+    super.key,
   });
 
-  final LegacyTweetData tweet;
-  final TweetActionCallback? onTranslate;
+  final BlueskyPostData post;
   final double sizeDelta;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final iconTheme = IconTheme.of(context);
     final harpyTheme = ref.watch(harpyThemeProvider);
+    final translationState = ref.watch(postTranslationProvider(post));
 
     final iconSize = iconTheme.size! + sizeDelta;
 
-    final tweetActive = tweet.translation != null || tweet.isTranslating;
-    final quoteActive = _quoteActiveTranslation(context, ref, tweet: tweet);
+    final isActive = translationState.maybeMap(
+      translating: (_) => true,
+      translated: (_) => true,
+      orElse: () => false,
+    );
 
     return TweetActionButton(
-      active: tweetActive || quoteActive,
+      active: isActive,
       iconBuilder: (_) => Icon(Icons.translate, size: iconSize),
       bubblesColor: const BubblesColor(
         primary: Colors.teal,
@@ -40,31 +44,18 @@ class TranslateButton extends ConsumerWidget {
       iconSize: iconSize,
       sizeDelta: sizeDelta,
       activeColor: harpyTheme.colors.translate,
-      activate: () => onTranslate?.call(ref),
-      deactivate: null,
+      activate: () {
+        final notifier = ref.read(postTranslationProvider(post).notifier);
+        final locale = Localizations.localeOf(context);
+        final translateLanguage = ref
+            .read(languagePreferencesProvider)
+            .activeTranslateLanguage(locale);
+        notifier.translate(translateLanguage);
+      },
+      deactivate: () {
+        final notifier = ref.read(postTranslationProvider(post).notifier);
+        notifier.reset();
+      },
     );
-  }
-}
-
-bool _quoteActiveTranslation(
-  BuildContext context,
-  WidgetRef ref, {
-  required LegacyTweetData tweet,
-}) {
-  if (tweet.quote == null) return false;
-
-  final locale = Localizations.localeOf(context);
-  final languagePreferences = ref.watch(languagePreferencesProvider);
-
-  final quoteTranslatable = tweet.quote!.translatable(
-    languagePreferences.activeTranslateLanguage(locale),
-  );
-
-  if (quoteTranslatable) {
-    final quote = ref.watch(tweetProvider(tweet.quote!.originalId));
-
-    return quote?.translation != null || (quote?.isTranslating ?? false);
-  } else {
-    return false;
   }
 }

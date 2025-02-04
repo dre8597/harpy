@@ -33,8 +33,8 @@ class MediaGalleryOverlay extends ConsumerStatefulWidget {
     this.actions = kDefaultOverlayActions,
   });
 
-  final LegacyTweetData tweet;
-  final MediaData media;
+  final BlueskyPostData tweet;
+  final BlueskyMediaData media;
   final TweetDelegates delegates;
   final Widget child;
   final Set<MediaOverlayActions> actions;
@@ -99,10 +99,10 @@ class _MediaOverlayState extends ConsumerState<MediaGalleryOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final tweet =
-        ref.watch(tweetProvider(widget.tweet.originalId)) ?? widget.tweet;
+    final tweet = ref.watch(tweetProvider(widget.tweet.id)) ?? widget.tweet;
 
-    final overlap = tweet.mediaType != MediaType.video;
+    final overlap =
+        tweet.media?.first.type.toMediaCategory != MediaType.video.name;
 
     final child = Center(
       key: _childKey,
@@ -203,8 +203,8 @@ class _OverlayTweetActions extends ConsumerWidget {
     required this.actions,
   });
 
-  final LegacyTweetData tweet;
-  final MediaData media;
+  final BlueskyPostData tweet;
+  final BlueskyMediaData media;
   final TweetDelegates delegates;
   final Set<MediaOverlayActions> actions;
 
@@ -230,6 +230,7 @@ class _OverlayTweetActions extends ConsumerWidget {
           foregroundColor: Colors.white,
           onFavorite: delegates.onFavorite,
           onUnfavorite: delegates.onUnfavorite,
+          onShowLikes: delegates.onShowLikes,
         );
       case MediaOverlayActions.spacer:
         return const Spacer();
@@ -253,11 +254,13 @@ class _OverlayTweetActions extends ConsumerWidget {
           tweet: tweet,
           sizeDelta: 2,
           foregroundColor: Colors.white,
-          onViewMoreActions: (ref) => showMediaActionsBottomSheet(
-            ref,
-            media: media,
-            delegates: delegates,
-          ),
+          onViewMoreActions: (ref) {
+            showMediaActionsBottomSheet(
+              ref,
+              media: media,
+              delegates: delegates,
+            );
+          },
         );
     }
   }
@@ -298,7 +301,7 @@ class _OverlayPreviewText extends ConsumerWidget {
     required this.delegates,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetDelegates delegates;
 
   @override
@@ -327,9 +330,9 @@ class _OverlayPreviewText extends ConsumerWidget {
               ],
             ),
             child: Text(
-              tweet.visibleText,
+              tweet.text,
               key: ObjectKey(tweet),
-              style: theme.textTheme.bodyText2!.copyWith(
+              style: theme.textTheme.bodyMedium!.copyWith(
                 color: Colors.white,
               ),
               maxLines: 2,

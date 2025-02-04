@@ -38,6 +38,7 @@ class WebViewStateNotifier extends StateNotifier<WebViewState> {
   }
 
   Future<void> onPageFinished(String url) async {
+    if (!mounted) return;
     state = state.copyWith(
       currentUrl: url,
       loading: false,

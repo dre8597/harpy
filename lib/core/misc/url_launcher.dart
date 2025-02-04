@@ -28,7 +28,7 @@ final launcherProvider = Provider<UrlLauncher>(
       } else {
         ref.read(routerProvider).pushNamed(
           WebviewPage.name,
-          queryParams: {
+          queryParameters: {
             'initialUrl': url,
           },
         );

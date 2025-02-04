@@ -13,7 +13,7 @@ class TweetImages extends ConsumerWidget {
     this.onImageLongPress,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetDelegates delegates;
   final int? tweetIndex;
   final IndexedVoidCallback? onImageLongPress;
@@ -21,7 +21,7 @@ class TweetImages extends ConsumerWidget {
   void _onImageTap(
     BuildContext context, {
     required int index,
-    required LegacyTweetData tweet,
+    required BlueskyPostData tweet,
   }) {
     final theme = Theme.of(context);
 
@@ -29,26 +29,30 @@ class TweetImages extends ConsumerWidget {
       HeroDialogRoute(
         builder: (_) => MediaGallery(
           initialIndex: index,
-          itemCount: tweet.media.length,
-          builder: (index) => MediaGalleryEntry(
-            tweet: tweet,
-            delegates: delegates,
-            media: tweet.media[index],
-            builder: (_) => TweetGalleryImage(
-              media: tweet.media[index],
-              heroTag: 'tweet${mediaHeroTag(
-                context,
-                tweet: tweet,
-                media: tweet.media[index],
-                index: tweetIndex,
-              )}',
-              borderRadius: _borderRadiusForImage(
-                theme.shape.radius,
-                index,
-                tweet.media.length,
+          itemCount: tweet.media?.length ?? 0,
+          builder: (index) {
+            final media = tweet.media?[index];
+            if (media == null) return null;
+            return MediaGalleryEntry(
+              tweet: tweet,
+              delegates: delegates,
+              media: media,
+              builder: (_) => TweetGalleryImage(
+                media: media,
+                heroTag: 'tweet${mediaHeroTag(
+                  context,
+                  tweet: tweet,
+                  media: media,
+                  index: tweetIndex,
+                )}',
+                borderRadius: _borderRadiusForImage(
+                  theme.shape.radius,
+                  index,
+                  tweet.media?.length ?? 0,
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -67,7 +71,7 @@ class TweetImages extends ConsumerWidget {
       ),
       onImageLongPress: onImageLongPress,
       children: [
-        for (final image in tweet.media)
+        for (final image in tweet.media ?? <BlueskyMediaData>[])
           Hero(
             tag: 'tweet${mediaHeroTag(
               context,
@@ -152,7 +156,7 @@ Widget _flightShuttleBuilder(
     animation: animation,
     builder: (_, __) => ClipRRect(
       clipBehavior: Clip.hardEdge,
-      borderRadius: tween.evaluate(animation),
+      borderRadius: tween.evaluate(animation) ?? BorderRadius.zero,
       child: hero.child,
     ),
   );

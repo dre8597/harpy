@@ -55,7 +55,7 @@ class _MediaAutoplayState extends ConsumerState<MediaAutoplay> {
       if (mounted &&
           _visible &&
           widget.state is VideoPlayerStateUninitialized) {
-        await widget.notifier.initialize(volume: 0);
+        await widget.notifier.initialize();
       }
     }
   }

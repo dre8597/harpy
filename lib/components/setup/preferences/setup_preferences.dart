@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 final setupPreferencesProvider = Provider(
   (ref) => SetupPreferences(
@@ -21,7 +21,7 @@ class SetupPreferences {
 
   /// Whether the currently authenticated user has been through the setup after
   /// their first login.
-  bool get performedSetup => _preferences.getBool('performedSetup2', false);
+  bool get performedSetup => _preferences.getBool('performedSetup2');
   set performedSetup(bool value) =>
       _preferences.setBool('performedSetup2', value);
 }

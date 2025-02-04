@@ -15,7 +15,7 @@ void main() {
         (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy,
           ),
@@ -33,7 +33,7 @@ void main() {
     testGoldens('builds top row with long name', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy.copyWith(
               name: 'Harpy with a really long name, like, really long.',
@@ -53,7 +53,7 @@ void main() {
     testGoldens('builds top row with empty name and handle', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy.copyWith(
               name: '',
@@ -73,7 +73,7 @@ void main() {
     testGoldens('builds top row with zero width name', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy.copyWith(
               name: '\u064E',
@@ -93,7 +93,7 @@ void main() {
     testGoldens('builds text', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             text: 'Hello World!',
             visibleText: 'Hello World!',
@@ -113,7 +113,7 @@ void main() {
         (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             text: 'Hello World!',
             visibleText: 'Hello World!',
@@ -137,7 +137,7 @@ void main() {
     testGoldens('builds translation', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             text: 'Hello World!',
             visibleText: 'Hello World!',
@@ -168,7 +168,7 @@ void main() {
         (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             text: 'Hello World!',
             visibleText: 'Hello World!',
@@ -198,7 +198,7 @@ void main() {
     testGoldens('builds media with 1 image', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy,
             media: [
@@ -224,7 +224,7 @@ void main() {
     testGoldens('builds media with 4 images', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy,
             media: [
@@ -262,7 +262,7 @@ void main() {
     testGoldens('builds media with video', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy,
             media: [
@@ -296,7 +296,7 @@ void main() {
     testGoldens('builds media with gif', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             createdAt: DateTime.now(),
             user: userDataHarpy,
             media: [
@@ -307,7 +307,7 @@ void main() {
                     ..aspectRatio = [16, 9]
                     ..variants = [])
                   ..mediaUrlHttps = 'blue.png',
-              )
+              ),
             ],
           ),
         ),
@@ -324,13 +324,13 @@ void main() {
     testGoldens('builds quote', (tester) async {
       await tester.pumpWidgetBuilder(
         TweetCard(
-          tweet: LegacyTweetData(
+          tweet: BlueskyPostData(
             originalId: '1',
             createdAt: DateTime.now(),
             user: userDataHarpy,
             text: 'text',
             visibleText: 'text',
-            quote: LegacyTweetData(
+            quote: BlueskyPostData(
               originalId: '2',
               createdAt: DateTime.now(),
               user: userDataHarpy,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/entities_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 
@@ -17,7 +18,7 @@ class TranslatedText extends ConsumerWidget {
   final String text;
   final String? language;
   final TextDirection? textDirection;
-  final EntitiesData? entities;
+  final BlueskyEntitiesData? entities;
   final String? urlToIgnore;
   final double fontSizeDelta;
 
@@ -32,11 +33,11 @@ class TranslatedText extends ConsumerWidget {
         ? TextDirection.rtl
         : TextDirection.ltr;
 
-    final bodyText1 = theme.textTheme.bodyText1!.apply(
+    final bodyText1 = theme.textTheme.bodyLarge!.apply(
       fontSizeDelta: fontSizeDelta,
     );
 
-    final bodyText2 = theme.textTheme.bodyText2!.apply(
+    final bodyMedium = theme.textTheme.bodyMedium!.apply(
       fontSizeDelta: fontSizeDelta,
     );
 
@@ -64,7 +65,7 @@ class TranslatedText extends ConsumerWidget {
             text,
             entities: entities,
             urlToIgnore: urlToIgnore,
-            style: bodyText2,
+            style: bodyMedium,
           ),
         ],
       ),

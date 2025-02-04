@@ -15,6 +15,7 @@ class LoadMoreHandler extends StatefulWidget {
     required this.onLoadMore,
     this.listen = true,
     this.extentTrigger,
+    this.scrollThreshold = 0.5,
   });
 
   final Widget child;
@@ -28,24 +29,28 @@ class LoadMoreHandler extends StatefulWidget {
   /// Defaults to half of the scrollable's viewport size.
   final double? extentTrigger;
 
+  /// The scroll threshold (0.0 to 1.0) that determines when to load more content.
+  /// A value of 0.5 means the user needs to scroll through 50% of the current
+  /// content before more content is loaded.
+  final double scrollThreshold;
+
   @override
   State<LoadMoreHandler> createState() => _LoadMoreHandlerState();
 }
 
 class _LoadMoreHandlerState extends State<LoadMoreHandler> {
   bool _loading = false;
+  bool _canLoadMore = true;
 
   @override
   void initState() {
     super.initState();
-
     widget.controller.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_scrollListener);
-
     super.dispose();
   }
 
@@ -53,8 +58,11 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
   void didUpdateWidget(covariant LoadMoreHandler oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // When re-enabling the listener, we want to query the current scroll extent
-    // to potentially call the callback.
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_scrollListener);
+      widget.controller.addListener(_scrollListener);
+    }
+
     if (!oldWidget.listen && widget.listen) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollListener());
     }
@@ -62,33 +70,60 @@ class _LoadMoreHandlerState extends State<LoadMoreHandler> {
 
   void _scrollListener() {
     if (_loading || !widget.listen || !mounted) return;
-    assert(widget.controller.hasClients);
+    if (!widget.controller.hasClients) return;
     if (widget.controller.positions.length != 1) return;
 
     final position = widget.controller.positions.first;
 
-    if (position.extentAfter <=
-        (widget.extentTrigger ?? position.viewportDimension / 2)) {
+    // Calculate the scroll progress (0.0 to 1.0)
+    final scrollProgress = position.pixels / position.maxScrollExtent;
+
+    // Only allow loading more if we've scrolled past the threshold
+    if (scrollProgress >= widget.scrollThreshold) {
+      _canLoadMore = true;
+    }
+
+    if (_canLoadMore &&
+        position.extentAfter <=
+            (widget.extentTrigger ?? position.viewportDimension / 2)) {
       _loadMore();
     }
   }
 
   Future<void> _loadMore() async {
-    if (_loading) return;
+    if (_loading || !_canLoadMore) return;
 
-    if (mounted) setState(() => _loading = true);
-    await widget.onLoadMore();
-    if (mounted) setState(() => _loading = false);
-
-    // After loading more, re-trigger the listener in case the scroll extent is
-    // still below the extent trigger.
-    _scrollListener();
+    try {
+      if (mounted) setState(() => _loading = true);
+      await widget.onLoadMore();
+      // Reset the load more flag until we scroll past threshold again
+      _canLoadMore = false;
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+        _scrollListener();
+      }
+    }
   }
 
   bool _onNotification(ScrollNotification notification) {
-    if (notification.metrics.extentAfter <=
-        (widget.extentTrigger ?? notification.metrics.viewportDimension / 2)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _loadMore());
+    if (!mounted) return false;
+
+    // Calculate scroll progress for notification-based scrolling
+    final scrollProgress =
+        notification.metrics.pixels / notification.metrics.maxScrollExtent;
+
+    if (scrollProgress >= widget.scrollThreshold) {
+      _canLoadMore = true;
+    }
+
+    if (_canLoadMore &&
+        notification.metrics.extentAfter <=
+            (widget.extentTrigger ??
+                notification.metrics.viewportDimension / 2)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadMore();
+      });
     }
 
     return false;

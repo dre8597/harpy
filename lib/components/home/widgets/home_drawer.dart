@@ -107,7 +107,7 @@ class _AuthenticatedUser extends ConsumerWidget {
       borderRadius: theme.shape.borderRadius,
       onTap: () => context.pushNamed(
         UserPage.name,
-        params: {'handle': user.handle},
+        pathParameters: {'authorDid': user.id},
       ),
       child: Card(
         child: Padding(
@@ -127,16 +127,16 @@ class _AuthenticatedUser extends ConsumerWidget {
                   children: [
                     Text(
                       user.name,
-                      style: theme.textTheme.headline5,
+                      style: theme.textTheme.headlineSmall,
                     ),
                     VerticalSpacer.small,
                     Text(
                       '@${user.handle}',
-                      style: theme.textTheme.subtitle1,
+                      style: theme.textTheme.titleMedium,
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -156,16 +156,24 @@ class _ConnectionsCount extends ConsumerWidget {
       return const SizedBox();
     }
 
+    final theme = Theme.of(context);
+    final textStyle = TextStyle(color: theme.colorScheme.onSurface);
+
     return Row(
       children: [
         Expanded(
           child: ConnectionCount(
             count: user.followingCount,
             builder: (count) => RbyListCard(
-              title: FittedBox(child: Text('$count  following')),
+              title: FittedBox(
+                child: Text(
+                  '$count  following',
+                  style: textStyle,
+                ),
+              ),
               onTap: () => context.pushNamed(
                 FollowingPage.name,
-                params: {'handle': user.handle},
+                pathParameters: {'authorDid': user.id},
               ),
             ),
           ),
@@ -175,10 +183,15 @@ class _ConnectionsCount extends ConsumerWidget {
           child: ConnectionCount(
             count: user.followersCount,
             builder: (count) => RbyListCard(
-              title: FittedBox(child: Text('$count  followers')),
+              title: FittedBox(
+                child: Text(
+                  '$count  followers',
+                  style: textStyle,
+                ),
+              ),
               onTap: () => context.pushNamed(
                 FollowersPage.name,
-                params: {'handle': user.handle},
+                pathParameters: {'authorDid': user.id},
               ),
             ),
           ),
@@ -236,49 +249,53 @@ class _Entries extends ConsumerWidget {
     final directionality = Directionality.of(context);
 
     if (user == null) return const SizedBox();
+    final textStyle = TextStyle(color: theme.colorScheme.onSurface);
 
     final children = [
       RbyListCard(
         leading: const Icon(CupertinoIcons.person),
-        title: const Text('profile'),
+        title: Text('profile', style: textStyle),
         onTap: () => context.pushNamed(
           UserPage.name,
-          params: {'handle': user.handle},
+          pathParameters: {'authorDid': user.handle},
         ),
       ),
       VerticalSpacer.normal,
       RbyListCard(
         leading: const Icon(CupertinoIcons.search),
-        title: const Text('search'),
+        title: Text('search', style: textStyle),
         onTap: () => context.pushNamed(SearchPage.name),
       ),
       VerticalSpacer.normal,
       RbyListCard(
         leading: const Icon(CupertinoIcons.list_bullet),
-        title: const Text('lists'),
+        title: Text('lists', style: textStyle),
         onTap: () => context.pushNamed(
           ListShowPage.name,
-          params: {'handle': user.handle},
+          pathParameters: {'authorDid': user.id},
         ),
       ),
       VerticalSpacer.normal,
       RbyListCard(
         leading: const Icon(FeatherIcons.feather),
-        title: const Text('compose'),
+        title: Text('compose', style: textStyle),
         onTap: () => context.pushNamed(ComposePage.name),
       ),
       VerticalSpacer.normal,
       VerticalSpacer.normal,
       RbyListCard(
         leading: const Icon(Icons.settings_rounded),
-        title: const Text('settings'),
+        title: Text(
+          'settings',
+          style: textStyle,
+        ),
         onTap: () => context.pushNamed(SettingsPage.name),
       ),
       VerticalSpacer.normal,
       if (isFree) ...[
         RbyListCard(
           leading: const FlareIcon.shiningStar(),
-          title: const Text('harpy pro'),
+          title: Text('harpy pro', style: textStyle),
           onTap: () => launcher(
             'https://play.google.com/store/apps/details?id=com.robertodoering.harpy.pro',
           ),
@@ -287,7 +304,7 @@ class _Entries extends ConsumerWidget {
       ],
       RbyListCard(
         leading: const FlareIcon.harpyLogo(),
-        title: const Text('about'),
+        title: Text('about', style: textStyle),
         onTap: () => context.pushNamed(AboutPage.name),
       ),
       VerticalSpacer.normal,
@@ -297,11 +314,14 @@ class _Entries extends ConsumerWidget {
           CupertinoIcons.square_arrow_left,
           color: theme.colorScheme.error,
         ),
-        title: const Text('logout'),
+        title: Text('logout', style: textStyle),
         onTap: () async {
           final result = await showDialog<bool>(
             context: context,
-            builder: (_) => const LogoutDialog(),
+            builder: (context) => Theme(
+              data: Theme.of(context),
+              child: const LogoutDialog(),
+            ),
           );
 
           if (result ?? false) ref.read(logoutProvider).logout().ignore();

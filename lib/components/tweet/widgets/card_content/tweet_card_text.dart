@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/data/bluesky_text_entities.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/widgets/bluesky_text.dart';
 
 class TweetCardText extends StatelessWidget {
   const TweetCardText({
-    required this.tweet,
+    required this.post,
     required this.style,
+    super.key,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData post;
   final TweetCardElementStyle style;
 
   @override
@@ -16,13 +19,23 @@ class TweetCardText extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Directionality(
-      textDirection:
-          tweet.isRtlLanguage ? TextDirection.rtl : TextDirection.ltr,
-      child: TwitterText(
-        tweet.text,
-        entities: tweet.entities,
-        urlToIgnore: tweet.quoteUrl,
-        style: theme.textTheme.bodyText2!.apply(fontSizeDelta: style.sizeDelta),
+      textDirection: post.isRtlLanguage ? TextDirection.rtl : TextDirection.ltr,
+      child: BlueskyText(
+        post.text,
+        entities: post.entities,
+        urlToIgnore: post.quoteUrl,
+        style: theme.textTheme.bodyMedium!.apply(
+          fontSizeDelta: style.sizeDelta,
+        ),
+        onMentionTap: (mention) {
+          // Handle mention tap - navigate to profile
+        },
+        onHashtagTap: (hashtag) {
+          // Handle hashtag tap - search for hashtag
+        },
+        onUrlTap: (url) {
+          // Handle URL tap - open in browser or webview
+        },
       ),
     );
   }

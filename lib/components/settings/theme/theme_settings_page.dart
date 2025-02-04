@@ -209,7 +209,7 @@ class _CustomThemes extends ConsumerWidget {
                   // edit selected theme
                   ? context.goNamed(
                       CustomThemePage.name,
-                      queryParams: {'themeId': '${i + 10}'},
+                      queryParameters: {'themeId': '${i + 10}'},
                     )
                   // select theme
                   : selectTheme(
@@ -232,7 +232,7 @@ class _CustomThemes extends ConsumerWidget {
               ),
               onEdit: () => context.goNamed(
                 CustomThemePage.name,
-                queryParams: {'themeId': '${i + 10}'},
+                queryParameters: {'themeId': '${i + 10}'},
               ),
               onDelete: () => notifier.removeCustomTheme(
                 themeId: i + 10,
@@ -261,8 +261,10 @@ class _LockedProThemes extends ConsumerWidget {
           padding: theme.spacing.symmetric(horizontal: true),
           child: Text(
             'only available for harpy pro',
-            style: theme.textTheme.subtitle2?.copyWith(
-              color: theme.colorScheme.onBackground.withOpacity(.8),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.primary.withValues(
+                alpha: theme.colorScheme.primary.alpha * 0.1,
+              ),
             ),
           ),
         ),
@@ -273,7 +275,7 @@ class _LockedProThemes extends ConsumerWidget {
             child: LockedProThemeCard(harpyTheme),
           ),
           VerticalSpacer.small,
-        ]
+        ],
       ]),
     );
   }

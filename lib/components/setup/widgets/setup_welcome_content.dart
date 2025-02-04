@@ -48,7 +48,7 @@ class _SetupWelcomeContentState extends ConsumerState<SetupWelcomeContent>
                     curve: Curves.easeOutCubic,
                     child: Text(
                       'welcome',
-                      style: theme.textTheme.headline4,
+                      style: theme.textTheme.headlineMedium,
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -67,8 +67,8 @@ class _SetupWelcomeContentState extends ConsumerState<SetupWelcomeContent>
                     child: FittedBox(
                       child: Text(
                         authentication.user!.name,
-                        style: theme.textTheme.headline2?.copyWith(
-                          color: harpyTheme.colors.onBackground,
+                        style: theme.textTheme.displayMedium?.copyWith(
+                          color: harpyTheme.colors.onSurface,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -90,7 +90,7 @@ class _SetupWelcomeContentState extends ConsumerState<SetupWelcomeContent>
               curve: Curves.easeOutCubic,
               child: Text(
                 "let's take a moment to setup your experience",
-                style: theme.textTheme.headline5,
+                style: theme.textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
             ),

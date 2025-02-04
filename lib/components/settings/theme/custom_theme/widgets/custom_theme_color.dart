@@ -39,8 +39,8 @@ class CustomThemeColor extends ConsumerWidget {
     if (newColor != null) onColorChanged(newColor);
   }
 
-  Color _onBackground(Color background) {
-    final interpolatedColor = Color.lerp(background, color, color.opacity)!;
+  Color _onSurface(Color background) {
+    final interpolatedColor = Color.lerp(background, color, color.a)!;
 
     return ThemeData.estimateBrightnessForColor(interpolatedColor) ==
             Brightness.light
@@ -56,7 +56,7 @@ class CustomThemeColor extends ConsumerWidget {
     return Theme(
       data: theme.copyWith(
         colorScheme: theme.colorScheme.copyWith(
-          onBackground: _onBackground(harpyTheme.colors.averageBackgroundColor),
+          onSurface: _onSurface(harpyTheme.colors.averageBackgroundColor),
         ),
       ),
       child: RbyListCard(

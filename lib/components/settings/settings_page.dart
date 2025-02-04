@@ -108,31 +108,48 @@ class _OtherSettingsCard extends ConsumerWidget {
 
     final usingCustomApi =
         ref.watch(customApiPreferencesProvider).hasCustomApiKeyAndSecret;
+    final theme = Theme.of(context);
+    final onBackground = theme.colorScheme.onSurface;
 
     return ExpansionCard(
       title: const Text('other'),
       children: [
         RbyListTile(
           leading: const Icon(FeatherIcons.sliders),
-          title: const Text('general'),
+          title: Text(
+            'general',
+            style: TextStyle(color: onBackground),
+          ),
           onTap: () => context.goNamed(GeneralSettingsPage.name),
         ),
         RbyListTile(
           leading: const Icon(Icons.translate),
-          title: const Text('language'),
+          title: Text(
+            'language',
+            style: TextStyle(color: onBackground),
+          ),
           onTap: () => context.goNamed(LanguageSettingsPage.name),
         ),
         if (hasUnapprovedDomains)
-          const RbyListTile(
-            leading: Icon(CupertinoIcons.share),
-            title: Text('open Twitter links'),
-            subtitle: Text('allow harpy to open Twitter links'),
+          RbyListTile(
+            leading: const Icon(CupertinoIcons.share),
+            title: Text(
+              'open Twitter links',
+              style: TextStyle(color: onBackground),
+            ),
+            subtitle: Text(
+              'allow harpy to open Twitter links',
+              style: TextStyle(color: onBackground),
+            ),
             onTap: showOpenByDefault,
           ),
         if (!usingCustomApi)
           RbyListTile(
             leading: const Icon(FeatherIcons.twitter),
-            title: const Text('use custom api key'),
+            title: Text(
+              'use custom api key',
+              style: TextStyle(color: onBackground),
+            ),
             subtitle: const Text(
               'connect to Twitter with your own api credentials',
             ),

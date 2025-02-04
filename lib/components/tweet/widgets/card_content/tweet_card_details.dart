@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -10,7 +11,7 @@ class TweetCardDetails extends ConsumerWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetCardElementStyle style;
 
   @override
@@ -28,8 +29,8 @@ class TweetCardDetails extends ConsumerWidget {
       alwaysUse24HourFormat: general.alwaysUse24HourFormat,
     );
 
-    final textStyle = theme.textTheme.bodyText2!.apply(
-      color: theme.textTheme.bodyText1!.color,
+    final textStyle = theme.textTheme.bodyMedium!.apply(
+      color: theme.textTheme.bodyLarge!.color,
       fontSizeDelta: style.sizeDelta,
     );
 
@@ -44,7 +45,8 @@ class TweetCardDetails extends ConsumerWidget {
             Text(date, style: textStyle),
           ],
         ),
-        if (tweet.source.isNotEmpty) Text(tweet.source, style: textStyle),
+        if (tweet.parentPostId?.isNotEmpty ?? false)
+          Text(tweet.repostOf?.text ?? '', style: textStyle),
       ],
     );
   }

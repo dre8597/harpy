@@ -24,7 +24,7 @@ class TweetGif extends ConsumerWidget {
     this.onGifLongPress,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final Object heroTag;
   final HeroPlaceholderBuilder? placeholderBuilder;
   final bool compact;
@@ -37,7 +37,7 @@ class TweetGif extends ConsumerWidget {
     final mediaPreferences = ref.watch(mediaPreferencesProvider);
     final connectivity = ref.watch(connectivityProvider);
 
-    final mediaData = tweet.media.single as VideoMediaData;
+    final mediaData = tweet.media?.single as VideoMediaData;
     final arguments = _videoArguments(mediaData);
 
     final state = ref.watch(videoPlayerProvider(arguments));
@@ -96,7 +96,7 @@ class TweetGif extends ConsumerWidget {
                   icon: const Icon(Icons.gif),
                   compact: compact,
                 ),
-                onTap: () => notifier.initialize(volume: 0),
+                onTap: notifier.initialize,
                 onLongPress: onGifLongPress,
               ),
             ),

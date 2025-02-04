@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -13,7 +14,7 @@ class TweetCardHandle extends ConsumerWidget {
     required this.style,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final TweetActionCallback? onUserTap;
   final TweetCardElementStyle style;
 
@@ -26,14 +27,14 @@ class TweetCardHandle extends ConsumerWidget {
 
     final textSpans = [
       TextSpan(
-        text: '@${tweet.user.handle}',
-        style: theme.textTheme.bodyText1!
+        text: '@${tweet.handle}',
+        style: theme.textTheme.bodyLarge!
             .copyWith(height: 1)
             .apply(fontSizeDelta: style.sizeDelta),
       ),
       TextSpan(
         text: ' \u00b7 ',
-        style: theme.textTheme.bodyText1!
+        style: theme.textTheme.bodyLarge!
             .copyWith(height: 1)
             .apply(fontSizeDelta: style.sizeDelta),
       ),
@@ -119,7 +120,7 @@ class _CreatedAtRelativeTimeState extends State<_CreatedAtRelativeTime> {
     return Text(
       timeago.format(widget.localCreatedAt, locale: languageCode),
       textDirection: TextDirection.ltr,
-      style: theme.textTheme.bodyText1!
+      style: theme.textTheme.bodyLarge!
           .copyWith(height: 1)
           .apply(fontSizeDelta: widget.sizeDelta),
     );
@@ -154,7 +155,7 @@ class _CreatedAtAbsoluteTime extends ConsumerWidget {
       child: Text(
         '$time \u00b7 $date',
         textDirection: TextDirection.ltr,
-        style: theme.textTheme.bodyText1!
+        style: theme.textTheme.bodyLarge!
             .copyWith(height: 1)
             .apply(fontSizeDelta: sizeDelta),
       ),

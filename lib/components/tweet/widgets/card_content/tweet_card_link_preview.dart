@@ -1,4 +1,5 @@
 import 'package:any_link_preview/any_link_preview.dart';
+import 'package:bluesky/core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,29 +14,29 @@ class TweetCardLinkPreview extends ConsumerWidget {
     required this.tweet,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final launcher = ref.watch(launcherProvider);
-    final urlString = tweet.previewUrl.toString();
+    final urlString = tweet.uri.toString();
 
     return GestureDetector(
       onTap: () => launcher(urlString),
       onLongPress: () => defaultOnUrlLongPress(
         ref,
-        UrlData(
-          expandedUrl: urlString,
-          displayUrl: urlString,
+        BlueskyLinkData(
+          start: 0,
+          end: urlString.length,
           url: urlString,
         ),
       ),
       child: AnyLinkPreview.builder(
-        link: '${tweet.previewUrl}',
+        link: tweet.uri.toString(),
         placeholderWidget: const _LinkPreviewPlaceholder(),
-        errorWidget: _LinkPreviewError(url: tweet.previewUrl!),
-        itemBuilder: (_, metadata, imageProvider) => Container(
+        errorWidget: _LinkPreviewError(url: tweet.uri),
+        itemBuilder: (_, metadata, imageProvider, __) => Container(
           decoration: BoxDecoration(
             borderRadius: theme.shape.borderRadius,
             border: Border.all(color: theme.dividerColor),
@@ -80,11 +81,11 @@ class _LinkPreviewPlaceholder extends StatelessWidget {
       child: Shimmer(
         gradient: LinearGradient(
           colors: [
-            theme.cardTheme.color!.withOpacity(.3),
-            theme.cardTheme.color!.withOpacity(.3),
+            theme.cardTheme.color!.withAlpha(76),
+            theme.cardTheme.color!.withAlpha(76),
             theme.colorScheme.secondary,
-            theme.cardTheme.color!.withOpacity(.3),
-            theme.cardTheme.color!.withOpacity(.3),
+            theme.cardTheme.color!.withAlpha(76),
+            theme.cardTheme.color!.withAlpha(76),
           ],
         ),
         child: Container(
@@ -105,7 +106,7 @@ class _LinkPreviewError extends StatelessWidget {
     required this.url,
   });
 
-  final Uri url;
+  final AtUri url;
 
   String get urlStr {
     final urlString = '$url';
@@ -154,7 +155,7 @@ class _LinkPreviewError extends StatelessWidget {
               child: FittedBox(
                 child: Text(
                   urlStr,
-                  style: theme.textTheme.subtitle2,
+                  style: theme.textTheme.titleSmall,
                 ),
               ),
             ),
@@ -193,7 +194,7 @@ class _LinkPreviewText extends StatelessWidget {
                     child: Text(
                       limitLength(title!, 40),
                       maxLines: 2,
-                      style: theme.textTheme.subtitle2,
+                      style: theme.textTheme.titleSmall,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -203,11 +204,11 @@ class _LinkPreviewText extends StatelessWidget {
                     desc!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyText2
+                    style: theme.textTheme.bodyMedium
                         ?.copyWith(height: 1.15)
                         .apply(
                           fontSizeDelta: -4,
-                          color: theme.colorScheme.onBackground.withOpacity(.9),
+                          color: theme.colorScheme.onSurface.withOpacity(.9),
                         ),
                   ),
               ],
@@ -217,8 +218,8 @@ class _LinkPreviewText extends StatelessWidget {
             metadata.url ?? '',
             maxLines: 1,
             overflow: TextOverflow.visible,
-            style: theme.textTheme.caption?.apply(fontSizeDelta: -4),
-          )
+            style: theme.textTheme.bodySmall?.apply(fontSizeDelta: -4),
+          ),
         ],
       ),
     );

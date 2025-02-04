@@ -1,5 +1,4 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:dart_twitter_api/twitter_api.dart' as v1;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
@@ -36,16 +35,6 @@ class ImageMediaData with _$ImageMediaData, MediaData {
     /// [thumb] sized images are always in a 1:1 aspect ratio.
     required double aspectRatioDouble,
   }) = _ImageMediaData;
-
-  factory ImageMediaData.fromV1(v1.Media media) {
-    final aspectRatioDouble =
-        (media.sizes?.large?.w ?? 16) / (media.sizes?.large?.h ?? 9);
-
-    return ImageMediaData(
-      baseUrl: media.mediaUrlHttps ?? '',
-      aspectRatioDouble: aspectRatioDouble,
-    );
-  }
 
   ImageMediaData._();
 
@@ -86,45 +75,6 @@ class VideoMediaData with _$VideoMediaData, MediaData {
     required ImageMediaData thumbnail,
     required MediaType type,
   }) = _VideoMediaData;
-
-  factory VideoMediaData.fromV1(v1.Media media) {
-    final aspectRatio = media.videoInfo?.aspectRatio ?? [];
-
-    final aspectRatioDouble =
-        aspectRatio.length == 2 ? aspectRatio[0] / aspectRatio[1] : 16 / 9;
-
-    final durationMillis = media.videoInfo?.durationMillis;
-
-    // removes variants that does not have a bitrate (content type:
-    // 'application/x-mpeg') and then sorts them by the bitrate descending
-    // (highest quality first)
-    final variants = media.videoInfo?.variants
-        ?.where((variant) => variant.bitrate != null)
-        .where((variant) => variant.url != null && variant.url!.isNotEmpty)
-        .toList()
-      ?..sort((a, b) => b.bitrate!.compareTo(a.bitrate!));
-
-    final thumbnail = ImageMediaData(
-      baseUrl: media.mediaUrlHttps ?? '',
-      aspectRatioDouble: aspectRatioDouble,
-    );
-
-    assert(media.type == kMediaVideo || media.type == kMediaGif);
-
-    return VideoMediaData(
-      aspectRatioDouble: aspectRatioDouble,
-      duration: durationMillis != null
-          ? Duration(milliseconds: durationMillis)
-          : null,
-      variants: variants
-              ?.map((variant) => variant.url)
-              .whereType<String>()
-              .toList() ??
-          [],
-      thumbnail: thumbnail,
-      type: media.type == kMediaGif ? MediaType.gif : MediaType.video,
-    );
-  }
 
   VideoMediaData._();
 

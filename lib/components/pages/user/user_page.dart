@@ -10,17 +10,17 @@ import 'package:sliver_tools/sliver_tools.dart';
 
 class UserPage extends ConsumerWidget {
   const UserPage({
-    required this.handle,
+    required this.authorDid,
   });
 
-  final String handle;
+  final String authorDid;
 
   static const name = 'user';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(userPageNotifierProvider(handle));
-    final notifier = ref.watch(userPageNotifierProvider(handle).notifier);
+    final state = ref.watch(userPageNotifierProvider(authorDid));
+    final notifier = ref.watch(userPageNotifierProvider(authorDid).notifier);
     final auth = ref.watch(authenticationStateProvider);
 
     return HarpyScaffold(
@@ -32,7 +32,7 @@ class UserPage extends ConsumerWidget {
             isAuthenticatedUser: data.user.id == auth.user?.id,
           ),
           error: (_, __) => UserPageError(
-            onRetry: () => ref.refresh(userPageNotifierProvider(handle)),
+            onRetry: () => ref.refresh(userPageNotifierProvider(authorDid)),
           ),
           loading: () => const UserPageLoading(),
         ),

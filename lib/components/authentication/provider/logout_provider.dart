@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
+
 import 'package:rby/rby.dart';
 
 /// Handles logout.
@@ -29,7 +30,7 @@ class Logout with LoggerMixin {
 
     _ref.read(routerProvider).goNamed(
       target,
-      queryParams: {'transition': 'fade'},
+      queryParameters: {'transition': 'fade'},
     );
 
     // invalidate session after navigation to avoid building the home screen

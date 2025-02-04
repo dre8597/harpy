@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -107,7 +108,7 @@ class VideoPlayerProgressText extends StatelessWidget {
     return Text(
       '${prettyPrintDuration(data.position)} / '
       '${prettyPrintDuration(data.duration)}',
-      style: theme.textTheme.bodyText1!.copyWith(
+      style: theme.textTheme.bodyLarge!.copyWith(
         color: Colors.white,
         height: 1,
       ),
@@ -149,7 +150,7 @@ class VideoPlayerFullscreenButton extends StatelessWidget {
     this.padding,
   });
 
-  final LegacyTweetData tweet;
+  final BlueskyPostData tweet;
   final EdgeInsets? padding;
 
   @override

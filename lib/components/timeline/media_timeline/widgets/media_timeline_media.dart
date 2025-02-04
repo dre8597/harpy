@@ -57,7 +57,6 @@ class MediaTimelineMedia extends ConsumerWidget {
             ),
           ),
         );
-        break;
       case MediaType.gif:
         child = VisibilityChangeListener(
           detectorKey: ObjectKey(entry),
@@ -70,7 +69,6 @@ class MediaTimelineMedia extends ConsumerWidget {
             onGifLongPress: onMediaLongPress,
           ),
         );
-        break;
       case MediaType.video:
         child = VisibilityChangeListener(
           detectorKey: ObjectKey(entry),
@@ -99,7 +97,6 @@ class MediaTimelineMedia extends ConsumerWidget {
                   ),
           ),
         );
-        break;
     }
 
     return ClipRRect(

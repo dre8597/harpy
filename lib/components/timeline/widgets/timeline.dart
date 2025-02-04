@@ -4,6 +4,7 @@ import 'package:built_collection/built_collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:rby/rby.dart';
 
@@ -33,7 +34,7 @@ class Timeline extends ConsumerStatefulWidget {
   /// [TimelineState.noData] state.
   final VoidCallback? onChangeFilter;
 
-  final ValueChanged<LegacyTweetData>? onUpdatedTweetVisibility;
+  final ValueChanged<BlueskyPostData>? onUpdatedTweetVisibility;
 
   @override
   ConsumerState<Timeline> createState() => _TimelineState();
@@ -41,30 +42,45 @@ class Timeline extends ConsumerStatefulWidget {
 
 class _TimelineState extends ConsumerState<Timeline> {
   ScrollController? _controller;
-  bool _disposeController = false;
+  bool _ownsController = false;
 
   /// The index of the newest visible tweet.
   int _newestVisibleIndex = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    _initializeController();
+  }
 
-    if (_controller == null) {
-      _controller = PrimaryScrollController.of(context) ?? ScrollController();
-      _disposeController = PrimaryScrollController.of(context) == null;
-    }
+  void _initializeController() {
+    // Create our own controller
+    _controller = ScrollController();
+    _ownsController = true;
   }
 
   @override
   void dispose() {
-    if (_disposeController) _controller?.dispose();
-
+    if (_ownsController) {
+      _controller?.dispose();
+    }
+    _controller = null;
     super.dispose();
   }
 
+  @override
+  void deactivate() {
+    // Remove listeners but don't dispose when widget is temporarily removed from tree
+    _controller?.removeListener(_scrollListener);
+    super.deactivate();
+  }
+
+  void _scrollListener() {
+    // Add any scroll listening logic here if needed
+  }
+
   void _onLayoutFinished({
-    required BuiltList<LegacyTweetData> tweets,
+    required BuiltList<BlueskyPostData> tweets,
     required int firstIndex,
     required int lastIndex,
   }) {
@@ -87,8 +103,8 @@ class _TimelineState extends ConsumerState<Timeline> {
     }
   }
 
-  Widget _tweetBuilder(TimelineState state, LegacyTweetData tweet, int index) {
-    return state.showNewTweetsExist(tweet.originalId)
+  Widget _tweetBuilder(TimelineState state, BlueskyPostData tweet, int index) {
+    return state.showNewTweetsExist(tweet.rootPostId ?? tweet.id)
         ? Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -178,7 +194,7 @@ class _TimelineState extends ConsumerState<Timeline> {
             orElse: () => LoadMoreHandler(
               controller: _controller!,
               listen: state.canLoadMore,
-              onLoadMore: notifier.loadOlder,
+              onLoadMore: notifier.load,
               child: TweetList(
                 state.tweets.toList(),
                 key: widget.listKey,

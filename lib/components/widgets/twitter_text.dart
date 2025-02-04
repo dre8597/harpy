@@ -1,10 +1,9 @@
-import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/entities_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -14,34 +13,35 @@ import 'package:tuple/tuple.dart';
 /// Signature for callbacks that are called when an entity has been tapped.
 typedef EntityTapped<T> = void Function(WidgetRef ref, T value);
 
-void defaultOnUserMentionTap(WidgetRef ref, UserMentionData mention) {
+void defaultOnUserMentionTap(WidgetRef ref, BlueskyMentionData mention) {
   final router = ref.read(routerProvider);
+  final currentPath = router.routeInformationProvider.value.location;
 
-  if (!router.location.endsWith(mention.handle)) {
+  if (!currentPath.endsWith(mention.handle ?? mention.did)) {
     router.pushNamed(
       UserPage.name,
-      params: {'handle': mention.handle},
+      pathParameters: {'authorDid': mention.did},
     );
   }
 }
 
-void defaultOnUrlTap(WidgetRef ref, UrlData url) {
+void defaultOnUrlTap(WidgetRef ref, BlueskyLinkData url) {
   HapticFeedback.lightImpact();
-  ref.read(launcherProvider)(url.expandedUrl);
+  ref.read(launcherProvider)(url.url);
 }
 
-void defaultOnUrlLongPress(WidgetRef ref, UrlData url) {
+void defaultOnUrlLongPress(WidgetRef ref, BlueskyLinkData url) {
   showRbyBottomSheet<void>(
     ref.context,
     children: [
-      BottomSheetHeader(child: Text(url.expandedUrl)),
+      BottomSheetHeader(child: Text(url.url)),
       RbyListTile(
         leading: const Icon(CupertinoIcons.square_arrow_left),
         title: const Text('open url externally'),
         onTap: () {
           HapticFeedback.lightImpact();
           ref.read(launcherProvider)(
-            url.expandedUrl,
+            url.url,
             alwaysOpenExternally: true,
           );
           Navigator.of(ref.context).pop();
@@ -52,7 +52,7 @@ void defaultOnUrlLongPress(WidgetRef ref, UrlData url) {
         title: const Text('copy url'),
         onTap: () {
           HapticFeedback.lightImpact();
-          Clipboard.setData(ClipboardData(text: url.expandedUrl));
+          Clipboard.setData(ClipboardData(text: url.url));
           Navigator.of(ref.context).pop();
         },
       ),
@@ -61,7 +61,7 @@ void defaultOnUrlLongPress(WidgetRef ref, UrlData url) {
         title: const Text('share url'),
         onTap: () {
           HapticFeedback.lightImpact();
-          Share.share(url.expandedUrl);
+          Share.share(url.url);
           Navigator.of(ref.context).pop();
         },
       ),
@@ -69,8 +69,8 @@ void defaultOnUrlLongPress(WidgetRef ref, UrlData url) {
   );
 }
 
-void defaultOnHashtagTap(WidgetRef ref, TagData hashtag) {
-  final searchQuery = '#${hashtag.text}';
+void defaultOnHashtagTap(WidgetRef ref, BlueskyTagData hashtag) {
+  final searchQuery = '#${hashtag.tag}';
 
   if (ref.read(tweetSearchProvider) != const TweetSearchState.initial()) {
     // active tweet search already exists
@@ -78,7 +78,7 @@ void defaultOnHashtagTap(WidgetRef ref, TagData hashtag) {
   } else {
     ref.read(routerProvider).pushNamed(
       TweetSearchPage.name,
-      queryParams: {'query': searchQuery},
+      queryParameters: {'query': searchQuery},
     );
   }
 }
@@ -103,7 +103,7 @@ class TwitterText extends ConsumerStatefulWidget {
   });
 
   final String text;
-  final EntitiesData? entities;
+  final BlueskyEntitiesData? entities;
 
   /// The style of the entity in the text.
   ///
@@ -120,16 +120,13 @@ class TwitterText extends ConsumerStatefulWidget {
   /// How visual overflow should be handled.
   final TextOverflow? overflow;
 
-  /// A url that will be removed if it is part of [Entities.urls].
-  ///
-  /// Used to hide the quoted status url that appears at the end of the text
-  /// when the tweet includes a quote.
+  /// A url that will be removed if it is part of [entities.links].
   final String? urlToIgnore;
 
-  final EntityTapped<TagData>? onHashtagTap;
-  final EntityTapped<UrlData>? onUrlTap;
-  final EntityTapped<UrlData> onUrlLongPress;
-  final EntityTapped<UserMentionData>? onUserMentionTap;
+  final EntityTapped<BlueskyTagData>? onHashtagTap;
+  final EntityTapped<BlueskyLinkData>? onUrlTap;
+  final EntityTapped<BlueskyLinkData> onUrlLongPress;
+  final EntityTapped<BlueskyMentionData>? onUserMentionTap;
 
   @override
   ConsumerState<TwitterText> createState() => _TwitterTextState();
@@ -184,20 +181,15 @@ class _TwitterTextState extends ConsumerState<TwitterText> {
   void _addEntityTextSpan(_TwitterTextEntity entity) {
     final dynamic value = entity.value;
 
-    if (value is Media) {
-      // hide the media url at the end of the text
-      return;
-    }
-
     String? text;
     GestureRecognizer? recognizer;
 
-    if (value is TagData) {
+    if (value is BlueskyTagData) {
       recognizer = TapGestureRecognizer()
         ..onTap = () => widget.onHashtagTap?.call(ref, value);
 
-      text = '#${value.text}';
-    } else if (value is UrlData) {
+      text = '#${value.tag}';
+    } else if (value is BlueskyLinkData) {
       if (value.url == widget.urlToIgnore) {
         // hide the url to ignore
         // usually the quoted status link at the end of the text
@@ -208,12 +200,12 @@ class _TwitterTextState extends ConsumerState<TwitterText> {
         ..onTap = ((_) => widget.onUrlTap?.call(ref, value))
         ..onLongTapDown = (_, __) => widget.onUrlLongPress.call(ref, value);
 
-      text = value.displayUrl;
-    } else if (value is UserMentionData) {
+      text = value.url;
+    } else if (value is BlueskyMentionData) {
       recognizer = TapGestureRecognizer()
         ..onTap = () => widget.onUserMentionTap?.call(ref, value);
 
-      text = '@${value.handle}';
+      text = '@${value.handle ?? value.did}';
     }
 
     if (recognizer != null) _gestureRecognizer.add(recognizer);
@@ -272,86 +264,52 @@ class _TwitterTextState extends ConsumerState<TwitterText> {
 
 /// Returns a list of [_TwitterTextEntity] from the [entities] as they appear in
 /// the [text] sorted by their occurrence.
-///
-/// The [Tweet] object returns the indices where the entity appears in the full
-/// tweet text that should make it easy to parse, however we can't use that
-/// since the utf8 encoded characters that are returned by Twitter are handled
-/// differently in dart.
-/// Therefore we use [_findIndices] to find the entity indices ourselves.
 List<_TwitterTextEntity> _initializeEntities(
   String text,
-  EntitiesData entities,
+  BlueskyEntitiesData entities,
 ) {
   final twitterTextEntities = <_TwitterTextEntity>[];
 
-  // hashtags
-  var indexStart = 0;
-  for (final hashtag in entities.hashtags) {
-    final indices = _findIndices(text, '#${hashtag.text}', indexStart) ??
-        _findIndices(text, '＃${hashtag.text}', indexStart);
-
-    if (indices != null) {
-      indexStart = indices.item2;
-      _addEntity(_TwitterTextEntity(indices, hashtag), twitterTextEntities);
+  // mentions
+  if (entities.mentions != null) {
+    for (final mention in entities.mentions!) {
+      _addEntity(
+        _TwitterTextEntity(
+          Tuple2<int, int>(mention.start, mention.end),
+          mention,
+        ),
+        twitterTextEntities,
+      );
     }
   }
 
-  // urls
-  indexStart = 0;
-  for (final url in entities.urls) {
-    final indices = _findIndices(text, url.url, indexStart);
-
-    if (indices != null) {
-      indexStart = indices.item2;
-      _addEntity(_TwitterTextEntity(indices, url), twitterTextEntities);
+  // links
+  if (entities.links != null) {
+    for (final link in entities.links!) {
+      _addEntity(
+        _TwitterTextEntity(
+          Tuple2<int, int>(link.start, link.end),
+          link,
+        ),
+        twitterTextEntities,
+      );
     }
   }
 
-  // user mentions
-  indexStart = 0;
-  for (final userMention in entities.userMentions) {
-    final indices = _findIndices(text, '@${userMention.handle}', indexStart);
-
-    if (indices != null) {
-      indexStart = indices.item2;
-      _addEntity(_TwitterTextEntity(indices, userMention), twitterTextEntities);
-    }
-  }
-
-  // media
-  indexStart = 0;
-  for (final media in entities.media) {
-    final indices = _findIndices(text, media.url, indexStart);
-
-    if (indices != null) {
-      indexStart = indices.item2;
-      _addEntity(_TwitterTextEntity(indices, media), twitterTextEntities);
+  // tags
+  if (entities.tags != null) {
+    for (final tag in entities.tags!) {
+      _addEntity(
+        _TwitterTextEntity(
+          Tuple2<int, int>(tag.start, tag.end),
+          tag,
+        ),
+        twitterTextEntities,
+      );
     }
   }
 
   return twitterTextEntities;
-}
-
-/// Finds and returns the start and end index for the entity in the [text].
-///
-/// We can't rely on the Twitter returned indices as they are counted
-/// differently in dart when unicode characters are involved, even when using
-/// the https://pub.dev/packages/characters package for counting the characters.
-///
-/// Returns `null` if the [entityText] has not been found in the text.
-Tuple2<int, int>? _findIndices(String text, String entityText, int indexStart) {
-  try {
-    final start = text.toLowerCase().indexOf(
-          entityText.toLowerCase(),
-          indexStart,
-        );
-
-    if (start != -1) return Tuple2(start, start + entityText.length);
-  } catch (e) {
-    // assume indices can't be found
-  }
-
-  return null;
 }
 
 void _addEntity(
@@ -375,8 +333,7 @@ class _TwitterTextEntity {
 
   /// The entity value.
   ///
-  /// Types include [TagData], [UrlData], [UserMentionData] and
-  /// [EntitiesMediaData].
+  /// Types include [BlueskyTagData], [BlueskyLinkData], and [BlueskyMentionData].
   final dynamic value;
 }
 

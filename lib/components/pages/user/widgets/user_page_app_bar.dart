@@ -105,7 +105,7 @@ class _MoreButton extends StatelessWidget {
     required this.notifier,
   });
 
-  final RelationshipData relationship;
+  final BlueskyRelationshipData relationship;
   final UserPageNotifier notifier;
 
   Future<void> _showButtonMenu(BuildContext context) async {
