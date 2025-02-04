@@ -41,6 +41,7 @@ class TweetCardActions extends ConsumerWidget {
           tweet: tweet,
           onFavorite: delegates.onFavorite,
           onUnfavorite: delegates.onUnfavorite,
+          onShowLikes: delegates.onShowLikes,
           sizeDelta: style.sizeDelta,
         );
       case TweetCardActionElement.showReplies:

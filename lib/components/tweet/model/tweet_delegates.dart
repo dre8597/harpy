@@ -7,6 +7,7 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:harpy/components/likes/likes_page.dart';
 
 part 'tweet_delegates.freezed.dart';
 
@@ -26,6 +27,7 @@ class TweetDelegates with _$TweetDelegates {
     TweetActionCallback? onShowRetweeter,
     TweetActionCallback? onFavorite,
     TweetActionCallback? onUnfavorite,
+    TweetActionCallback? onShowLikes,
     TweetActionCallback? onRetweet,
     TweetActionCallback? onUnretweet,
     TweetActionCallback? onTranslate,
@@ -80,6 +82,15 @@ TweetDelegates defaultTweetDelegates(
       HapticFeedback.lightImpact();
       notifier.unlike();
     },
+    onShowLikes: tweet.likeCount > 0
+        ? (ref) => ref.read(routerProvider).pushNamed(
+              LikesPage.name,
+              pathParameters: {
+                'authorDid': tweet.authorDid,
+                'id': tweet.uri.toString(),
+              },
+            )
+        : null,
     onRetweet: (_) {
       HapticFeedback.lightImpact();
       notifier.repost();
@@ -97,7 +108,7 @@ TweetDelegates defaultTweetDelegates(
               RetweetersPage.name,
               pathParameters: {
                 'authorDid': tweet.authorDid,
-                'id': tweet.uri.toString()
+                'id': tweet.uri.toString(),
               },
             )
         : null,
@@ -112,14 +123,15 @@ TweetDelegates defaultTweetDelegates(
     onDelete: (ref) {
       HapticFeedback.lightImpact();
       notifier.delete(
-        onDeleted: () =>
-            ref.read(homeTimelineProvider.notifier).removeTweet(tweet),
+        onDeleted: () => ref.read(homeTimelineProvider.notifier).removeTweet(tweet),
       );
     },
     onOpenTweetExternally: (ref) {
       HapticFeedback.lightImpact();
-      ref.read(launcherProvider)(tweet.uri.toString(),
-          alwaysOpenExternally: true);
+      ref.read(launcherProvider)(
+        tweet.uri.toString(),
+        alwaysOpenExternally: true,
+      );
     },
     onCopyText: (ref) {
       HapticFeedback.lightImpact();

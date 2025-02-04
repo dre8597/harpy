@@ -6,6 +6,7 @@ import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/api/bluesky/data/list_data.dart';
 import 'package:harpy/api/twitter/data/user_data.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/likes/likes_page.dart';
 import 'package:harpy/core/core.dart';
 
 final routeObserver = Provider(
@@ -123,8 +124,7 @@ final routesProvider = Provider(
         GoRoute(
           name: UserPage.name,
           path: 'user/:authorDid',
-          builder: (context, state) =>
-              UserPage(authorDid: state.pathParameters['authorDid']!),
+          builder: (context, state) => UserPage(authorDid: state.pathParameters['authorDid']!),
           routes: [
             GoRoute(
               name: FollowingPage.name,
@@ -149,8 +149,7 @@ final routesProvider = Provider(
             GoRoute(
               name: UserTimelineFilter.name,
               path: 'filter',
-              builder: (context, state) =>
-                  UserTimelineFilter(user: state.extra! as UserData),
+              builder: (context, state) => UserTimelineFilter(user: state.extra! as UserData),
             ),
             GoRoute(
               name: TweetDetailPage.name,
@@ -163,8 +162,12 @@ final routesProvider = Provider(
                 GoRoute(
                   name: RetweetersPage.name,
                   path: 'retweets',
-                  builder: (context, state) =>
-                      RetweetersPage(tweetId: state.pathParameters['id']!),
+                  builder: (context, state) => RetweetersPage(tweetId: state.pathParameters['id']!),
+                ),
+                GoRoute(
+                  name: LikesPage.name,
+                  path: 'likes',
+                  builder: (context, state) => LikesPage(tweetId: state.pathParameters['id']!),
                 ),
               ],
             ),
@@ -179,10 +182,9 @@ final routesProvider = Provider(
               name: TimelineFilterCreation.name,
               path: 'create',
               builder: (context, state) => TimelineFilterCreation(
-                initialTimelineFilter: (state.extra
-                    as Map?)?['initialTimelineFilter'] as TimelineFilter?,
-                onSaved: (state.extra as Map?)?['onSaved']
-                    as ValueChanged<TimelineFilter>?,
+                initialTimelineFilter:
+                    (state.extra as Map?)?['initialTimelineFilter'] as TimelineFilter?,
+                onSaved: (state.extra as Map?)?['onSaved'] as ValueChanged<TimelineFilter>?,
               ),
             ),
           ],
@@ -208,10 +210,10 @@ final routesProvider = Provider(
                   name: TweetSearchFilter.name,
                   path: 'filter',
                   builder: (context, state) => TweetSearchFilter(
-                    initialFilter: (state.extra as Map?)?['initialFilter']
-                        as TweetSearchFilterData?,
-                    onSaved: (state.extra as Map?)?['onSaved']
-                        as ValueChanged<TweetSearchFilterData>?,
+                    initialFilter:
+                        (state.extra as Map?)?['initialFilter'] as TweetSearchFilterData?,
+                    onSaved:
+                        (state.extra as Map?)?['onSaved'] as ValueChanged<TweetSearchFilterData>?,
                   ),
                 ),
               ],
@@ -248,10 +250,8 @@ final routesProvider = Provider(
           name: ComposePage.name,
           path: 'compose/tweet',
           builder: (context, state) => ComposePage(
-            parentTweet:
-                (state.extra as Map?)?['parentTweet'] as BlueskyPostData?,
-            quotedTweet:
-                (state.extra as Map?)?['quotedTweet'] as BlueskyPostData?,
+            parentTweet: (state.extra as Map?)?['parentTweet'] as BlueskyPostData?,
+            quotedTweet: (state.extra as Map?)?['quotedTweet'] as BlueskyPostData?,
           ),
         ),
         GoRoute(
@@ -290,10 +290,8 @@ final routesProvider = Provider(
                   path: 'font',
                   builder: (context, state) => FontSelectionPage(
                     title: (state.extra as Map?)?['title'] as String,
-                    selectedFont:
-                        (state.extra as Map?)?['selectedFont'] as String,
-                    onChanged: (state.extra as Map?)?['onChanged']
-                        as ValueChanged<String>,
+                    selectedFont: (state.extra as Map?)?['selectedFont'] as String,
+                    onChanged: (state.extra as Map?)?['onChanged'] as ValueChanged<String>,
                   ),
                 ),
               ],

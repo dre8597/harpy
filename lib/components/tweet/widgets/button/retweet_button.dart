@@ -34,6 +34,8 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
     final renderBox = context.findRenderObject()! as RenderBox;
     final overlay =
         Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final theme = Theme.of(context);
+    final onBackground = theme.colorScheme.onSurface;
 
     final position = RelativeRect.fromRect(
       Rect.fromPoints(
@@ -56,19 +58,28 @@ class _RetweetButtonState extends ConsumerState<RetweetButton> {
         RbyPopupMenuListTile(
           value: 0,
           leading: const Icon(FeatherIcons.repeat),
-          title: Text(widget.tweet.isReposted ? 'unretweet' : 'retweet'),
+          title: Text(
+            widget.tweet.isReposted ? 'unretweet' : 'retweet',
+            style: TextStyle(color: onBackground),
+          ),
         ),
         if (widget.onComposeQuote != null)
-          const RbyPopupMenuListTile(
+          RbyPopupMenuListTile(
             value: 1,
-            leading: Icon(FeatherIcons.feather),
-            title: Text('quote tweet'),
+            leading: const Icon(FeatherIcons.feather),
+            title: Text(
+              'quote tweet',
+              style: TextStyle(color: onBackground),
+            ),
           ),
         if (widget.onShowRetweeters != null)
-          const RbyPopupMenuListTile(
+          RbyPopupMenuListTile(
             value: 2,
-            leading: Icon(FeatherIcons.users),
-            title: Text('view retweeters'),
+            leading: const Icon(FeatherIcons.users),
+            title: Text(
+              'view retweeters',
+              style: TextStyle(color: onBackground),
+            ),
           ),
       ],
     );
