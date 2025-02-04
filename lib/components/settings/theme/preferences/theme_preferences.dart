@@ -32,7 +32,8 @@ class ThemePreferencesNotifier extends StateNotifier<ThemePreferences>
             lightThemeId: preferences.getInt('lightThemeId'),
             darkThemeId: preferences.getInt('darkThemeId'),
             customThemes: BuiltList<String>.of(
-                preferences.getStringList('customThemes', [])),
+              preferences.getStringList('customThemes', []),
+            ),
           ),
         );
 

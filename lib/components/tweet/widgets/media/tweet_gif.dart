@@ -96,7 +96,7 @@ class TweetGif extends ConsumerWidget {
                   icon: const Icon(Icons.gif),
                   compact: compact,
                 ),
-                onTap: () => notifier.initialize(),
+                onTap: notifier.initialize,
                 onLongPress: onGifLongPress,
               ),
             ),

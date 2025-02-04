@@ -58,8 +58,8 @@ class _FindLocationDialogState extends ConsumerState<FindTrendsLocationDialog>
                 FocusScope.of(context).unfocus();
                 HapticFeedback.lightImpact();
                 notifier.search(
-                    query:
-                        'custom location'); //TODO: Enhance with location-based search
+                  query: 'custom location',
+                ); //TODO: Enhance with location-based search
                 _controller.animateTo(2, duration: theme.animation.short);
               },
             ),

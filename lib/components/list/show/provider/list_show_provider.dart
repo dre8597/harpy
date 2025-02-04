@@ -36,14 +36,14 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
   final log = Logger('ListShowNotifier');
 
   Future<void> load() async {
-    final _blueskyApi = _ref.read(blueskyApiProvider);
+    final blueskyApi = _ref.read(blueskyApiProvider);
 
     log.fine('loading lists');
     state = const ListShowState.loading();
 
     try {
       // Get lists owned by the user
-      final ownedLists = await _blueskyApi.graph.getLists(actor: _handle);
+      final ownedLists = await blueskyApi.graph.getLists(actor: _handle);
       final ownerships = ownedLists.data.lists
           .map(
             (list) => BlueskyListData(
@@ -63,7 +63,7 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
           .toBuiltList();
 
       // Get lists the user is subscribed to
-      final subscribedLists = await _blueskyApi.graph
+      final subscribedLists = await blueskyApi.graph
           .getLists(actor: _handle, cursor: ownedLists.data.cursor);
       final subscriptions = subscribedLists.data.lists
           .where(
@@ -112,9 +112,9 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
       );
 
       try {
-        final _blueskyApi = _ref.read(blueskyApiProvider);
+        final blueskyApi = _ref.read(blueskyApiProvider);
 
-        final response = await _blueskyApi.graph.getLists(
+        final response = await blueskyApi.graph.getLists(
           actor: _handle,
           cursor: currentState.ownershipsCursor,
         );
@@ -168,9 +168,9 @@ class ListShowNotifier extends StateNotifier<ListShowState> with LoggerMixin {
       );
 
       try {
-        final _blueskyApi = _ref.read(blueskyApiProvider);
+        final blueskyApi = _ref.read(blueskyApiProvider);
 
-        final response = await _blueskyApi.graph.getLists(
+        final response = await blueskyApi.graph.getLists(
           actor: _handle,
           cursor: currentState.subscriptionsCursor,
         );

@@ -1,14 +1,15 @@
 import 'dart:math';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 
-final _currentMediaIndexProvider = StateProvider.autoDispose.family<int, String>(
+final _currentMediaIndexProvider =
+    StateProvider.autoDispose.family<int, String>(
   (ref, tweetId) => 0,
 );
 
@@ -118,7 +119,8 @@ class TweetCardMedia extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final mediaItems = tweet.media;
-    final currentIndex = ref.watch(_currentMediaIndexProvider(tweet.uri.toString()));
+    final currentIndex =
+        ref.watch(_currentMediaIndexProvider(tweet.uri.toString()));
 
     Widget buildGridLayout(
       List<BlueskyMediaData> mediaItems,
@@ -132,7 +134,12 @@ class TweetCardMedia extends ConsumerWidget {
             for (var i = 0; i < itemCount; i++) ...[
               if (i > 0) const SizedBox(width: 2),
               Expanded(
-                child: _buildMediaItem(context, mediaItems[i], i, onMediaLongPress),
+                child: _buildMediaItem(
+                  context,
+                  mediaItems[i],
+                  i,
+                  onMediaLongPress,
+                ),
               ),
             ],
           ],
@@ -167,7 +174,8 @@ class TweetCardMedia extends ConsumerWidget {
 
     Widget mediaWidget;
     if (mediaItems.length == 1) {
-      mediaWidget = _buildMediaItem(context, mediaItems.first, 0, onMediaLongPress);
+      mediaWidget =
+          _buildMediaItem(context, mediaItems.first, 0, onMediaLongPress);
     } else if (mediaItems.length <= 4) {
       mediaWidget = buildGridLayout(mediaItems, onMediaLongPress);
     } else {
@@ -183,8 +191,9 @@ class TweetCardMedia extends ConsumerWidget {
           viewportFraction: 1,
           enableInfiniteScroll: false,
           height: MediaQuery.of(context).size.height * 0.4,
-          onPageChanged: (index, _) =>
-              ref.read(_currentMediaIndexProvider(tweet.uri.toString()).notifier).state = index,
+          onPageChanged: (index, _) => ref
+              .read(_currentMediaIndexProvider(tweet.uri.toString()).notifier)
+              .state = index,
         ),
       );
     }
@@ -246,7 +255,8 @@ class _MediaConstrainedHeight extends ConsumerWidget {
     }
 
     final aspectRatio = media.aspectRatioDouble;
-    final isSingleImage = tweet.media?.length == 1 && media.type == MediaType.image;
+    final isSingleImage =
+        tweet.media?.length == 1 && media.type == MediaType.image;
 
     switch (media.type) {
       case MediaType.image:
@@ -254,7 +264,9 @@ class _MediaConstrainedHeight extends ConsumerWidget {
           constraints: BoxConstraints(maxHeight: mediaQuery.size.height * .8),
           child: isSingleImage && !mediaPreferences.cropImage
               ? _constrainedAspectRatio(
-                  mediaPreferences.cropImage ? min(aspectRatio, 16 / 9) : aspectRatio,
+                  mediaPreferences.cropImage
+                      ? min(aspectRatio, 16 / 9)
+                      : aspectRatio,
                 )
               : _constrainedAspectRatio(16 / 9),
         );

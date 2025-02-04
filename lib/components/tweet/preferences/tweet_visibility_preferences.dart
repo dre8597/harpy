@@ -28,7 +28,7 @@ class TweetVisibilityPreferences with LoggerMixin {
   final GeneralPreferences _generalPreferences;
 
   /// The id of the list visible tweet in the home timeline.
-  int get lastVisibleTweet => _preferences.getInt('lastVisibleTweet', 0);
+  int get lastVisibleTweet => _preferences.getInt('lastVisibleTweet');
 
   set lastVisibleTweet(int value) =>
       _preferences.setInt('lastVisibleTweet', value);
@@ -53,7 +53,7 @@ class TweetVisibilityPreferences with LoggerMixin {
   }
 
   /// The id of the last viewed mention for the mentions timeline.
-  int get lastViewedMention => _preferences.getInt('lastViewedMention', 0);
+  int get lastViewedMention => _preferences.getInt('lastViewedMention');
   set lastViewedMention(int value) =>
       _preferences.setInt('lastViewedMention', value);
 }

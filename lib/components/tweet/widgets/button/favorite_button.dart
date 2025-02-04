@@ -30,7 +30,8 @@ class FavoriteButton extends ConsumerStatefulWidget {
 class _FavoriteButtonState extends ConsumerState<FavoriteButton> {
   Future<void> _showMenu() async {
     final renderBox = context.findRenderObject()! as RenderBox;
-    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final overlay =
+        Overlay.of(context).context.findRenderObject()! as RenderBox;
     final theme = Theme.of(context);
     final onBackground = theme.colorScheme.onSurface;
 
@@ -61,7 +62,7 @@ class _FavoriteButtonState extends ConsumerState<FavoriteButton> {
           ),
         ),
         if (widget.onShowLikes != null)
-           RbyPopupMenuListTile(
+          RbyPopupMenuListTile(
             value: 1,
             leading: const Icon(FeatherIcons.users),
             title: Text(
@@ -74,7 +75,9 @@ class _FavoriteButtonState extends ConsumerState<FavoriteButton> {
 
     if (mounted) {
       if (result == 0) {
-        widget.tweet.isLiked ? widget.onUnfavorite?.call(ref) : widget.onFavorite?.call(ref);
+        widget.tweet.isLiked
+            ? widget.onUnfavorite?.call(ref)
+            : widget.onFavorite?.call(ref);
       } else if (result == 1) {
         widget.onShowLikes?.call(ref);
       }

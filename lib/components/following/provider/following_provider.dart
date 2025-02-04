@@ -46,9 +46,9 @@ class FollowingNotifier extends PaginatedUsersNotifier {
 
   @override
   Future<PaginatedUsers> request([int? cursor]) async {
-    final _blueskyApi = _ref.read(blueskyApiProvider);
+    final blueskyApi = _ref.read(blueskyApiProvider);
 
-    final response = await _blueskyApi.graph.getFollows(
+    final response = await blueskyApi.graph.getFollows(
       actor: _handle,
       cursor: cursor?.toString(),
       limit: 50,
@@ -56,7 +56,7 @@ class FollowingNotifier extends PaginatedUsersNotifier {
 
     final following = await Future.wait(
       response.data.follows.map((actor) async {
-        final profile = await _blueskyApi.actor.getProfile(actor: actor.did);
+        final profile = await blueskyApi.actor.getProfile(actor: actor.did);
         return UserData.fromBlueskyActorProfile(profile.data);
       }),
     );

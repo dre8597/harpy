@@ -225,9 +225,11 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
   Widget build(BuildContext context) {
     final orientation = MediaQuery.of(context).orientation;
     final videoData = widget.mediaData ??
-        widget.tweet.media?.firstWhereOrNull(
-          (m) => m.type == MediaType.video,
-        )?.toVideoMediaData();
+        widget.tweet.media
+            ?.firstWhereOrNull(
+              (m) => m.type == MediaType.video,
+            )
+            ?.toVideoMediaData();
 
     if (videoData == null) {
       return const SizedBox();

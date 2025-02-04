@@ -166,10 +166,11 @@ class _ConnectionsCount extends ConsumerWidget {
             count: user.followingCount,
             builder: (count) => RbyListCard(
               title: FittedBox(
-                  child: Text(
-                '$count  following',
-                style: textStyle,
-              )),
+                child: Text(
+                  '$count  following',
+                  style: textStyle,
+                ),
+              ),
               onTap: () => context.pushNamed(
                 FollowingPage.name,
                 pathParameters: {'authorDid': user.id},
@@ -183,10 +184,11 @@ class _ConnectionsCount extends ConsumerWidget {
             count: user.followersCount,
             builder: (count) => RbyListCard(
               title: FittedBox(
-                  child: Text(
-                '$count  followers',
-                style: textStyle,
-              )),
+                child: Text(
+                  '$count  followers',
+                  style: textStyle,
+                ),
+              ),
               onTap: () => context.pushNamed(
                 FollowersPage.name,
                 pathParameters: {'authorDid': user.id},

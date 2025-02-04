@@ -8,7 +8,8 @@ part 'embed_view_provider.freezed.dart';
 
 final embedViewProvider = NotifierProvider.autoDispose
     .family<EmbedViewNotifier, EmbedViewState, EmbedView>(
-        EmbedViewNotifier.new);
+  EmbedViewNotifier.new,
+);
 
 @freezed
 class EmbedViewState with _$EmbedViewState {

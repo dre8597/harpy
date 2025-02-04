@@ -18,7 +18,8 @@ final tweetSearchProvider =
   name: 'TweetSearchProvider',
 );
 
-class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMixin {
+class TweetSearchNotifier extends StateNotifier<TweetSearchState>
+    with LoggerMixin {
   TweetSearchNotifier({
     required Ref ref,
   })  : _ref = ref,
@@ -87,9 +88,9 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
     state = TweetSearchState.loading(query: query, filter: filter);
 
     try {
-      final _blueskyApi = _ref.read(blueskyApiProvider);
+      final blueskyApi = _ref.read(blueskyApiProvider);
 
-      final searchResult = await _blueskyApi.feed.searchPosts(query);
+      final searchResult = await blueskyApi.feed.searchPosts(query);
 
       if (searchResult.data.posts.isEmpty) {
         log.fine('found no posts for query: $query');

@@ -83,7 +83,7 @@ class _GeneralSettingsList extends ConsumerWidget {
             leading: const Icon(Icons.speed),
             title: Text(
               'performance mode',
-              style: TextStyle(color:  onBackground),
+              style: TextStyle(color: onBackground),
             ),
             subtitle: const Text('reduces animations and effects'),
             value: general.performanceMode,
@@ -97,7 +97,7 @@ class _GeneralSettingsList extends ConsumerWidget {
             leading: const Icon(Icons.access_time),
             title: Text(
               'always use 24-hour time format',
-              style: TextStyle(color:  onBackground),
+              style: TextStyle(color: onBackground),
             ),
             value: general.alwaysUse24HourFormat,
             borderRadius: theme.shape.borderRadius,
@@ -108,9 +108,9 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(FeatherIcons.feather),
-            title:  Text(
+            title: Text(
               'floating compose button',
-              style: TextStyle(color:  onBackground),
+              style: TextStyle(color: onBackground),
             ),
             subtitle: const Text(
               'display a floating compose button in the home screen',
@@ -124,9 +124,9 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: HarpyRadioDialogTile(
             leading: const Icon(CupertinoIcons.square_list),
-            title:  Text(
+            title: Text(
               'restore home timeline position on app start',
-              style: TextStyle(color:  onBackground),
+              style: TextStyle(color: onBackground),
             ),
             dialogTitle: const Text(
               'change how the app behaves when opening the home timeline',
@@ -145,9 +145,9 @@ class _GeneralSettingsList extends ConsumerWidget {
         Card(
           child: RbySwitchTile(
             leading: const Icon(CupertinoIcons.refresh),
-            title:  Text(
+            title: Text(
               'restore home timeline position on refresh',
-              style: TextStyle(color:  onBackground),
+              style: TextStyle(color: onBackground),
             ),
             subtitle: const Text(
               'restores your position in the home timeline after a refresh',
@@ -163,9 +163,9 @@ class _GeneralSettingsList extends ConsumerWidget {
           children: [
             RbySwitchTile(
               leading: const Icon(CupertinoIcons.rectangle),
-              title:  Text(
+              title: Text(
                 'automatically hide app bar',
-                style: TextStyle(color:  onBackground),
+                style: TextStyle(color: onBackground),
               ),
               subtitle: const Text('when scrolling down'),
               value: general.hideHomeAppBar,
@@ -173,9 +173,9 @@ class _GeneralSettingsList extends ConsumerWidget {
             ),
             RbySwitchTile(
               leading: const Icon(CupertinoIcons.rectangle_dock),
-              title:  Text(
+              title: Text(
                 'bottom app bar',
-                style: TextStyle(color:  onBackground),
+                style: TextStyle(color: onBackground),
               ),
               subtitle: const Text('position the app bar at the bottom'),
               value: general.bottomAppBar,

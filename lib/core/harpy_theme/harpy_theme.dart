@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:built_collection/built_collection.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';

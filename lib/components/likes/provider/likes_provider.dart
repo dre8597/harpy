@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 
-final likesProvider = FutureProvider.autoDispose.family<BuiltList<UserData>, String>(
+final likesProvider =
+    FutureProvider.autoDispose.family<BuiltList<UserData>, String>(
   (ref, postUri) async {
     final blueskyApi = ref.watch(blueskyApiProvider);
     final likes = await blueskyApi.feed.getLikes(
@@ -25,8 +26,9 @@ final likesProvider = FutureProvider.autoDispose.family<BuiltList<UserData>, Str
             name: profile.data.displayName ?? profile.data.handle,
             handle: profile.data.handle,
             description: profile.data.description,
-            profileImage:
-                profile.data.avatar != null ? UserProfileImage.fromUrl(profile.data.avatar!) : null,
+            profileImage: profile.data.avatar != null
+                ? UserProfileImage.fromUrl(profile.data.avatar!)
+                : null,
             followersCount: profile.data.followersCount,
             followingCount: profile.data.followsCount,
             tweetCount: profile.data.postsCount,

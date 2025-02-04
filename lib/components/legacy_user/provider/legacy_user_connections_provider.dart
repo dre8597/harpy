@@ -67,7 +67,7 @@ class LegacyUserConnectionsNotifier
   }
 
   Future<void> follow(String handle) async {
-    final _blueskyApi = _ref.read(blueskyApiProvider);
+    final blueskyApi = _ref.read(blueskyApiProvider);
     log.fine('follow $handle');
 
     state = state.rebuild(
@@ -78,8 +78,8 @@ class LegacyUserConnectionsNotifier
     );
 
     try {
-      final profile = await _blueskyApi.actor.getProfile(actor: handle);
-      await _blueskyApi.graph.follow(did: profile.data.did);
+      final profile = await blueskyApi.actor.getProfile(actor: handle);
+      await blueskyApi.graph.follow(did: profile.data.did);
     } catch (e, st) {
       log.warning('error following user', e, st);
       _ref.read(messageServiceProvider).showText('error following user');
@@ -107,10 +107,10 @@ class LegacyUserConnectionsNotifier
     );
 
     try {
-      final _blueskyApi = _ref.read(blueskyApiProvider);
+      final blueskyApi = _ref.read(blueskyApiProvider);
 
-      final profile = await _blueskyApi.actor.getProfile(actor: handle);
-      await _blueskyApi.atproto.repo
+      final profile = await blueskyApi.actor.getProfile(actor: handle);
+      await blueskyApi.atproto.repo
           .deleteRecord(uri: profile.data.viewer.following!);
     } catch (e, st) {
       log.warning('error unfollowing user', e, st);

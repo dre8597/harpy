@@ -36,9 +36,9 @@ class UserSearchNotifier extends StateNotifier<PaginatedState<UsersSearchData>>
     required Iterable<UserData> oldUsers,
   }) async {
     try {
-      final _blueskyApi = _ref.read(blueskyApiProvider);
+      final blueskyApi = _ref.read(blueskyApiProvider);
 
-      final response = await _blueskyApi.actor.searchActors(
+      final response = await blueskyApi.actor.searchActors(
         term: query,
         limit: 20,
         cursor: cursor > 1 ? cursor.toString() : null,
@@ -51,7 +51,7 @@ class UserSearchNotifier extends StateNotifier<PaginatedState<UsersSearchData>>
         )
             .map((actor) async {
           // Get full profile for each actor to get counts
-          final profile = await _blueskyApi.actor.getProfile(actor: actor.did);
+          final profile = await blueskyApi.actor.getProfile(actor: actor.did);
           return UserData(
             id: actor.did,
             name: actor.displayName ?? actor.handle,

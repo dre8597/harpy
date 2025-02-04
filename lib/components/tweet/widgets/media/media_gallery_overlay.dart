@@ -84,7 +84,8 @@ class _MediaOverlayState extends ConsumerState<MediaGalleryOverlay>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _observer ??= ref.read(routeObserver)?..subscribe(this, ModalRoute.of(context)!);
+    _observer ??= ref.read(routeObserver)
+      ?..subscribe(this, ModalRoute.of(context)!);
 
     _controller.duration = Theme.of(context).animation.short;
   }
@@ -100,7 +101,8 @@ class _MediaOverlayState extends ConsumerState<MediaGalleryOverlay>
   Widget build(BuildContext context) {
     final tweet = ref.watch(tweetProvider(widget.tweet.id)) ?? widget.tweet;
 
-    final overlap = tweet.media?.first.type.toMediaCategory != MediaType.video.name;
+    final overlap =
+        tweet.media?.first.type.toMediaCategory != MediaType.video.name;
 
     final child = Center(
       key: _childKey,
@@ -178,7 +180,8 @@ class _OverlayAppBar extends ConsumerWidget {
                 colors: [Colors.black87, Colors.transparent],
               ),
             ),
-            padding: EdgeInsets.symmetric(horizontal: theme.spacing.small).copyWith(
+            padding:
+                EdgeInsets.symmetric(horizontal: theme.spacing.small).copyWith(
               top: theme.spacing.small + mediaQuery.padding.top,
             ),
             child: RbyButton.transparent(

@@ -43,7 +43,6 @@ class HarpyRadioDialogTile<T> extends ConsumerWidget {
             left: theme.spacingScheme.xl,
             right: theme.spacingScheme.xl,
           ),
-
           title: dialogTitle,
           contentPadding: theme.spacing.only(top: true),
           clipBehavior: Clip.antiAlias,

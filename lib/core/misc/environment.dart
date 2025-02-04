@@ -21,7 +21,8 @@ final environmentProvider = Provider(
 
     final actualAesKey = aesKey.isNotEmpty ? aesKey : _fallbackAesKey;
     _log.fine(
-        'Initializing environment with AES key: ${actualAesKey.substring(0, 10)}...');
+      'Initializing environment with AES key: ${actualAesKey.substring(0, 10)}...',
+    );
 
     if (aesKey.isNotEmpty) {
       final encrypter = Encrypter(AES(Key.fromBase64(actualAesKey)));

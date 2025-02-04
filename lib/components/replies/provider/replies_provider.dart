@@ -84,11 +84,11 @@ class RepliesState with _$RepliesState {
 
     /// When the tweet is a reply itself, the [parent] will contain the parent
     /// reply chain.
-    final BlueskyPostData? parent,
+    BlueskyPostData? parent,
   }) = _Data;
 
-  const factory RepliesState.noData({final BlueskyPostData? parent}) = _NoData;
-  const factory RepliesState.error({final BlueskyPostData? parent}) = _Error;
+  const factory RepliesState.noData({BlueskyPostData? parent}) = _NoData;
+  const factory RepliesState.error({BlueskyPostData? parent}) = _Error;
 }
 
 extension RepliesStateExtension on RepliesState {

@@ -20,7 +20,7 @@ class TrendsLocationPreferencesNotifier
   })  : _preferences = preferences,
         super(
           TrendsLocationPreferences(
-            trendsLocationData: preferences.getString('trendsLocation', ''),
+            trendsLocationData: preferences.getString('trendsLocation'),
           ),
         );
 

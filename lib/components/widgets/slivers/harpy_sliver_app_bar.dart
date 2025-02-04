@@ -173,7 +173,7 @@ Widget? _leading(
     child = leading;
   } else if (Scaffold.of(context).hasDrawer) {
     child = RbyButton.transparent(
-      icon: Icon(Icons.menu),
+      icon: const Icon(Icons.menu),
       onTap: Scaffold.of(context).openDrawer,
     );
   } else if (route is PageRoute<dynamic> && route.fullscreenDialog) {

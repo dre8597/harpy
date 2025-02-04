@@ -21,7 +21,7 @@ class SetupPreferences {
 
   /// Whether the currently authenticated user has been through the setup after
   /// their first login.
-  bool get performedSetup => _preferences.getBool('performedSetup2', false);
+  bool get performedSetup => _preferences.getBool('performedSetup2');
   set performedSetup(bool value) =>
       _preferences.setBool('performedSetup2', value);
 }

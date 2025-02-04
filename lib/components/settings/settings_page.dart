@@ -137,8 +137,10 @@ class _OtherSettingsCard extends ConsumerWidget {
               'open Twitter links',
               style: TextStyle(color: onBackground),
             ),
-            subtitle: Text('allow harpy to open Twitter links',
-                style: TextStyle(color: onBackground)),
+            subtitle: Text(
+              'allow harpy to open Twitter links',
+              style: TextStyle(color: onBackground),
+            ),
             onTap: showOpenByDefault,
           ),
         if (!usingCustomApi)
