@@ -1,4 +1,5 @@
 import 'package:bluesky/bluesky.dart' as bsky;
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
@@ -28,8 +29,12 @@ class UserPageNotifier extends _$UserPageNotifier {
     BlueskyPostData? pinnedPost;
     final pinnedPosts = await _blueskyApi.feed.getAuthorFeed(actor: authorDid);
     if (pinnedPosts.data.feed.isNotEmpty) {
-      final pinnedPostView = pinnedPosts.data.feed.first;
-      pinnedPost = BlueskyPostData.fromFeedView(pinnedPostView);
+      final pinnedPostView = pinnedPosts.data.feed.firstWhereOrNull(
+        (post) => post.post.viewer.pinned,
+      );
+      if (pinnedPostView != null) {
+        pinnedPost = BlueskyPostData.fromFeedView(pinnedPostView);
+      }
     }
 
     final relationship = BlueskyRelationshipData(

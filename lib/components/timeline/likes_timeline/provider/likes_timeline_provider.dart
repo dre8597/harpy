@@ -31,26 +31,54 @@ class LikesTimelineNotifier extends TimelineNotifier {
   @override
   final log = Logger('LikesTimelineNotifier');
 
-  @override
-  TimelineFilter? currentFilter() => null;
+  static const _batchSize = 25;
 
-  /// Validates a batch of post URIs to ensure they are accessible
-  Future<List<AtUri>> _validatePosts(
+  @override
+  TimelineFilter? currentFilter() {
+    final activeFilter =
+        ref.read(timelineFilterProvider).activeUserFilter(_userId);
+    return ref.read(timelineFilterProvider).filterByUuid(activeFilter?.uuid);
+  }
+
+  /// Processes a batch of posts and returns valid feed views
+  Future<List<bsky.FeedView>> _processBatch(
     List<AtUri> uris,
     bsky.Bluesky blueskyApi,
   ) async {
+    if (!mounted) return [];
+
     try {
       final response = await blueskyApi.feed.getPosts(uris: uris);
-      // Only return URIs for posts that were successfully fetched
-      return response.data.posts.map((post) => post.uri).toList();
+
+      return response.data.posts
+          .map((post) => bsky.FeedView(post: post))
+          .toList();
     } catch (e, stack) {
-      log.warning(
-        'Error validating posts batch, skipping invalid posts',
-        e,
-        stack,
-      );
-      return [];
+      log.warning('Error processing batch of ${uris.length} posts', e, stack);
+
+      // If batch fails and has more than one post, try processing individually
+      if (uris.length > 1) {
+        final individualResults = <bsky.FeedView>[];
+
+        for (final uri in uris) {
+          if (!mounted) return individualResults;
+
+          try {
+            final singleResponse = await blueskyApi.feed.getPosts(uris: [uri]);
+            individualResults.addAll(
+              singleResponse.data.posts
+                  .map((post) => bsky.FeedView(post: post)),
+            );
+          } catch (e, stack) {
+            log.fine('Skipping inaccessible post: $uri', e, stack);
+          }
+        }
+
+        return individualResults;
+      }
     }
+
+    return [];
   }
 
   @override
@@ -72,51 +100,46 @@ class LikesTimelineNotifier extends TimelineNotifier {
       final likedPostUris = response.data.records
           .map((record) => record.value['subject']['uri'] as String?)
           .whereType<String>()
-          .map(AtUri.parse)
+          .map((uri) {
+            try {
+              return AtUri.parse(uri);
+            } catch (e) {
+              log.warning('Invalid URI format: $uri');
+              return null;
+            }
+          })
+          .whereType<AtUri>()
           .toList();
 
       if (likedPostUris.isEmpty) {
         return TimelineResponse([], response.data.cursor);
       }
 
-      // Process URIs in smaller batches to handle potential invalid posts
-      final validatedUris = <AtUri>[];
-      const batchSize = 25;
+      // Process URIs in batches
+      final allFeedViews = <bsky.FeedView>[];
 
-      for (var i = 0; i < likedPostUris.length; i += batchSize) {
-        final end = (i + batchSize < likedPostUris.length)
-            ? i + batchSize
+      for (var i = 0; i < likedPostUris.length; i += _batchSize) {
+        if (!mounted) break;
+
+        final end = (i + _batchSize < likedPostUris.length)
+            ? i + _batchSize
             : likedPostUris.length;
+
         final batch = likedPostUris.sublist(i, end);
+        final batchResults = await _processBatch(batch, blueskyApi);
 
-        if (!mounted) return TimelineResponse([], null);
-
-        final validBatch = await _validatePosts(batch, blueskyApi);
-        validatedUris.addAll(validBatch);
+        allFeedViews.addAll(batchResults);
       }
-
-      if (validatedUris.isEmpty) {
-        return TimelineResponse([], response.data.cursor);
-      }
-
-      // Fetch the validated posts
-      final postsResponse =
-          await blueskyApi.feed.getPosts(uris: validatedUris.sublist(0, 4));
 
       if (!mounted) return TimelineResponse([], null);
 
-      // Convert the posts to feed views for compatibility with handleTimelinePosts
-      final feedViews = postsResponse.data.posts
-          .map(
-            (post) => bsky.FeedView(
-              post: post,
-            ),
-          )
-          .toList();
+      if (allFeedViews.isEmpty) {
+        return TimelineResponse([], response.data.cursor);
+      }
 
       // Process the posts using the timeline helper
       final processedPosts = await handleTimelinePosts(
-        feedViews,
+        allFeedViews,
         response.data.cursor,
       );
 

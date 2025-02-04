@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
@@ -39,13 +38,26 @@ class UserTimelineNotifier extends TimelineNotifier {
   @override
   Future<TimelineResponse> request({String? cursor}) async {
     final blueskyApi = ref.read(blueskyApiProvider);
-    final feed = await blueskyApi.feed.getAuthorFeed(
-      actor: _userId,
-      cursor: cursor,
-      limit: 100,
-    );
 
-    final posts = feed.data.feed.map(BlueskyPostData.fromFeedView).toList();
-    return TimelineResponse(posts, feed.data.cursor);
+    try {
+      final feed = await blueskyApi.feed.getAuthorFeed(
+        actor: _userId,
+        cursor: cursor,
+        limit: 100,
+      );
+
+      if (!mounted) return TimelineResponse([], null);
+
+      // Process the posts using the timeline helper for proper filtering
+      final processedPosts = await handleTimelinePosts(
+        feed.data.feed,
+        feed.data.cursor,
+      );
+
+      return processedPosts;
+    } catch (e, stack) {
+      log.severe('Error fetching user timeline', e, stack);
+      rethrow;
+    }
   }
 }
