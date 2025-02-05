@@ -63,13 +63,23 @@ class _MediaSettingsList extends ConsumerWidget {
             leading: const Icon(CupertinoIcons.photo),
             title: const Text('tweet image quality'),
             borderRadius: theme.shape.borderRadius,
-            dialogTitle: const Text(
+            dialogTitle: Text(
               'change when tweet images use the best quality',
+              style: TextStyle(color: onBackground),
             ),
-            entries: const {
-              0: Text('always use best quality'),
-              1: Text('only use best quality on wifi'),
-              2: Text('never use best quality'),
+            entries: {
+              0: Text(
+                'always use best quality',
+                style: TextStyle(color: onBackground),
+              ),
+              1: Text(
+                'only use best quality on wifi',
+                style: TextStyle(color: onBackground),
+              ),
+              2: Text(
+                'never use best quality',
+                style: TextStyle(color: onBackground),
+              ),
             },
             groupValue: media.bestMediaQuality,
             onChanged: mediaNotifier.setBestMediaQuality,
@@ -130,30 +140,44 @@ class _MediaSettingsList extends ConsumerWidget {
                 'autoplay gifs',
                 style: TextStyle(color: onBackground),
               ),
-              dialogTitle: const Text(
+              dialogTitle: Text(
                 'change when gifs should automatically play',
+                style: TextStyle(color: onBackground),
               ),
-              entries: const {
-                0: Text('always autoplay'),
-                1: Text('only on wifi'),
-                2: Text('never autoplay'),
+              entries: {
+                0: Text(
+                  'always autoplay',
+                  style: TextStyle(color: onBackground),
+                ),
+                1: Text('only on wifi', style: TextStyle(color: onBackground)),
+                2: Text(
+                  'never autoplay',
+                  style: TextStyle(color: onBackground),
+                ),
               },
               groupValue: media.autoplayGifs,
               onChanged: mediaNotifier.setAutoplayGifs,
             ),
             HarpyRadioDialogTile(
-              leading: const Icon(CupertinoIcons.play_circle),
+              leading: Icon(CupertinoIcons.play_circle, color: onBackground),
               title: Text(
                 'autoplay videos',
                 style: TextStyle(color: onBackground),
               ),
-              dialogTitle: const Text(
+              dialogTitle: Text(
                 'change when videos should automatically play',
+                style: TextStyle(color: onBackground),
               ),
-              entries: const {
-                0: Text('always autoplay'),
-                1: Text('only on wifi'),
-                2: Text('never autoplay'),
+              entries: {
+                0: Text(
+                  'always autoplay',
+                  style: TextStyle(color: onBackground),
+                ),
+                1: Text('only on wifi', style: TextStyle(color: onBackground)),
+                2: Text(
+                  'never autoplay',
+                  style: TextStyle(color: onBackground),
+                ),
               },
               groupValue: media.autoplayVideos,
               onChanged: mediaNotifier.setAutoplayVideos,
@@ -164,13 +188,17 @@ class _MediaSettingsList extends ConsumerWidget {
                 'preload videos',
                 style: TextStyle(color: onBackground),
               ),
-              dialogTitle: const Text(
+              dialogTitle: Text(
                 'change when videos should be preloaded',
+                style: TextStyle(color: onBackground),
               ),
-              entries: const {
-                0: Text('always preload'),
-                1: Text('only on wifi'),
-                2: Text('never preload'),
+              entries: {
+                0: Text(
+                  'always preload',
+                  style: TextStyle(color: onBackground),
+                ),
+                1: Text('only on wifi', style: TextStyle(color: onBackground)),
+                2: Text('never preload', style: TextStyle(color: onBackground)),
               },
               groupValue: media.preloadVideos,
               onChanged: mediaNotifier.setPreloadVideos,
@@ -191,6 +219,20 @@ class _MediaSettingsList extends ConsumerWidget {
           ),
         ),
         VerticalSpacer.normal,
+        Card(
+          child: RbySwitchTile(
+            leading: const Icon(CupertinoIcons.play_rectangle_fill),
+            title: Text(
+              'reels video mode',
+              style: TextStyle(color: onBackground),
+            ),
+            subtitle: const Text('TikTok/Instagram Reels style video feed'),
+            value: media.useReelsVideoMode,
+            borderRadius: theme.shape.borderRadius,
+            onChanged: mediaNotifier.setUseReelsVideoMode,
+          ),
+        ),
+        VerticalSpacer.normal,
         const _MediaDownloadSettings(),
       ]),
     );
@@ -204,8 +246,7 @@ class _MediaDownloadSettings extends ConsumerStatefulWidget {
   _MediaDownloadSettingsState createState() => _MediaDownloadSettingsState();
 }
 
-class _MediaDownloadSettingsState
-    extends ConsumerState<_MediaDownloadSettings> {
+class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> {
   @override
   void initState() {
     super.initState();

@@ -9,8 +9,8 @@ import 'package:rby/rby.dart';
 
 part 'replies_provider.freezed.dart';
 
-final repliesProvider = StateNotifierProvider.autoDispose
-    .family<RepliesNotifier, RepliesState, BlueskyPostData>(
+final repliesProvider =
+    StateNotifierProvider.autoDispose.family<RepliesNotifier, RepliesState, BlueskyPostData>(
   (ref, tweet) => RepliesNotifier(
     findPostReplies: ref.watch(findPostRepliesProvider),
     tweet: tweet,
@@ -24,45 +24,43 @@ class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
     required BlueskyPostData tweet,
   })  : _findPostReplies = findPostReplies,
         _tweet = tweet,
-        super(const RepliesState.loading()) {
+        super(const RepliesState.loading(parent: null)) {
     load();
   }
 
   final FindPostReplies _findPostReplies;
   final BlueskyPostData _tweet;
+  String? _cursor;
+  bool _hasMore = true;
+
   @override
   final log = Logger('RepliesNotifier');
 
   Future<void> load() async {
     log.fine('loading replies for ${_tweet.id}');
 
-    state = const RepliesState.loading();
+    // Keep the parent in loading state if we have it
+    final currentParent = state.parent;
+    state = RepliesState.loading(parent: currentParent);
 
     try {
-      final thread = await _findPostReplies.findThread(_tweet);
-
-      // The first post in the thread is the parent (if it exists)
+      // First get the parent post if this is a reply
       BlueskyPostData? parent;
-      if (thread.isNotEmpty && thread.first.id != _tweet.id) {
-        parent = thread.first;
+      if (_tweet.parentPostId != null) {
+        parent = await _findPostReplies.findParentPost(_tweet);
       }
 
-      // Get replies (all posts after the original tweet)
-      final replies = <BlueskyPostData>[];
-      var foundOriginal = false;
-      for (final post in thread) {
-        if (foundOriginal) {
-          replies.add(post);
-        } else if (post.id == _tweet.id) {
-          foundOriginal = true;
-        }
-      }
+      // Then get the first page of replies
+      final result = await _findPostReplies.findRepliesWithPagination(_tweet);
+      _cursor = result.cursor;
+      _hasMore = result.hasMore;
 
-      if (replies.isNotEmpty) {
-        log.fine('found ${replies.length} replies');
+      if (result.replies.isNotEmpty) {
+        log.fine('found ${result.replies.length} replies');
         state = RepliesState.data(
-          replies: replies.toBuiltList(),
+          replies: result.replies.toBuiltList(),
           parent: parent,
+          hasMore: _hasMore,
         );
       } else {
         log.fine('no replies found');
@@ -73,22 +71,63 @@ class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
       state = const RepliesState.error();
     }
   }
+
+  Future<void> loadMore() async {
+    if (!_hasMore) return;
+
+    final currentState = state;
+    if (!currentState.maybeMap(
+      data: (_) => true,
+      orElse: () => false,
+    )) {
+      return;
+    }
+
+    try {
+      final result = await _findPostReplies.findRepliesWithPagination(
+        _tweet,
+        cursor: _cursor,
+      );
+
+      _cursor = result.cursor;
+      _hasMore = result.hasMore;
+
+      if (result.replies.isNotEmpty) {
+        state = currentState.maybeMap(
+          data: (data) => RepliesState.data(
+            replies: (data.replies.toList()..addAll(result.replies)).toBuiltList(),
+            parent: data.parent,
+            hasMore: _hasMore,
+          ),
+          orElse: () => currentState,
+        );
+      }
+    } catch (e, st) {
+      log.warning('error loading more replies', e, st);
+      // Don't update state on error, keep existing replies
+    }
+  }
 }
 
 @freezed
 class RepliesState with _$RepliesState {
-  const factory RepliesState.loading() = _Loading;
+  const factory RepliesState.loading({
+    BlueskyPostData? parent,
+  }) = _Loading;
 
   const factory RepliesState.data({
     required BuiltList<BlueskyPostData> replies,
-
-    /// When the tweet is a reply itself, the [parent] will contain the parent
-    /// reply chain.
     BlueskyPostData? parent,
+    required bool hasMore,
   }) = _Data;
 
-  const factory RepliesState.noData({BlueskyPostData? parent}) = _NoData;
-  const factory RepliesState.error({BlueskyPostData? parent}) = _Error;
+  const factory RepliesState.noData({
+    BlueskyPostData? parent,
+  }) = _NoData;
+
+  const factory RepliesState.error({
+    BlueskyPostData? parent,
+  }) = _Error;
 }
 
 extension RepliesStateExtension on RepliesState {
@@ -96,10 +135,16 @@ extension RepliesStateExtension on RepliesState {
         data: (value) => value.parent,
         noData: (value) => value.parent,
         error: (value) => value.parent,
+        loading: (value) => value.parent,
       );
 
   BuiltList<BlueskyPostData> get replies => maybeMap(
         data: (value) => value.replies,
         orElse: BuiltList.new,
+      );
+
+  bool get hasMore => maybeMap(
+        data: (value) => value.hasMore,
+        orElse: () => false,
       );
 }

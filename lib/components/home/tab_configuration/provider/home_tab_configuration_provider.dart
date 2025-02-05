@@ -35,7 +35,7 @@ class HomeTabConfigurationNotifier extends StateNotifier<HomeTabConfiguration>
       return;
     }
 
-    final json = _preferences.getString('homeTabConfiguration', '');
+    final json = _preferences.getString('homeTabConfiguration');
 
     if (json.isEmpty) {
       log.fine('no home tabs configuration exists');

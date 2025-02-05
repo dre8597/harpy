@@ -151,7 +151,7 @@ class BlueskyMediaData with _$BlueskyMediaData implements MediaData {
   }) = _BlueskyMediaData;
 
   factory BlueskyMediaData.fromUEmbedViewMediaVideo(
-      bsky.UEmbedViewMediaVideo video) {
+      bsky.UEmbedViewMediaVideo video,) {
     return BlueskyMediaData(
       alt: video.data.alt ?? '',
       url: video.data.playlist,

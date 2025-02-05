@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/tweet/widgets/media/utils/video_utils.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
 
@@ -147,10 +148,16 @@ class VideoPlayerQualityButton extends ConsumerWidget {
 class VideoPlayerFullscreenButton extends StatelessWidget {
   const VideoPlayerFullscreenButton({
     required this.tweet,
+    required this.media,
+    required this.delegates,
+    this.mediaData,
     this.padding,
   });
 
   final BlueskyPostData tweet;
+  final BlueskyMediaData media;
+  final TweetDelegates delegates;
+  final VideoMediaData? mediaData;
   final EdgeInsets? padding;
 
   @override
@@ -160,10 +167,12 @@ class VideoPlayerFullscreenButton extends StatelessWidget {
     return RbyButton.transparent(
       icon: const Icon(Icons.fullscreen_rounded, color: Colors.white),
       padding: padding ?? EdgeInsets.all(theme.spacing.small),
-      onTap: () => Navigator.of(context).push<void>(
-        HeroDialogRoute(
-          builder: (_) => TweetFullscreenVideo(tweet: tweet),
-        ),
+      onTap: () => navigateToVideo(
+        context,
+        tweet: tweet,
+        media: media,
+        delegates: delegates,
+        mediaData: mediaData,
       ),
     );
   }

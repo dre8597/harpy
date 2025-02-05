@@ -17,6 +17,7 @@ enum TweetCardElement {
   actionsRow,
   details,
   linkPreview,
+  parentPreview,
 }
 
 /// The actions used in the [TweetCardElement.actionsRow].
@@ -33,56 +34,62 @@ enum TweetCardActionElement {
 }
 
 extension TweetCardElementExtension on TweetCardElement {
-  //TODO: Update this work with Bluesky data instead
   bool shouldBuild(BlueskyPostData tweet, TweetCardConfig config) {
-    if (config.elements.contains(this)) {
-      switch (this) {
-        case TweetCardElement.retweeter:
-          return tweet.isReposted;
-        case TweetCardElement.text:
-          return tweet.text.isNotEmpty;
-        case TweetCardElement.quote:
-          return tweet.quoteOf != null;
-        case TweetCardElement.media:
-          return tweet.media?.isNotEmpty ?? false;
-        case TweetCardElement.linkPreview:
-          return tweet.externalUrls?.isNotEmpty ?? false;
-        case TweetCardElement.topRow:
-        case TweetCardElement.translation:
-        case TweetCardElement.pinned:
-        case TweetCardElement.actionsButton:
-        case TweetCardElement.actionsRow:
-        case TweetCardElement.avatar:
-        case TweetCardElement.name:
-        case TweetCardElement.handle:
-        case TweetCardElement.details:
-          return true;
-      }
-    }
-
-    return false;
+    return switch (this) {
+      TweetCardElement.topRow =>
+        config.elements.contains(TweetCardElement.topRow),
+      TweetCardElement.pinned => false,
+      TweetCardElement.retweeter =>
+        config.elements.contains(TweetCardElement.retweeter),
+      TweetCardElement.avatar =>
+        config.elements.contains(TweetCardElement.avatar),
+      TweetCardElement.name => config.elements.contains(TweetCardElement.name),
+      TweetCardElement.handle =>
+        config.elements.contains(TweetCardElement.handle),
+      TweetCardElement.text =>
+        config.elements.contains(TweetCardElement.text) &&
+            tweet.text.isNotEmpty,
+      TweetCardElement.translation =>
+        config.elements.contains(TweetCardElement.translation),
+      TweetCardElement.quote =>
+        config.elements.contains(TweetCardElement.quote),
+      TweetCardElement.media =>
+        config.elements.contains(TweetCardElement.media) &&
+            (tweet.media?.isNotEmpty ?? false),
+      TweetCardElement.actionsButton =>
+        config.elements.contains(TweetCardElement.actionsButton),
+      TweetCardElement.actionsRow =>
+        config.elements.contains(TweetCardElement.actionsRow),
+      TweetCardElement.details =>
+        config.elements.contains(TweetCardElement.details),
+      TweetCardElement.linkPreview =>
+        config.elements.contains(TweetCardElement.linkPreview) &&
+            (tweet.externalUrls?.isNotEmpty ?? true),
+      TweetCardElement.parentPreview =>
+        config.elements.contains(TweetCardElement.parentPreview) &&
+            tweet.parentPostId != null,
+    };
   }
 
   /// Whether the element requires padding to be builds around it.
   bool get requiresPadding {
-    switch (this) {
-      case TweetCardElement.pinned:
-      case TweetCardElement.retweeter:
-      case TweetCardElement.avatar:
-      case TweetCardElement.name:
-      case TweetCardElement.handle:
-      case TweetCardElement.text:
-      case TweetCardElement.quote:
-      case TweetCardElement.media:
-      case TweetCardElement.details:
-      case TweetCardElement.linkPreview:
-        return true;
-      case TweetCardElement.translation:
-      case TweetCardElement.topRow:
-      case TweetCardElement.actionsButton:
-      case TweetCardElement.actionsRow:
-        return false;
-    }
+    return switch (this) {
+      TweetCardElement.topRow => false,
+      TweetCardElement.pinned => true,
+      TweetCardElement.retweeter => true,
+      TweetCardElement.avatar => false,
+      TweetCardElement.name => false,
+      TweetCardElement.handle => false,
+      TweetCardElement.text => true,
+      TweetCardElement.translation => true,
+      TweetCardElement.quote => true,
+      TweetCardElement.media => true,
+      TweetCardElement.actionsButton => false,
+      TweetCardElement.actionsRow => true,
+      TweetCardElement.details => true,
+      TweetCardElement.linkPreview => true,
+      TweetCardElement.parentPreview => true,
+    };
   }
 
   /// Build padding below when:

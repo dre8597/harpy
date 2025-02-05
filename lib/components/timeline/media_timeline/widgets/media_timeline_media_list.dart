@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/tweet/widgets/media/reels_video_feed.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
@@ -12,14 +13,40 @@ import 'package:waterfall_flow/waterfall_flow.dart';
 class MediaTimelineMediaList extends ConsumerWidget {
   const MediaTimelineMediaList({
     required this.entries,
+    required this.provider,
   });
 
   final BuiltList<MediaTimelineEntry> entries;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final layout = ref.watch(layoutPreferencesProvider);
+    final media = ref.watch(mediaPreferencesProvider);
+
+    if (media.useReelsVideoMode && !layout.mediaTiled) {
+      // Filter only video entries
+      final videoEntries = entries
+          .where(
+            (entry) => entry.media.type == MediaType.video,
+          )
+          .toList();
+
+      if (videoEntries.isEmpty) {
+        return const SliverToBoxAdapter(child: SizedBox());
+      }
+
+      return SliverFillRemaining(
+        child: ReelsVideoFeed(
+          entries: videoEntries,
+          onRefresh: () async {
+            final timelineNotifier = ref.read(provider.notifier);
+            await timelineNotifier.load(clearPrevious: true);
+          },
+        ),
+      );
+    }
 
     return SliverWaterfallFlow(
       gridDelegate: SliverWaterfallFlowDelegateWithFixedCrossAxisCount(
@@ -78,7 +105,7 @@ class _MediaEntryItemState extends ConsumerState<_MediaEntryItem> {
     var tweet = ref.watch(provider) ?? entry.tweet;
     var tweetNotifier = ref.watch(provider.notifier);
 
-    var delegates = defaultTweetDelegates(tweet, tweetNotifier);
+    final delegates = defaultTweetDelegates(tweet, tweetNotifier);
 
     return MediaTimelineMedia(
       entry: entry,
@@ -103,7 +130,7 @@ class _MediaEntryItemState extends ConsumerState<_MediaEntryItem> {
                   ..initialize(widget.entries[index].tweet);
               });
 
-              delegates = defaultTweetDelegates(
+              final delegates = defaultTweetDelegates(
                 tweet,
                 tweetNotifier,
               );
@@ -129,7 +156,12 @@ class _MediaEntryItemState extends ConsumerState<_MediaEntryItem> {
                     case MediaType.gif:
                       return TweetGif(tweet: tweet, heroTag: heroTag);
                     case MediaType.video:
-                      return TweetGalleryVideo(tweet: tweet, heroTag: heroTag);
+                      return TweetGalleryVideo(
+                        tweet: tweet,
+                        media: widget.entries[index].media,
+                        delegates: delegates,
+                        heroTag: heroTag,
+                      );
                   }
                 },
               );

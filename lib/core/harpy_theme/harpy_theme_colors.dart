@@ -62,29 +62,24 @@ class HarpyThemeColors {
   ///
   /// Similar to [ThemeData.estimateBrightnessForColor] for multiple colors.
   void _setupBrightness() {
-    _backgroundLuminance = backgroundColors
-            .map((color) => color.computeLuminance())
-            .reduce((a, b) => a + b) /
-        backgroundColors.length;
+    _backgroundLuminance =
+        backgroundColors.map((color) => color.computeLuminance()).reduce((a, b) => a + b) /
+            backgroundColors.length;
 
     // the Material Design color brightness threshold
     const kThreshold = 0.15;
 
-    brightness = (_backgroundLuminance + 0.05) * (_backgroundLuminance + 0.05) >
-            kThreshold
+    brightness = (_backgroundLuminance + 0.05) * (_backgroundLuminance + 0.05) > kThreshold
         ? Brightness.light
         : Brightness.dark;
   }
 
   void _setupCardColors() {
-    alternateCardColor =
-        Color.lerp(cardColor, averageBackgroundColor, .9)!.withOpacity(.9);
+    alternateCardColor = Color.lerp(cardColor, averageBackgroundColor, .9)!.withOpacity(.9);
 
-    solidCardColor1 =
-        Color.lerp(cardColor, averageBackgroundColor, .85)!.withOpacity(1);
+    solidCardColor1 = Color.lerp(cardColor, averageBackgroundColor, .85)!.withOpacity(1);
 
-    solidCardColor2 =
-        Color.lerp(cardColor, averageBackgroundColor, .775)!.withOpacity(1);
+    solidCardColor2 = Color.lerp(cardColor, averageBackgroundColor, .775)!.withOpacity(1);
   }
 
   void _setupErrorColor() {
@@ -96,6 +91,7 @@ class HarpyThemeColors {
         Colors.deepOrange,
       ],
       baseLuminance: _backgroundLuminance,
+      minContrastRatio: 3,
     );
   }
 
@@ -108,6 +104,7 @@ class HarpyThemeColors {
         Colors.pinkAccent[400]!,
       ],
       baseLuminance: _backgroundLuminance,
+      minContrastRatio: 3,
     );
 
     retweet = _calculateBestContrastColor(
@@ -116,6 +113,7 @@ class HarpyThemeColors {
         Colors.green[700]!,
       ],
       baseLuminance: _backgroundLuminance,
+      minContrastRatio: 3,
     );
 
     translate = _calculateBestContrastColor(
@@ -124,6 +122,7 @@ class HarpyThemeColors {
         Colors.indigoAccent[700]!,
       ],
       baseLuminance: _backgroundLuminance,
+      minContrastRatio: 3,
     );
   }
 
@@ -131,21 +130,25 @@ class HarpyThemeColors {
     onPrimary = _calculateBestContrastColor(
       colors: [Colors.white, Colors.black],
       baseLuminance: primary.computeLuminance(),
+      minContrastRatio: 4.5,
     );
 
     onSecondary = _calculateBestContrastColor(
       colors: [Colors.white, Colors.black],
       baseLuminance: secondary.computeLuminance(),
+      minContrastRatio: 4.5,
     );
 
     onSurface = _calculateBestContrastColor(
       colors: [Colors.white, Colors.black],
       baseLuminance: _backgroundLuminance,
+      minContrastRatio: 4.5,
     );
 
     onError = _calculateBestContrastColor(
       colors: [Colors.white, Colors.black],
       baseLuminance: error.computeLuminance(),
+      minContrastRatio: 4.5,
     );
   }
 
@@ -185,10 +188,11 @@ class HarpyThemeColors {
 }
 
 /// Returns the color in [colors] that has the best contrast on the
-/// [baseLuminance].
+/// [baseLuminance], ensuring it meets the minimum contrast ratio.
 Color _calculateBestContrastColor({
   required Iterable<Color> colors,
   required double baseLuminance,
+  required double minContrastRatio,
 }) {
   assert(colors.isNotEmpty);
 
@@ -207,6 +211,17 @@ Color _calculateBestContrastColor({
     }
   }
 
+  // If we don't meet the minimum contrast ratio, adjust the color
+  if (bestLuminance! < minContrastRatio && bestColor != null) {
+    if (baseLuminance > 0.5) {
+      // Background is light, darken the text
+      return Colors.black;
+    } else {
+      // Background is dark, lighten the text
+      return Colors.white;
+    }
+  }
+
   return bestColor!;
 }
 
@@ -222,6 +237,5 @@ double _contrastRatio(double firstLuminance, double secondLuminance) {
 }
 
 extension on Brightness {
-  Brightness get opposite =>
-      this == Brightness.dark ? Brightness.light : Brightness.dark;
+  Brightness get opposite => this == Brightness.dark ? Brightness.light : Brightness.dark;
 }

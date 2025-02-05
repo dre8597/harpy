@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
@@ -30,8 +31,7 @@ class _TweetDetailPageState extends ConsumerState<TweetDetailPage> {
     super.initState();
 
     SchedulerBinding.instance.addPostFrameCallback(
-      (_) =>
-          ref.read(tweetDetailProvider(widget.id).notifier).load(widget.tweet),
+      (_) => ref.read(tweetDetailProvider(widget.id).notifier).load(widget.tweet),
     );
   }
 
@@ -64,6 +64,7 @@ class _TweetDetailContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repliesState = ref.watch(repliesProvider(tweet));
     final repliesNotifier = ref.watch(repliesProvider(tweet).notifier);
+    final theme = Theme.of(context);
 
     return ScrollDirectionListener(
       child: ScrollToTop(
@@ -102,6 +103,26 @@ class _TweetDetailContent extends ConsumerWidget {
               ],
             ),
           ],
+          onLayoutFinished: (firstIndex, lastIndex) {
+            if (repliesState.hasMore && lastIndex >= repliesState.replies.length - 1) {
+              repliesNotifier.loadMore();
+            }
+          },
+          endSlivers: repliesState.maybeMap(
+            data: (data) => data.hasMore
+                ? [
+                    SliverPadding(
+                      padding: theme.spacing.edgeInsets,
+                      sliver: const SliverToBoxAdapter(
+                        child: Center(
+                          child: CircularProgressIndicator.adaptive(),
+                        ),
+                      ),
+                    ),
+                  ]
+                : const <Widget>[],
+            orElse: () => const <Widget>[],
+          ),
         ),
       ),
     );

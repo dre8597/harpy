@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rby/rby.dart';
-import 'package:rby/theme/spacing_scheme.dart';
 
 class HarpyRadioDialogTile<T> extends ConsumerWidget {
   const HarpyRadioDialogTile({
@@ -39,9 +38,9 @@ class HarpyRadioDialogTile<T> extends ConsumerWidget {
         context: context,
         builder: (context) => RbyDialog(
           titlePadding: EdgeInsets.only(
-            top: theme.spacingScheme.xl,
-            left: theme.spacingScheme.xl,
-            right: theme.spacingScheme.xl,
+            top: theme.spacing.edgeInsets.top,
+            left: theme.spacing.edgeInsets.start,
+            right:theme.spacing.edgeInsets.end,
           ),
           title: dialogTitle,
           contentPadding: theme.spacing.only(top: true),

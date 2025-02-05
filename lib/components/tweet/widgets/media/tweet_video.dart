@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/tweet/widgets/media/utils/video_utils.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
 import 'package:video_player/video_player.dart';
@@ -66,7 +67,7 @@ class TweetVideo extends ConsumerWidget {
       return const SizedBox();
     }
 
-    final arguments = _videoArguments(videoData);
+    final arguments = createVideoArguments(videoData);
     final provider = videoPlayerProvider(arguments);
     final state = ref.watch(provider);
     final notifier = ref.watch(provider.notifier);
@@ -162,12 +163,16 @@ class TweetGalleryVideo extends ConsumerWidget {
   const TweetGalleryVideo({
     required this.tweet,
     required this.heroTag,
+    required this.media,
+    required this.delegates,
     this.onVideoLongPress,
     this.mediaData,
   });
 
   final BlueskyPostData tweet;
   final Object heroTag;
+  final BlueskyMediaData media;
+  final TweetDelegates delegates;
   final VoidCallback? onVideoLongPress;
   final VideoMediaData? mediaData;
 
@@ -181,6 +186,9 @@ class TweetGalleryVideo extends ConsumerWidget {
         notifier: notifier,
         tweet: tweet,
         data: data,
+        media: media,
+        delegates: delegates,
+        mediaData: mediaData,
         child: child,
       ),
     );
@@ -190,10 +198,14 @@ class TweetGalleryVideo extends ConsumerWidget {
 class TweetFullscreenVideo extends ConsumerStatefulWidget {
   const TweetFullscreenVideo({
     required this.tweet,
+    required this.media,
+    required this.delegates,
     this.mediaData,
   });
 
   final BlueskyPostData tweet;
+  final BlueskyMediaData media;
+  final TweetDelegates delegates;
   final VideoMediaData? mediaData;
 
   @override
@@ -201,6 +213,8 @@ class TweetFullscreenVideo extends ConsumerStatefulWidget {
 }
 
 class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
+  bool? _previousMuteState;
+
   @override
   void initState() {
     super.initState();
@@ -209,16 +223,72 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
       SystemUiMode.manual,
       overlays: [],
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleFullscreenEntry();
+    });
   }
 
   @override
   void dispose() {
+    _restorePreviousMuteState();
+
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
     );
 
     super.dispose();
+  }
+
+  void _handleFullscreenEntry() {
+    final videoData = widget.mediaData ??
+        widget.tweet.media
+            ?.firstWhereOrNull(
+              (m) => m.type == MediaType.video,
+            )
+            ?.toVideoMediaData();
+
+    if (videoData == null) return;
+
+    final arguments = _videoArguments(videoData);
+    final notifier = ref.read(videoPlayerProvider(arguments).notifier);
+    final state = ref.read(videoPlayerProvider(arguments));
+    state.maybeMap(
+      data: (data) {
+        _previousMuteState = data.isMuted;
+        if (data.isMuted) {
+          notifier.controller.setVolume(1);
+        }
+      },
+      orElse: () {},
+    );
+  }
+
+  void _restorePreviousMuteState() {
+    if (_previousMuteState == null) return;
+
+    final videoData = widget.mediaData ??
+        widget.tweet.media
+            ?.firstWhereOrNull(
+              (m) => m.type == MediaType.video,
+            )
+            ?.toVideoMediaData();
+
+    if (videoData == null) return;
+
+    final arguments = _videoArguments(videoData);
+    final notifier = ref.read(videoPlayerProvider(arguments).notifier);
+    final state = ref.read(videoPlayerProvider(arguments));
+
+    state.maybeMap(
+      data: (data) {
+        if (data.isMuted != _previousMuteState) {
+          notifier.controller.setVolume(_previousMuteState! ? 0 : 1);
+        }
+      },
+      orElse: () {},
+    );
   }
 
   @override
@@ -261,6 +331,9 @@ class _FullscreenVideoState extends ConsumerState<TweetFullscreenVideo> {
                   notifier: notifier,
                   tweet: widget.tweet,
                   data: data,
+                  media: widget.media,
+                  delegates: widget.delegates,
+                  mediaData: videoData,
                   isFullscreen: true,
                   child: VideoPlayer(notifier.controller),
                 ),

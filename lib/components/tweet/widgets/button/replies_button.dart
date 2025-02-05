@@ -18,7 +18,6 @@ class Repliesbutton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final iconTheme = IconTheme.of(context);
-
     final iconSize = iconTheme.size! + sizeDelta;
 
     return TweetActionButton(
@@ -28,6 +27,7 @@ class Repliesbutton extends ConsumerWidget {
       sizeDelta: sizeDelta,
       activate: () => onShowReplies?.call(ref),
       deactivate: null,
+      value: tweet.replyCount,
     );
   }
 }

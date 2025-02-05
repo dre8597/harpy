@@ -20,8 +20,10 @@ class TweetCardLinkPreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final launcher = ref.watch(launcherProvider);
-    final urlString = tweet.uri.toString();
-
+    final urlString = tweet.externalUrls?.firstOrNull?.toString();
+    if (urlString == null) {
+      return const SizedBox.shrink();
+    }
     return GestureDetector(
       onTap: () => launcher(urlString),
       onLongPress: () => defaultOnUrlLongPress(

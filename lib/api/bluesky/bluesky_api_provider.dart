@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:bluesky/atproto.dart';
 import 'package:bluesky/bluesky.dart';
 import 'package:bluesky/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-import 'dart:async';
 
 /// Status of the Bluesky client initialization
 enum BlueskyStatus {

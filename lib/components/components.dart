@@ -275,3 +275,4 @@ export 'widgets/video_player/video_player_handler.dart';
 export 'widgets/video_player/video_player_progress_indicator.dart';
 export 'widgets/video_player/video_player_provider.dart';
 export 'widgets/visibility_change_listener.dart';
+export 'tweet/widgets/card_content/tweet_card_parent_preview.dart';

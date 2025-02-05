@@ -30,6 +30,7 @@ const kDefaultTweetCardConfig = TweetCardConfig(
     TweetCardElement.avatar,
     TweetCardElement.name,
     TweetCardElement.handle,
+    TweetCardElement.parentPreview,
     TweetCardElement.text,
     TweetCardElement.translation,
     TweetCardElement.quote,

@@ -8,7 +8,7 @@ final listMembersProvider = StateNotifierProvider.autoDispose
     .family<ListsMembersNotifier, PaginatedState<BuiltList<UserData>>, String>(
   (ref, listId) => ListsMembersNotifier(
     ref: ref,
-    listId: listId,
+    // listId: listId,
   ),
   name: 'ListMembersProvider',
 );
@@ -19,7 +19,7 @@ final listMembersProvider = StateNotifierProvider.autoDispose
 class ListsMembersNotifier extends PaginatedUsersNotifier {
   ListsMembersNotifier({
     required Ref ref,
-    required String listId,
+    // required String listId,
   })  : _ref = ref,
         super(const PaginatedState.loading()) {
     loadInitial();

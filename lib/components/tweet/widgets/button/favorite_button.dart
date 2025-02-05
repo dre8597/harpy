@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/tweet/widgets/button/tweet_action_menu.dart';
 import 'package:rby/rby.dart';
 
 class FavoriteButton extends ConsumerStatefulWidget {
@@ -30,57 +31,18 @@ class FavoriteButton extends ConsumerStatefulWidget {
 class _FavoriteButtonState extends ConsumerState<FavoriteButton> {
   Future<void> _showMenu() async {
     final renderBox = context.findRenderObject()! as RenderBox;
-    final overlay =
-        Overlay.of(context).context.findRenderObject()! as RenderBox;
-    final theme = Theme.of(context);
-    final onBackground = theme.colorScheme.onSurface;
-
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        renderBox.localToGlobal(
-          renderBox.size.bottomLeft(Offset.zero),
-          ancestor: overlay,
-        ),
-        renderBox.localToGlobal(
-          renderBox.size.bottomRight(Offset.zero),
-          ancestor: overlay,
-        ),
-      ),
-      Offset.zero & overlay.size,
-    );
-
-    final result = await showRbyMenu(
-      context: context,
-      position: position,
-      items: [
-        RbyPopupMenuListTile(
-          value: 0,
-          leading: const Icon(FeatherIcons.heart),
-          title: Text(
-            widget.tweet.isLiked ? 'unlike' : 'like',
-            style: TextStyle(color: onBackground),
-          ),
-        ),
-        if (widget.onShowLikes != null)
-          RbyPopupMenuListTile(
-            value: 1,
-            leading: const Icon(FeatherIcons.users),
-            title: Text(
-              'show likes',
-              style: TextStyle(color: onBackground),
-            ),
-          ),
-      ],
-    );
-
     if (mounted) {
-      if (result == 0) {
-        widget.tweet.isLiked
-            ? widget.onUnfavorite?.call(ref)
-            : widget.onFavorite?.call(ref);
-      } else if (result == 1) {
-        widget.onShowLikes?.call(ref);
-      }
+      await showLikeActionMenu(
+        context: context,
+        ref: ref,
+        tweet: widget.tweet,
+        delegates: TweetDelegates(
+          onFavorite: widget.onFavorite,
+          onUnfavorite: widget.onUnfavorite,
+          onShowLikes: widget.onShowLikes,
+        ),
+        renderBox: renderBox,
+      );
     }
   }
 
