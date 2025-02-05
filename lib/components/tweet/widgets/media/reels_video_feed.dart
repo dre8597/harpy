@@ -1,138 +1,10 @@
 import 'dart:ui';
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
-import 'package:harpy/components/tweet/widgets/button/tweet_action_menu.dart';
-import 'package:harpy/core/core.dart';
+import 'package:harpy/components/tweet/widgets/button/replies_button.dart';
 import 'package:rby/rby.dart';
-
-/// Shows a like action menu with options to like/unlike and show likes.
-Future<void> _showLikeActionMenu({
-  required BuildContext context,
-  required WidgetRef ref,
-  required BlueskyPostData tweet,
-  required TweetDelegates delegates,
-  required RenderBox renderBox,
-}) async {
-  final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
-  final theme = Theme.of(context);
-  final onBackground = theme.colorScheme.onSurface;
-
-  final position = RelativeRect.fromRect(
-    Rect.fromPoints(
-      renderBox.localToGlobal(
-        renderBox.size.bottomLeft(Offset.zero),
-        ancestor: overlay,
-      ),
-      renderBox.localToGlobal(
-        renderBox.size.bottomRight(Offset.zero),
-        ancestor: overlay,
-      ),
-    ),
-    Offset.zero & overlay.size,
-  );
-
-  final result = await showRbyMenu(
-    context: context,
-    position: position,
-    items: [
-      RbyPopupMenuListTile(
-        value: 0,
-        leading: const Icon(CupertinoIcons.heart_fill),
-        title: Text(
-          tweet.isLiked ? 'unlike' : 'like',
-          style: TextStyle(color: onBackground),
-        ),
-      ),
-      if (delegates.onShowLikes != null)
-        RbyPopupMenuListTile(
-          value: 1,
-          leading: const Icon(CupertinoIcons.person_2_fill),
-          title: Text(
-            'show likes',
-            style: TextStyle(color: onBackground),
-          ),
-        ),
-    ],
-  );
-
-  if (result == 0) {
-    tweet.isLiked ? delegates.onUnfavorite?.call(ref) : delegates.onFavorite?.call(ref);
-  } else if (result == 1) {
-    delegates.onShowLikes?.call(ref);
-  }
-}
-
-/// Shows a repost action menu with options to repost/unrepost, quote, and view retweeters.
-Future<void> _showRepostActionMenu({
-  required BuildContext context,
-  required WidgetRef ref,
-  required BlueskyPostData tweet,
-  required TweetDelegates delegates,
-  required RenderBox renderBox,
-}) async {
-  final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
-  final theme = Theme.of(context);
-  final onBackground = theme.colorScheme.onSurface;
-
-  final position = RelativeRect.fromRect(
-    Rect.fromPoints(
-      renderBox.localToGlobal(
-        renderBox.size.bottomLeft(Offset.zero),
-        ancestor: overlay,
-      ),
-      renderBox.localToGlobal(
-        renderBox.size.bottomRight(Offset.zero),
-        ancestor: overlay,
-      ),
-    ),
-    Offset.zero & overlay.size,
-  );
-
-  final result = await showRbyMenu(
-    context: context,
-    position: position,
-    items: [
-      RbyPopupMenuListTile(
-        value: 0,
-        leading: const Icon(CupertinoIcons.repeat),
-        title: Text(
-          tweet.isReposted ? 'unretweet' : 'retweet',
-          style: TextStyle(color: onBackground),
-        ),
-      ),
-      if (delegates.onComposeQuote != null)
-        RbyPopupMenuListTile(
-          value: 1,
-          leading: const Icon(CupertinoIcons.pencil),
-          title: Text(
-            'quote tweet',
-            style: TextStyle(color: onBackground),
-          ),
-        ),
-      if (delegates.onShowRetweeters != null)
-        RbyPopupMenuListTile(
-          value: 2,
-          leading: const Icon(CupertinoIcons.person_2_fill),
-          title: Text(
-            'view retweeters',
-            style: TextStyle(color: onBackground),
-          ),
-        ),
-    ],
-  );
-
-  if (result == 0) {
-    tweet.isReposted ? delegates.onUnretweet?.call(ref) : delegates.onRetweet?.call(ref);
-  } else if (result == 1) {
-    delegates.onComposeQuote?.call(ref);
-  } else if (result == 2) {
-    delegates.onShowRetweeters?.call(ref);
-  }
-}
 
 /// A TikTok/Instagram Reels style video feed that displays videos in fullscreen
 /// with like, retweet & comment buttons on the side.
@@ -175,8 +47,15 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
   @override
   void dispose() {
     _pageController.dispose();
-    _currentNotifier?.pause();
-    _previousNotifier?.pause();
+    // Delay video player state changes to avoid modifying providers during widget lifecycle
+    Future(() {
+      if (_currentNotifier != null) {
+        _currentNotifier!.pause();
+      }
+      if (_previousNotifier != null) {
+        _previousNotifier!.pause();
+      }
+    });
     _captionTimer?.cancel();
     super.dispose();
   }
@@ -243,6 +122,24 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     }
   }
 
+  // Helper method to safely perform video player operations
+  void _safeVideoOperation(
+    VideoPlayerNotifier? notifier,
+    void Function(VideoPlayerNotifier notifier) operation,
+  ) {
+    if (notifier == null) return;
+
+    try {
+      if (!mounted) return;
+      final controller = notifier.controller;
+      if (controller.value.isInitialized) {
+        operation(notifier);
+      }
+    } catch (e) {
+      // Ignore errors from disposed controllers
+    }
+  }
+
   void _onPageChanged(int index) {
     setState(() {
       _currentIndex = index;
@@ -258,18 +155,33 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     // Only handle video state changes if reels mode is active
     if (!_isActive) return;
 
-    // Pause previous video and mute it
-    if (_previousNotifier != null) {
-      _previousNotifier!.pause();
-      _previousNotifier!.controller.setVolume(0);
-    }
-
-    // Start playing current video and unmute it (reels mode always unmutes)
-    if (_currentNotifier != null) {
-      _currentNotifier!.controller.setVolume(1);
+    // Schedule video operations for the next frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _currentNotifier!.controller.play();
-    }
+
+      // Handle previous video
+      if (_previousNotifier != null) {
+        try {
+          final controller = _previousNotifier!.controller;
+          if (!controller.value.isPlaying) return;
+          _previousNotifier!.pause();
+        } catch (e) {
+          // Ignore errors from disposed controllers
+        }
+      }
+
+      // Handle current video
+      if (_currentNotifier != null) {
+        try {
+          final controller = _currentNotifier!.controller;
+          if (!controller.value.isInitialized) return;
+          if (!mounted) return;
+          controller.play();
+        } catch (e) {
+          // Ignore errors from disposed controllers
+        }
+      }
+    });
 
     // Load more content when reaching the end
     if (index == widget.entries.length - 1 && widget.onLoadMore != null) {
@@ -307,13 +219,13 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     if (!mounted || !_isActive) return;
     setState(() {
       _isManuallyPaused = !_isManuallyPaused;
-      if (_currentNotifier != null) {
+      _safeVideoOperation(_currentNotifier, (notifier) {
         if (_isManuallyPaused) {
-          _currentNotifier!.pause();
+          notifier.pause();
         } else {
-          _currentNotifier!.controller.play();
+          notifier.controller.play();
         }
-      }
+      });
     });
   }
 
@@ -405,7 +317,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                   curve: Curves.easeInOut,
                   left: 0,
                   right: 0,
-                  bottom: _isCaptionVisible ? spacing.large * 4 : -(spacing.large * 4),
+                  bottom: _isCaptionVisible ? spacing.base : -(spacing.large * 4),
                   child: GestureDetector(
                     onTap: () {
                       // Pause video before navigating
@@ -417,15 +329,19 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                       delegates.onShowTweet?.call(ref);
                     },
                     child: Container(
-                      padding: EdgeInsets.all(spacing.base),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: spacing.base,
+                        vertical: spacing.small,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withOpacity(0.7),
+                            Colors.black.withOpacity(0.8),
                             Colors.black.withOpacity(0),
                           ],
+                          stops: const [0.0, 0.8],
                         ),
                       ),
                       child: SafeArea(
@@ -477,57 +393,39 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Builder(
-                      builder: (context) => _ActionButton(
-                        icon: const Icon(CupertinoIcons.heart_fill),
-                        label: tweet.likeCount.toString(),
-                        onTap: () async {
-                          final renderBox = context.findRenderObject()! as RenderBox;
-                          if (mounted) {
-                            await showLikeActionMenu(
-                              context: context,
-                              ref: ref,
-                              tweet: tweet,
-                              delegates: delegates,
-                              renderBox: renderBox,
-                            );
-                          }
-                        },
-                        isActive: tweet.isLiked,
-                        activeColor: theme.colorScheme.error,
+                      builder: (context) => FavoriteButton(
+                        tweet: tweet,
+                        onFavorite: delegates.onFavorite,
+                        onUnfavorite: delegates.onUnfavorite,
+                        onShowLikes: delegates.onShowLikes,
+                        sizeDelta: 2,
+                        foregroundColor: Colors.white,
                       ),
                     ),
                     SizedBox(height: spacing.large),
                     Builder(
-                      builder: (context) => _ActionButton(
-                        icon: const Icon(CupertinoIcons.repeat),
-                        label: tweet.repostCount.toString(),
-                        onTap: () async {
-                          final renderBox = context.findRenderObject()! as RenderBox;
-                          if (mounted) {
-                            await showRepostActionMenu(
-                              context: context,
-                              ref: ref,
-                              tweet: tweet,
-                              delegates: delegates,
-                              renderBox: renderBox,
-                            );
-                          }
-                        },
-                        isActive: tweet.isReposted,
-                        activeColor: theme.colorScheme.secondary,
+                      builder: (context) => RetweetButton(
+                        tweet: tweet,
+                        onRetweet: delegates.onRetweet,
+                        onUnretweet: delegates.onUnretweet,
+                        onShowRetweeters: delegates.onShowRetweeters,
+                        onComposeQuote: delegates.onComposeQuote,
+                        sizeDelta: 2,
+                        foregroundColor: Colors.white,
                       ),
                     ),
                     SizedBox(height: spacing.large),
-                    _ActionButton(
-                      icon: const Icon(CupertinoIcons.chat_bubble_fill),
-                      label: tweet.replyCount.toString(),
-                      onTap: () => delegates.onComposeReply?.call(ref),
+                    Repliesbutton(
+                      tweet: tweet,
+                      onShowReplies: delegates.onShowTweet,
+                      sizeDelta: 2,
                     ),
                     SizedBox(height: spacing.large),
-                    _ActionButton(
-                      icon: const Icon(CupertinoIcons.ellipsis_vertical),
-                      label: '',
-                      onTap: () => showTweetActionsBottomSheet(
+                    MoreActionsButton(
+                      tweet: tweet,
+                      sizeDelta: 2,
+                      foregroundColor: Colors.white,
+                      onViewMoreActions: (ref) => showTweetActionsBottomSheet(
                         ref,
                         tweet: tweet,
                         delegates: delegates,
@@ -540,49 +438,6 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
           );
         },
       ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.isActive = false,
-    this.activeColor,
-  });
-
-  final Widget icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isActive;
-  final Color? activeColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = isActive ? activeColor ?? theme.colorScheme.primary : Colors.white;
-
-    return Column(
-      children: [
-        IconButton(
-          onPressed: onTap,
-          icon: IconTheme(
-            data: IconThemeData(
-              color: color,
-              size: 30,
-            ),
-            child: icon,
-          ),
-        ),
-        Text(
-          label,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 }
