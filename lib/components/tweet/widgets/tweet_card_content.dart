@@ -33,7 +33,8 @@ class TweetCardContent extends ConsumerWidget {
     final linkPreview = TweetCardElement.linkPreview.shouldBuild(tweet, config);
     final details = TweetCardElement.details.shouldBuild(tweet, config);
     final actionsRow = TweetCardElement.actionsRow.shouldBuild(tweet, config);
-    final parentPreview = TweetCardElement.parentPreview.shouldBuild(tweet, config);
+    final parentPreview =
+        TweetCardElement.parentPreview.shouldBuild(tweet, config);
     final isTranslatable = ref.watch(translationNotifierProvider(tweet));
 
     final content = {
@@ -79,7 +80,8 @@ class TweetCardContent extends ConsumerWidget {
           post: tweet,
           index: index,
         ),
-      if (linkPreview) TweetCardElement.linkPreview: TweetCardLinkPreview(tweet: tweet),
+      if (linkPreview)
+        TweetCardElement.linkPreview: TweetCardLinkPreview(tweet: tweet),
       if (details)
         TweetCardElement.details: TweetCardDetails(
           tweet: tweet,

@@ -62,24 +62,29 @@ class HarpyThemeColors {
   ///
   /// Similar to [ThemeData.estimateBrightnessForColor] for multiple colors.
   void _setupBrightness() {
-    _backgroundLuminance =
-        backgroundColors.map((color) => color.computeLuminance()).reduce((a, b) => a + b) /
-            backgroundColors.length;
+    _backgroundLuminance = backgroundColors
+            .map((color) => color.computeLuminance())
+            .reduce((a, b) => a + b) /
+        backgroundColors.length;
 
     // the Material Design color brightness threshold
     const kThreshold = 0.15;
 
-    brightness = (_backgroundLuminance + 0.05) * (_backgroundLuminance + 0.05) > kThreshold
+    brightness = (_backgroundLuminance + 0.05) * (_backgroundLuminance + 0.05) >
+            kThreshold
         ? Brightness.light
         : Brightness.dark;
   }
 
   void _setupCardColors() {
-    alternateCardColor = Color.lerp(cardColor, averageBackgroundColor, .9)!.withOpacity(.9);
+    alternateCardColor =
+        Color.lerp(cardColor, averageBackgroundColor, .9)!.withOpacity(.9);
 
-    solidCardColor1 = Color.lerp(cardColor, averageBackgroundColor, .85)!.withOpacity(1);
+    solidCardColor1 =
+        Color.lerp(cardColor, averageBackgroundColor, .85)!.withOpacity(1);
 
-    solidCardColor2 = Color.lerp(cardColor, averageBackgroundColor, .775)!.withOpacity(1);
+    solidCardColor2 =
+        Color.lerp(cardColor, averageBackgroundColor, .775)!.withOpacity(1);
   }
 
   void _setupErrorColor() {
@@ -237,5 +242,6 @@ double _contrastRatio(double firstLuminance, double secondLuminance) {
 }
 
 extension on Brightness {
-  Brightness get opposite => this == Brightness.dark ? Brightness.light : Brightness.dark;
+  Brightness get opposite =>
+      this == Brightness.dark ? Brightness.light : Brightness.dark;
 }

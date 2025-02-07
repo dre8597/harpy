@@ -95,7 +95,9 @@ class _BaseVideoPlayerOverlayState extends State<BaseVideoPlayerOverlay>
   }
 
   void _handleTap() {
-    if (widget.data.isFinished || !widget.data.isPlaying || widget.onVideoTap == null) {
+    if (widget.data.isFinished ||
+        !widget.data.isPlaying ||
+        widget.onVideoTap == null) {
       HapticFeedback.lightImpact();
       widget.notifier.togglePlayback();
     } else {
@@ -160,23 +162,33 @@ class _BaseVideoPlayerOverlayState extends State<BaseVideoPlayerOverlay>
           compact: _isCompact,
         ),
         IconTheme(
-          data: _isCompact ? iconTheme.copyWith(size: iconTheme.size! - 4) : iconTheme,
+          data: _isCompact
+              ? iconTheme.copyWith(size: iconTheme.size! - 4)
+              : iconTheme,
           child: VideoPlayerActions(
             data: widget.data,
             notifier: widget.notifier,
             children: [
-              SizedBox(width: _isCompact ? theme.spacing.small / 2 : theme.spacing.small),
+              SizedBox(
+                  width: _isCompact
+                      ? theme.spacing.small / 2
+                      : theme.spacing.small),
               VideoPlayerPlaybackButton(
                 data: widget.data,
                 notifier: widget.notifier,
-                padding: _isCompact ? EdgeInsets.all(theme.spacing.small / 2) : null,
+                padding:
+                    _isCompact ? EdgeInsets.all(theme.spacing.small / 2) : null,
               ),
               VideoPlayerMuteButton(
                 data: widget.data,
                 notifier: widget.notifier,
-                padding: _isCompact ? EdgeInsets.all(theme.spacing.small / 2) : null,
+                padding:
+                    _isCompact ? EdgeInsets.all(theme.spacing.small / 2) : null,
               ),
-              SizedBox(width: _isCompact ? theme.spacing.small / 2 : theme.spacing.small),
+              SizedBox(
+                  width: _isCompact
+                      ? theme.spacing.small / 2
+                      : theme.spacing.small),
               if (!_isCompact) VideoPlayerProgressText(data: widget.data),
               const Spacer(),
               if (widget.data.qualities.length > 1 && !_isCompact)
@@ -192,9 +204,14 @@ class _BaseVideoPlayerOverlayState extends State<BaseVideoPlayerOverlay>
                   media: widget.media,
                   delegates: widget.delegates,
                   mediaData: widget.mediaData,
-                  padding: _isCompact ? EdgeInsets.all(theme.spacing.small / 2) : null,
+                  padding: _isCompact
+                      ? EdgeInsets.all(theme.spacing.small / 2)
+                      : null,
                 ),
-              SizedBox(width: _isCompact ? theme.spacing.small / 2 : theme.spacing.small),
+              SizedBox(
+                  width: _isCompact
+                      ? theme.spacing.small / 2
+                      : theme.spacing.small),
             ],
           ),
         ),

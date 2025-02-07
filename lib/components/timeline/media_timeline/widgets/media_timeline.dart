@@ -14,7 +14,8 @@ class MediaTimeline extends ConsumerStatefulWidget {
     this.endSlivers = const [SliverBottomPadding()],
   });
 
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
+      provider;
 
   final double? scrollToTopOffset;
   final List<Widget> beginSlivers;

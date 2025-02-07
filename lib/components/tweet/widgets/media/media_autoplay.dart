@@ -33,7 +33,8 @@ class _MediaAutoplayState extends ConsumerState<MediaAutoplay> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _visibilityChange ??= VisibilityChange.of(context)?..addCallback(_onVisibilityChanged);
+    _visibilityChange ??= VisibilityChange.of(context)
+      ?..addCallback(_onVisibilityChanged);
 
     assert(_visibilityChange != null);
   }

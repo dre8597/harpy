@@ -18,8 +18,7 @@ final tweetSearchProvider =
   name: 'TweetSearchProvider',
 );
 
-class TweetSearchNotifier extends StateNotifier<TweetSearchState>
-    with LoggerMixin {
+class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMixin {
   TweetSearchNotifier({
     required Ref ref,
   })  : _ref = ref,
@@ -28,6 +27,8 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
   final Ref _ref;
   @override
   final log = Logger('TweetSearchNotifier');
+
+  bool _isLoading = false;
 
   List<BlueskyMediaData>? _processEmbed(bsky.EmbedView? embed) {
     if (embed == null) return null;
@@ -86,11 +87,13 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
     log.fine('searching posts');
 
     state = TweetSearchState.loading(query: query, filter: filter);
+    _isLoading = true;
 
     try {
       final blueskyApi = _ref.read(blueskyApiProvider);
 
-      final searchResult = await blueskyApi.feed.searchPosts(query);
+      final searchResult =
+          await blueskyApi.feed.searchPosts(query, tag: filter?.includesHashtags ?? []);
 
       if (searchResult.data.posts.isEmpty) {
         log.fine('found no posts for query: $query');
@@ -125,11 +128,89 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
           tweets: posts,
           query: query,
           filter: filter,
+          cursor: searchResult.data.cursor,
+          hasReachedEnd: searchResult.data.cursor == null,
         );
       }
     } catch (e, st) {
       log.severe('Error searching posts', e, st);
       state = TweetSearchState.error(query: query, filter: filter);
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (_isLoading) return;
+
+    final currentState = state;
+    if (!currentState.maybeMap(
+      data: (data) => data.cursor != null && !data.hasReachedEnd,
+      orElse: () => false,
+    )) {
+      return;
+    }
+
+    _isLoading = true;
+    final query = currentState.query!;
+    final filter = currentState.filter;
+    final cursor = currentState.maybeMap(
+      data: (data) => data.cursor,
+      orElse: () => null,
+    );
+
+    try {
+      final blueskyApi = _ref.read(blueskyApiProvider);
+
+      final searchResult = await blueskyApi.feed.searchPosts(
+        query,
+        tag: filter?.includesHashtags ?? [],
+        cursor: cursor,
+      );
+
+      if (searchResult.data.posts.isNotEmpty) {
+        final newPosts = searchResult.data.posts
+            .map(
+              (post) => BlueskyPostData(
+                authorAvatar: post.author.avatar ?? '',
+                authorDid: post.author.did,
+                id: post.cid,
+                uri: post.uri,
+                text: post.record.text,
+                author: post.author.displayName ?? '',
+                handle: post.author.handle,
+                createdAt: post.indexedAt,
+                likeCount: post.likeCount,
+                repostCount: post.repostCount,
+                replyCount: post.replyCount,
+                isLiked: post.viewer.like != null,
+                isReposted: post.viewer.repost != null,
+                media: _processEmbed(post.embed),
+              ),
+            )
+            .toList();
+
+        state = currentState.maybeMap(
+          data: (data) => TweetSearchState.data(
+            tweets: data.tweets.rebuild((b) => b..addAll(newPosts)),
+            query: query,
+            filter: filter,
+            cursor: searchResult.data.cursor,
+            hasReachedEnd: searchResult.data.cursor == null,
+          ),
+          orElse: () => state,
+        );
+      } else {
+        state = currentState.maybeMap(
+          data: (data) => data.copyWith(hasReachedEnd: true),
+          orElse: () => state,
+        );
+      }
+    } catch (e, st) {
+      log.severe('Error loading more posts', e, st);
+      // Keep the current state on error
+    } finally {
+      _isLoading = false;
     }
   }
 
@@ -150,12 +231,15 @@ class TweetSearchState with _$TweetSearchState {
   const factory TweetSearchState.loading({
     required String query,
     required TweetSearchFilterData? filter,
+    @Default(null) String? cursor,
   }) = _Loading;
 
   const factory TweetSearchState.data({
     required BuiltList<BlueskyPostData> tweets,
     required String query,
     required TweetSearchFilterData? filter,
+    @Default(null) String? cursor,
+    @Default(false) bool hasReachedEnd,
   }) = _Data;
 
   const factory TweetSearchState.noData({
@@ -166,7 +250,10 @@ class TweetSearchState with _$TweetSearchState {
   const factory TweetSearchState.error({
     required String query,
     required TweetSearchFilterData? filter,
+    @Default(null) String? cursor,
   }) = _Error;
+
+  const TweetSearchState._();
 }
 
 extension TweetSearchStateExtension on TweetSearchState {
@@ -187,5 +274,16 @@ extension TweetSearchStateExtension on TweetSearchState {
         data: (value) => value.filter,
         noData: (value) => value.filter,
         error: (value) => value.filter,
+      );
+
+  String? get cursor => mapOrNull(
+        data: (value) => value.cursor,
+        loading: (value) => value.cursor,
+        error: (value) => value.cursor,
+      );
+
+  bool get hasReachedEnd => maybeMap(
+        data: (value) => value.hasReachedEnd,
+        orElse: () => true,
       );
 }

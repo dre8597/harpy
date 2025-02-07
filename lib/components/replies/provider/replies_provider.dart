@@ -9,8 +9,8 @@ import 'package:rby/rby.dart';
 
 part 'replies_provider.freezed.dart';
 
-final repliesProvider =
-    StateNotifierProvider.autoDispose.family<RepliesNotifier, RepliesState, BlueskyPostData>(
+final repliesProvider = StateNotifierProvider.autoDispose
+    .family<RepliesNotifier, RepliesState, BlueskyPostData>(
   (ref, tweet) => RepliesNotifier(
     findPostReplies: ref.watch(findPostRepliesProvider),
     tweet: tweet,
@@ -95,7 +95,8 @@ class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
       if (result.replies.isNotEmpty) {
         state = currentState.maybeMap(
           data: (data) => RepliesState.data(
-            replies: (data.replies.toList()..addAll(result.replies)).toBuiltList(),
+            replies:
+                (data.replies.toList()..addAll(result.replies)).toBuiltList(),
             parent: data.parent,
             hasMore: _hasMore,
           ),

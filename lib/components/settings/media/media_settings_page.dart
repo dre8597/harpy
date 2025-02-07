@@ -246,7 +246,8 @@ class _MediaDownloadSettings extends ConsumerStatefulWidget {
   _MediaDownloadSettingsState createState() => _MediaDownloadSettingsState();
 }
 
-class _MediaDownloadSettingsState extends ConsumerState<_MediaDownloadSettings> {
+class _MediaDownloadSettingsState
+    extends ConsumerState<_MediaDownloadSettings> {
   @override
   void initState() {
     super.initState();

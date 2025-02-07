@@ -31,7 +31,8 @@ class _TweetDetailPageState extends ConsumerState<TweetDetailPage> {
     super.initState();
 
     SchedulerBinding.instance.addPostFrameCallback(
-      (_) => ref.read(tweetDetailProvider(widget.id).notifier).load(widget.tweet),
+      (_) =>
+          ref.read(tweetDetailProvider(widget.id).notifier).load(widget.tweet),
     );
   }
 
@@ -104,7 +105,8 @@ class _TweetDetailContent extends ConsumerWidget {
             ),
           ],
           onLayoutFinished: (firstIndex, lastIndex) {
-            if (repliesState.hasMore && lastIndex >= repliesState.replies.length - 1) {
+            if (repliesState.hasMore &&
+                lastIndex >= repliesState.replies.length - 1) {
               repliesNotifier.loadMore();
             }
           },

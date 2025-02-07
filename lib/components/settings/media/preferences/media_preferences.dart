@@ -6,7 +6,8 @@ import 'package:harpy/core/preferences/preferences.dart';
 
 part 'media_preferences.freezed.dart';
 
-final mediaPreferencesProvider = StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
+final mediaPreferencesProvider =
+    StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
   (ref) => MediaPreferencesNotifier(
     preferences: ref.watch(preferencesProvider(null)),
   ),
@@ -179,19 +180,23 @@ class MediaPreferences with _$MediaPreferences {
   /// Whether gifs should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayGifs(ConnectivityResult connectivity) =>
-      autoplayGifs == 0 || autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayGifs == 0 ||
+      autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether videos should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayVideos(ConnectivityResult connectivity) =>
-      autoplayVideos == 0 || autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayVideos == 0 ||
+      autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether the best media quality should be used, taking the connectivity
   /// into account.
   bool shouldUseBestMediaQuality(ConnectivityResult connectivity) =>
-      bestMediaQuality == 0 || bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
+      bestMediaQuality == 0 ||
+      bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether videos should be preloaded, taking the connectivity into account.
   bool shouldPreloadVideos(ConnectivityResult connectivity) =>
-      preloadVideos == 0 || preloadVideos == 1 && connectivity == ConnectivityResult.wifi;
+      preloadVideos == 0 ||
+      preloadVideos == 1 && connectivity == ConnectivityResult.wifi;
 }

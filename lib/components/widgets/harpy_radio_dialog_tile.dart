@@ -40,7 +40,7 @@ class HarpyRadioDialogTile<T> extends ConsumerWidget {
           titlePadding: EdgeInsets.only(
             top: theme.spacing.edgeInsets.top,
             left: theme.spacing.edgeInsets.start,
-            right:theme.spacing.edgeInsets.end,
+            right: theme.spacing.edgeInsets.end,
           ),
           title: dialogTitle,
           contentPadding: theme.spacing.only(top: true),

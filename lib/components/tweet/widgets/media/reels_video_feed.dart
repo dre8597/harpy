@@ -232,8 +232,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final spacing =
-        theme.extension<RbySpacingTheme>() ?? const RbySpacingTheme(base: 8, small: 4, large: 16);
+    final spacing = theme.extension<RbySpacingTheme>() ??
+        const RbySpacingTheme(base: 8, small: 4, large: 16);
 
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
@@ -249,6 +249,10 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
           final tweetNotifier = ref.watch(provider.notifier);
           final delegates = defaultTweetDelegates(tweet, tweetNotifier);
 
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            tweetNotifier.initialize(tweet);
+          });
+
           return Stack(
             fit: StackFit.expand,
             children: [
@@ -263,7 +267,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                       if (entry.media.thumb != null)
                         Positioned.fill(
                           child: ImageFiltered(
-                            imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                            imageFilter:
+                                ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                             child: HarpyImage(
                               imageUrl: entry.media.thumb!,
                               fit: BoxFit.cover,
@@ -317,7 +322,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                   curve: Curves.easeInOut,
                   left: 0,
                   right: 0,
-                  bottom: _isCaptionVisible ? spacing.base : -(spacing.large * 4),
+                  bottom:
+                      _isCaptionVisible ? spacing.base : -(spacing.large * 4),
                   child: GestureDetector(
                     onTap: () {
                       // Pause video before navigating

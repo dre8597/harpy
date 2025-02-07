@@ -68,9 +68,12 @@ class _UserSearchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final onBackground = theme.colorScheme.onSurface;
+
     return RbyListCard(
       leading: const Icon(CupertinoIcons.search),
-      title: const Text('users'),
+      title: Text('users', style: TextStyle(color: onBackground)),
       onTap: () => context.pushNamed(UserSearchPage.name),
     );
   }
@@ -81,9 +84,11 @@ class _TweetSearchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final onBackground = theme.colorScheme.onSurface;
     return RbyListCard(
       leading: const Icon(CupertinoIcons.search),
-      title: const Text('tweets'),
+      title: Text('tweets', style: TextStyle(color: onBackground)),
       onTap: () => context.pushNamed(TweetSearchPage.name),
     );
   }

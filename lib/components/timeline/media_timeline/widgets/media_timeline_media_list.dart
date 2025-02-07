@@ -17,7 +17,8 @@ class MediaTimelineMediaList extends ConsumerWidget {
   });
 
   final BuiltList<MediaTimelineEntry> entries;
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
+      provider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -54,3 +54,4 @@ app.*.map.json
 # Android signing key
 android/key.properties
 android/key.jks
+android/upload-keystore.jks

@@ -40,7 +40,8 @@ extension TweetCardElementExtension on TweetCardElement {
         config.elements.contains(TweetCardElement.topRow),
       TweetCardElement.pinned => false,
       TweetCardElement.retweeter =>
-        config.elements.contains(TweetCardElement.retweeter),
+        config.elements.contains(TweetCardElement.retweeter) &&
+            tweet.repostOf != null,
       TweetCardElement.avatar =>
         config.elements.contains(TweetCardElement.avatar),
       TweetCardElement.name => config.elements.contains(TweetCardElement.name),

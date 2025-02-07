@@ -48,14 +48,16 @@ class TweetCardContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final parentPreview = TweetCardElement.parentPreview.shouldBuild(tweet, config);
+    final parentPreview =
+        TweetCardElement.parentPreview.shouldBuild(tweet, config);
     final text = TweetCardElement.text.shouldBuild(tweet, config);
     final translation = TweetCardElement.translation.shouldBuild(tweet, config);
     final media = TweetCardElement.media.shouldBuild(tweet, config);
     final quote = TweetCardElement.quote.shouldBuild(tweet, config);
     final details = TweetCardElement.details.shouldBuild(tweet, config);
     final actionsRow = TweetCardElement.actionsRow.shouldBuild(tweet, config);
-    final showLinkPreview = TweetCardElement.linkPreview.shouldBuild(tweet, config);
+    final showLinkPreview =
+        TweetCardElement.linkPreview.shouldBuild(tweet, config);
     final hasExternalLink = _shouldShowLinkPreview();
     final linkPreview = showLinkPreview && hasExternalLink;
 
@@ -106,7 +108,8 @@ class TweetCardContent extends ConsumerWidget {
           post: tweet,
           index: index,
         ),
-      if (linkPreview) TweetCardElement.linkPreview: TweetCardLinkPreview(tweet: tweet),
+      if (linkPreview)
+        TweetCardElement.linkPreview: TweetCardLinkPreview(tweet: tweet),
       if (details)
         TweetCardElement.details: TweetCardDetails(
           tweet: tweet,

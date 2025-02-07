@@ -123,12 +123,15 @@ class _MediaGalleryState extends ConsumerState<MediaGallery> {
         itemCount: widget.itemCount,
         // disallow zooming in on videos
         enableGestures: entry.media.type != MediaType.video,
-        builder: (context, index) => widget.builder(index)?.builder(context) ?? const SizedBox(),
+        builder: (context, index) =>
+            widget.builder(index)?.builder(context) ?? const SizedBox(),
         onPageChanged: (index) {
           setState(() => _index = index);
           // Restore mute state of previous video before pausing all videos
           _restoreMuteState(_index);
-          ref.read(videoPlayerHandlerProvider).act((notifier) => notifier.pause());
+          ref
+              .read(videoPlayerHandlerProvider)
+              .act((notifier) => notifier.pause());
           // Handle mute state of new video after a small delay to allow state to settle
           Future.delayed(const Duration(milliseconds: 100), () {
             if (mounted) {

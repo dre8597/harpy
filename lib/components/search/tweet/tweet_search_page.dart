@@ -24,9 +24,7 @@ class _TweetSearchPageState extends ConsumerState<TweetSearchPage> {
 
     if (widget.initialQuery != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(tweetSearchProvider.notifier)
-            .search(customQuery: widget.initialQuery);
+        ref.read(tweetSearchProvider.notifier).search(customQuery: widget.initialQuery);
       });
     }
   }
@@ -49,6 +47,19 @@ class _TweetSearchPageState extends ConsumerState<TweetSearchPage> {
               edgeOffset: RbySliverAppBar.height(context) + theme.spacing.base,
               child: TweetList(
                 state.tweets.toList(),
+                loadMore: state.maybeMap(
+                  data: (data) => data.hasReachedEnd ? null : notifier.loadMore,
+                  orElse: () => null,
+                ),
+                hasReachedEnd: state.maybeMap(
+                  data: (data) => data.hasReachedEnd,
+                  orElse: () => true,
+                ),
+                isLoadingMore: state.maybeMap(
+                  data: (data) => false,
+                  loading: (_) => true,
+                  orElse: () => false,
+                ),
                 beginSlivers: [
                   SearchAppBar(
                     text: state.query,

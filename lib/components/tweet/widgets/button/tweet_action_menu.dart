@@ -56,7 +56,9 @@ Future<void> showLikeActionMenu({
   );
 
   if (result == 0) {
-    tweet.isLiked ? delegates.onUnfavorite?.call(ref) : delegates.onFavorite?.call(ref);
+    tweet.isLiked
+        ? delegates.onUnfavorite?.call(ref)
+        : delegates.onFavorite?.call(ref);
   } else if (result == 1) {
     delegates.onShowLikes?.call(ref);
   }
@@ -122,7 +124,9 @@ Future<void> showRepostActionMenu({
   );
 
   if (result == 0) {
-    tweet.isReposted ? delegates.onUnretweet?.call(ref) : delegates.onRetweet?.call(ref);
+    tweet.isReposted
+        ? delegates.onUnretweet?.call(ref)
+        : delegates.onRetweet?.call(ref);
   } else if (result == 1) {
     delegates.onComposeQuote?.call(ref);
   } else if (result == 2) {
