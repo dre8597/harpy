@@ -7,7 +7,8 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final homeTimelineProvider = StateNotifierProvider.autoDispose<HomeTimelineNotifier, TimelineState>(
+final homeTimelineProvider =
+    StateNotifierProvider.autoDispose<HomeTimelineNotifier, TimelineState>(
   (ref) {
     ref.cacheFor(const Duration(minutes: 15));
 
@@ -71,7 +72,8 @@ class HomeTimelineNotifier extends TimelineNotifier {
   bool get restoreRefreshPosition =>
       ref.read(generalPreferencesProvider).homeTimelineRefreshBehavior;
 
-  int get restoredTweetId => ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
+  int get restoredTweetId =>
+      ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
 
   void addTweet(BlueskyPostData post) {
     final currentState = state;

@@ -40,7 +40,8 @@ class TweetList extends StatefulWidget {
   final List<Widget> beginSlivers;
   final List<Widget> endSlivers;
 
-  static Widget defaultTweetBuilder(BlueskyPostData tweet, int index) => TweetCard(
+  static Widget defaultTweetBuilder(BlueskyPostData tweet, int index) =>
+      TweetCard(
         tweet: tweet,
         index: index,
       );
@@ -72,7 +73,8 @@ class _TweetListState extends State<TweetList> {
     if (!_isLoadingMore &&
         !widget.hasReachedEnd &&
         widget.loadMore != null &&
-        _scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200) {
       setState(() => _isLoadingMore = true);
       widget.loadMore!().then((_) {
         if (mounted) setState(() => _isLoadingMore = false);
