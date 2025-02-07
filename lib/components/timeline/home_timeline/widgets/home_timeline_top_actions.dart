@@ -21,6 +21,8 @@ class HomeTimelineTopActions extends StatelessWidget {
           children: [
             _RefreshButton(),
             Spacer(),
+            FeedSwitcher(),
+            HorizontalSpacer.normal,
             _ComposeButton(),
             HorizontalSpacer.normal,
             _FilterButton(),
@@ -52,6 +54,8 @@ class _RefreshButton extends ConsumerWidget {
   }
 }
 
+
+
 class _ComposeButton extends ConsumerWidget {
   const _ComposeButton();
 
@@ -61,9 +65,7 @@ class _ComposeButton extends ConsumerWidget {
 
     return RbyButton.card(
       icon: const Icon(FeatherIcons.feather),
-      onTap: state is! TimelineStateLoading
-          ? () => context.goNamed(ComposePage.name)
-          : null,
+      onTap: state is! TimelineStateLoading ? () => context.goNamed(ComposePage.name) : null,
     );
   }
 }
@@ -83,9 +85,7 @@ class _FilterButton extends ConsumerWidget {
       icon: notifier.filter != null
           ? Icon(
               Icons.filter_alt,
-              color: enable
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.primary.withOpacity(.5),
+              color: enable ? theme.colorScheme.primary : theme.colorScheme.primary.withOpacity(.5),
             )
           : const Icon(Icons.filter_alt_outlined),
       onTap: enable ? () => context.pushNamed(HomeTimelineFilter.name) : null,

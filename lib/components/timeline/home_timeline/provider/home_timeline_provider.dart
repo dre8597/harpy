@@ -1,3 +1,4 @@
+import 'package:bluesky/core.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
@@ -6,8 +7,7 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
 
-final homeTimelineProvider =
-    StateNotifierProvider.autoDispose<HomeTimelineNotifier, TimelineState>(
+final homeTimelineProvider = StateNotifierProvider.autoDispose<HomeTimelineNotifier, TimelineState>(
   (ref) {
     ref.cacheFor(const Duration(minutes: 15));
 
@@ -35,13 +35,32 @@ class HomeTimelineNotifier extends TimelineNotifier {
   @override
   Future<TimelineResponse> request({String? cursor}) async {
     final blueskyApi = ref.read(blueskyApiProvider);
+    final feedPreferences = ref.read(feedPreferencesProvider);
+    String activeFeedUri = (feedPreferences.activeFeedUri?.isNotEmpty ?? false)
+        ? feedPreferences.activeFeedUri!
+        : 'app.bsky.feed.getTimeline';
 
-    final feed = await blueskyApi.feed.getTimeline(
-      cursor: cursor,
-      limit: 50,
-    );
-
-    return handleTimelinePosts(feed.data.feed, feed.data.cursor);
+    try {
+      if (activeFeedUri == 'app.bsky.feed.getTimeline') {
+        // Default timeline
+        final feed = await blueskyApi.feed.getTimeline(
+          cursor: cursor,
+          limit: 50,
+        );
+        return handleTimelinePosts(feed.data.feed, feed.data.cursor);
+      } else {
+        // Custom feed
+        final feed = await blueskyApi.feed.getFeed(
+          generatorUri: AtUri.parse(activeFeedUri),
+          cursor: cursor,
+          limit: 50,
+        );
+        return handleTimelinePosts(feed.data.feed, feed.data.cursor);
+      }
+    } catch (e, stack) {
+      log.severe('Error fetching timeline', e, stack);
+      rethrow;
+    }
   }
 
   @override
@@ -52,8 +71,7 @@ class HomeTimelineNotifier extends TimelineNotifier {
   bool get restoreRefreshPosition =>
       ref.read(generalPreferencesProvider).homeTimelineRefreshBehavior;
 
-  int get restoredTweetId =>
-      ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
+  int get restoredTweetId => ref.read(tweetVisibilityPreferencesProvider).lastVisibleTweet;
 
   void addTweet(BlueskyPostData post) {
     final currentState = state;

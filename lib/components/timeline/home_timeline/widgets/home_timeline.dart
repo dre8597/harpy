@@ -5,6 +5,7 @@ import 'package:harpy/components/components.dart';
 
 class HomeTimeline extends ConsumerStatefulWidget {
   const HomeTimeline({
+    super.key,
     required this.refreshIndicatorOffset,
     required this.scrollToTopOffset,
   });
@@ -24,6 +25,9 @@ class _HomeTimelineState extends ConsumerState<HomeTimeline> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
     });
+
+    // Load feed preferences when timeline is initialized
+    ref.read(feedPreferencesProvider.notifier).loadFeeds();
   }
 
   @override
