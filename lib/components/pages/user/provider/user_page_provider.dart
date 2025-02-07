@@ -27,7 +27,7 @@ class UserPageNotifier extends _$UserPageNotifier {
     final profile = await _blueskyApi.actor.getProfile(actor: authorDid);
 
     BlueskyPostData? pinnedPost;
-    final pinnedPosts = await _blueskyApi.feed.getAuthorFeed(actor: authorDid);
+    final pinnedPosts = await _blueskyApi.feed.getAuthorFeed(actor: authorDid, includePins: true);
     if (pinnedPosts.data.feed.isNotEmpty) {
       final pinnedPostView = pinnedPosts.data.feed.firstWhereOrNull(
         (post) => post.post.viewer.pinned,

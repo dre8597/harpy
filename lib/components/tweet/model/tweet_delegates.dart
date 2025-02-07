@@ -25,6 +25,7 @@ class TweetDelegates with _$TweetDelegates {
     TweetActionCallback? onShowTweet,
     TweetActionCallback? onShowUser,
     TweetActionCallback? onShowRetweeter,
+    TweetActionCallback? onShowParentPost,
     TweetActionCallback? onFavorite,
     TweetActionCallback? onUnfavorite,
     TweetActionCallback? onShowLikes,
@@ -71,6 +72,17 @@ TweetDelegates defaultTweetDelegates(
         router.pushNamed(
           UserPage.name,
           pathParameters: {'authorDid': tweet.authorDid},
+        );
+      }
+    },
+    onShowParentPost: (ref) {
+      if (tweet.parentPost != null) {
+        ref.read(routerProvider).pushNamed(
+          TweetDetailPage.name,
+          pathParameters: {
+            'authorDid': tweet.authorDid,
+            'id': tweet.parentPost!.uri.toString(),
+          },
         );
       }
     },
@@ -123,8 +135,7 @@ TweetDelegates defaultTweetDelegates(
     onDelete: (ref) {
       HapticFeedback.lightImpact();
       notifier.delete(
-        onDeleted: () =>
-            ref.read(homeTimelineProvider.notifier).removeTweet(tweet),
+        onDeleted: () => ref.read(homeTimelineProvider.notifier).removeTweet(tweet),
       );
     },
     onOpenTweetExternally: (ref) {

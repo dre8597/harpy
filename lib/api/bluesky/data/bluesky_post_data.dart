@@ -39,6 +39,7 @@ class BlueskyPostData with _$BlueskyPostData {
     String? rootPostId,
     BlueskyPostData? repostOf,
     BlueskyPostData? quoteOf,
+    BlueskyPostData? parentPost,
     List<BlueskyMediaData>? media,
     List<String>? tags,
     List<String>? mentions,
@@ -57,8 +58,7 @@ class BlueskyPostData with _$BlueskyPostData {
 
   const BlueskyPostData._();
 
-  factory BlueskyPostData.fromJson(Map<String, dynamic> json) =>
-      _$BlueskyPostDataFromJson(json);
+  factory BlueskyPostData.fromJson(Map<String, dynamic> json) => _$BlueskyPostDataFromJson(json);
 
   /// Improved factory that creates a [BlueskyPostData] from a Bluesky [bsky.FeedView] and
   /// handles both image and video embeds.
@@ -70,10 +70,8 @@ class BlueskyPostData with _$BlueskyPostData {
       // Map on embed using the provided union-like API
       embed.map(
         images: (images) {
-          mediaData = images.data.images
-              .map(BlueskyMediaData.fromImage)
-              .cast<BlueskyMediaData>()
-              .toList();
+          mediaData =
+              images.data.images.map(BlueskyMediaData.fromImage).cast<BlueskyMediaData>().toList();
         },
         video: (video) {
           mediaData = [BlueskyMediaData.fromVideo(video)];
@@ -89,8 +87,8 @@ class BlueskyPostData with _$BlueskyPostData {
     final mentions = post.post.record.facets
         ?.where((f) => f.features.any((feat) => feat is bsky.FacetMention))
         .map((f) {
-      final mention = f.features.firstWhere((feat) => feat is bsky.FacetMention)
-          as bsky.FacetMention;
+      final mention =
+          f.features.firstWhere((feat) => feat is bsky.FacetMention) as bsky.FacetMention;
       return mention.did;
     }).toList();
 
@@ -98,8 +96,7 @@ class BlueskyPostData with _$BlueskyPostData {
     final tags = post.post.record.facets
         ?.where((f) => f.features.any((feat) => feat is bsky.FacetTag))
         .map((f) {
-      final tag = f.features.firstWhere((feat) => feat is bsky.FacetTag)
-          as bsky.FacetTag;
+      final tag = f.features.firstWhere((feat) => feat is bsky.FacetTag) as bsky.FacetTag;
       return tag.tag;
     }).toList();
 
@@ -158,16 +155,14 @@ class BlueskyMediaData with _$BlueskyMediaData implements MediaData {
       url: video.data.playlist,
       thumb: video.data.thumbnail,
       type: MediaType.video,
-      aspectRatio: (video.data.aspectRatio?.width ?? 1) /
-          (video.data.aspectRatio?.height ?? 1),
+      aspectRatio: (video.data.aspectRatio?.width ?? 1) / (video.data.aspectRatio?.height ?? 1),
       variants: [video.data.playlist], // Add video URL as the only variant
     );
   }
 
   const BlueskyMediaData._();
 
-  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) =>
-      _$BlueskyMediaDataFromJson(json);
+  factory BlueskyMediaData.fromJson(Map<String, dynamic> json) => _$BlueskyMediaDataFromJson(json);
 
   /// Converts an image embed into a [BlueskyMediaData] object.
   factory BlueskyMediaData.fromImage(bsky.EmbedViewImagesView image) {
@@ -192,8 +187,7 @@ class BlueskyMediaData with _$BlueskyMediaData implements MediaData {
       url: video.data.playlist,
       thumb: video.data.thumbnail,
       type: MediaType.video,
-      aspectRatio: (video.data.aspectRatio?.width ?? 1) /
-          (video.data.aspectRatio?.height ?? 1),
+      aspectRatio: (video.data.aspectRatio?.width ?? 1) / (video.data.aspectRatio?.height ?? 1),
       variants: [video.data.playlist], // Add video URL as the only variant
       duration: const Duration(), // TODO: Get actual duration when available
     );
@@ -248,6 +242,5 @@ class EmbedRecord with _$EmbedRecord {
 
   const EmbedRecord._();
 
-  factory EmbedRecord.fromJson(Map<String, dynamic> json) =>
-      _$EmbedRecordFromJson(json);
+  factory EmbedRecord.fromJson(Map<String, dynamic> json) => _$EmbedRecordFromJson(json);
 }

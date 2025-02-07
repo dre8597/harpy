@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/tweet/model/tweet_card_config_element.dart';
+import 'package:harpy/components/tweet/widgets/card_content/tweet_card_reply_to.dart';
 
 /// Builds the top row for the [TweetCardContent].
 ///
 /// The top row consist of the following tweet card elements:
 /// - [TweetCardElement.retweeter]
+/// - [TweetCardElement.replyTo]
 /// - [TweetCardElement.avatar]
 /// - [TweetCardElement.name]
 /// - [TweetCardElement.handle]
@@ -33,6 +36,7 @@ class TweetCardTopRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pinned = TweetCardElement.pinned.shouldBuild(tweet, config);
     final retweeter = TweetCardElement.retweeter.shouldBuild(tweet, config);
+    final replyTo = tweet.parentPostId != null;
     final avatar = TweetCardElement.avatar.shouldBuild(tweet, config);
     final name = TweetCardElement.name.shouldBuild(tweet, config);
     final handle = TweetCardElement.handle.shouldBuild(tweet, config);
@@ -52,13 +56,21 @@ class TweetCardTopRow extends ConsumerWidget {
               SizedBox(height: outerPadding),
               if (pinned) ...[
                 TweetCardPinned(style: TweetCardElement.pinned.style(config)),
-                if (retweeter || (avatar && name && handle))
+                if (retweeter || replyTo || (avatar && name && handle))
                   SizedBox(height: innerPadding),
               ],
               if (retweeter) ...[
                 TweetCardRetweeter(
                   tweet: tweet,
                   onRetweeterTap: delegates.onShowRetweeter,
+                  style: TweetCardElement.retweeter.style(config),
+                ),
+                if (replyTo || (avatar && name && handle)) SizedBox(height: innerPadding),
+              ],
+              if (replyTo) ...[
+                TweetCardReplyTo(
+                  tweet: tweet,
+                  onReplyToTap: delegates.onShowParentPost,
                   style: TweetCardElement.retweeter.style(config),
                 ),
                 if (avatar && name && handle) SizedBox(height: innerPadding),
@@ -87,8 +99,7 @@ class TweetCardTopRow extends ConsumerWidget {
                               onUserTap: delegates.onShowUser,
                               style: TweetCardElement.name.style(config),
                             ),
-                          if (name && handle)
-                            SizedBox(height: innerPadding / 2),
+                          if (name && handle) SizedBox(height: innerPadding / 2),
                           if (handle)
                             TweetCardHandle(
                               tweet: tweet,
