@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
-import 'package:harpy/components/components.dart';
-import 'package:harpy/components/tweet/model/tweet_card_config_element.dart';
 import 'package:harpy/api/bluesky/post_translation_provider.dart';
-import 'package:rby/rby.dart';
+import 'package:harpy/components/components.dart';
 
 class TweetCardContent extends ConsumerWidget {
   const TweetCardContent({

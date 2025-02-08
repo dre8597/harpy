@@ -36,7 +36,7 @@ class FeedSwitcher extends ConsumerWidget {
 }
 
 Future<String?> showFeedSwitcherDialog(
-    BuildContext context, FeedPreferences feedPreferences) {
+    BuildContext context, FeedPreferences feedPreferences,) {
   final theme = Theme.of(context);
   final size = MediaQuery.of(context).size;
 

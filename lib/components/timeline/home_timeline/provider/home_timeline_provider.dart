@@ -37,7 +37,7 @@ class HomeTimelineNotifier extends TimelineNotifier {
   Future<TimelineResponse> request({String? cursor}) async {
     final blueskyApi = ref.read(blueskyApiProvider);
     final feedPreferences = ref.read(feedPreferencesProvider);
-    String activeFeedUri = (feedPreferences.activeFeedUri?.isNotEmpty ?? false)
+    var activeFeedUri = (feedPreferences.activeFeedUri?.isNotEmpty ?? false)
         ? feedPreferences.activeFeedUri!
         : 'app.bsky.feed.getTimeline';
 

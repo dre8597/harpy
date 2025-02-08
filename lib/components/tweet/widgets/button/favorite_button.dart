@@ -5,7 +5,6 @@ import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/components/tweet/widgets/button/tweet_action_menu.dart';
-import 'package:rby/rby.dart';
 
 class FavoriteButton extends ConsumerStatefulWidget {
   const FavoriteButton({

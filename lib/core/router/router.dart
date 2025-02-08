@@ -187,7 +187,7 @@ final routesProvider = Provider(
                     id: state.pathParameters['id']!,
                     tweet: state.extra as BlueskyPostData?,
                   ),
-                )
+                ),
               ],
             ),
           ],

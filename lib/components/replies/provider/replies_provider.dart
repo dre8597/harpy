@@ -24,7 +24,7 @@ class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
     required BlueskyPostData tweet,
   })  : _findPostReplies = findPostReplies,
         _tweet = tweet,
-        super(const RepliesState.loading(parent: null)) {
+        super(const RepliesState.loading()) {
     load();
   }
 

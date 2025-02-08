@@ -90,9 +90,9 @@ class FeedPreferencesNotifier extends StateNotifier<FeedPreferences> {
       // Get saved feed generators
       final preferences = await blueskyApi.actor.getPreferences();
       final allFeeds = preferences.data.preferences
-          .where((pref) => pref is bsky.UPreferenceSavedFeeds);
+          .whereType<bsky.UPreferenceSavedFeeds>();
       final savedFeeds = allFeeds
-          .expand((pref) => (pref.data as bsky.SavedFeedsPreference).savedUris)
+          .expand((pref) => (pref.data).savedUris)
           .whereType<AtUri>()
           .toList();
 

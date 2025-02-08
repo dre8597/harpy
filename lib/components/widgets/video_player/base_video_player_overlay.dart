@@ -172,7 +172,7 @@ class _BaseVideoPlayerOverlayState extends State<BaseVideoPlayerOverlay>
               SizedBox(
                   width: _isCompact
                       ? theme.spacing.small / 2
-                      : theme.spacing.small),
+                      : theme.spacing.small,),
               VideoPlayerPlaybackButton(
                 data: widget.data,
                 notifier: widget.notifier,
@@ -188,7 +188,7 @@ class _BaseVideoPlayerOverlayState extends State<BaseVideoPlayerOverlay>
               SizedBox(
                   width: _isCompact
                       ? theme.spacing.small / 2
-                      : theme.spacing.small),
+                      : theme.spacing.small,),
               if (!_isCompact) VideoPlayerProgressText(data: widget.data),
               const Spacer(),
               if (widget.data.qualities.length > 1 && !_isCompact)
@@ -211,7 +211,7 @@ class _BaseVideoPlayerOverlayState extends State<BaseVideoPlayerOverlay>
               SizedBox(
                   width: _isCompact
                       ? theme.spacing.small / 2
-                      : theme.spacing.small),
+                      : theme.spacing.small,),
             ],
           ),
         ),
