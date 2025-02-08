@@ -7,11 +7,16 @@ import 'package:rby/rby.dart';
 class TweetSearchPage extends ConsumerStatefulWidget {
   const TweetSearchPage({
     this.initialQuery,
-    this.hashtag,
+    this.hashTag,
+    this.author,
+    this.url,
+    super.key,
   });
 
   final String? initialQuery;
-  final String? hashtag;
+  final String? hashTag;
+  final String? author;
+  final String? url;
 
   static const name = 'tweet_search';
 
@@ -24,11 +29,21 @@ class _TweetSearchPageState extends ConsumerState<TweetSearchPage> {
   void initState() {
     super.initState();
 
-    if (widget.initialQuery != null) {
+    if (widget.initialQuery != null ||
+        widget.hashTag != null ||
+        widget.author != null ||
+        widget.url != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(tweetSearchProvider.notifier)
-            .search(customQuery: widget.initialQuery, hashTag: widget.hashtag);
+        ref.read(tweetSearchProvider.notifier).search(
+              customQuery: widget.initialQuery,
+              hashTag: widget.hashTag,
+              filter: widget.author != null || widget.url != null
+                  ? TweetSearchFilterData(
+                      author: widget.author ?? '',
+                      url: widget.url ?? '',
+                    )
+                  : null,
+            );
       });
     }
   }
@@ -105,15 +120,15 @@ class _TweetSearchPageState extends ConsumerState<TweetSearchPage> {
                     ],
                     noData: (_) => const [
                       SliverFillInfoMessage(
-                        primaryMessage: Text('no tweets found'),
+                        primaryMessage: Text('no posts found'),
                         secondaryMessage: Text(
-                          'only tweets of the last 7 days can be retrieved',
+                          'only posts of the last 7 days can be retrieved',
                         ),
                       ),
                     ],
                     error: (_) => [
                       SliverFillLoadingError(
-                        message: const Text('error searching tweets'),
+                        message: const Text('error searching posts'),
                         onRetry: state.filter != null
                             ? () => notifier.search(filter: state.filter)
                             : null,

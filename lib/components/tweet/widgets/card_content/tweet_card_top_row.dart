@@ -65,7 +65,8 @@ class TweetCardTopRow extends ConsumerWidget {
                   onRetweeterTap: delegates.onShowRetweeter,
                   style: TweetCardElement.retweeter.style(config),
                 ),
-                if (replyTo || (avatar && name && handle)) SizedBox(height: innerPadding),
+                if (replyTo || (avatar && name && handle))
+                  SizedBox(height: innerPadding),
               ],
               if (replyTo) ...[
                 TweetCardReplyTo(
@@ -99,7 +100,8 @@ class TweetCardTopRow extends ConsumerWidget {
                               onUserTap: delegates.onShowUser,
                               style: TweetCardElement.name.style(config),
                             ),
-                          if (name && handle) SizedBox(height: innerPadding / 2),
+                          if (name && handle)
+                            SizedBox(height: innerPadding / 2),
                           if (handle)
                             TweetCardHandle(
                               tweet: tweet,

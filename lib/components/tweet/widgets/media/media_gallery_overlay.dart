@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/data/bluesky_text_entities.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/widgets/bluesky_text.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
 
@@ -307,6 +309,64 @@ class _OverlayPreviewText extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final router = ref.watch(routerProvider);
+    final launcher = ref.watch(launcherProvider);
+
+    // Create entities from mentions and tags
+    final entities = <BlueskyTextEntity>[];
+
+    // Add mentions
+    if (tweet.mentions != null) {
+      for (final mention in tweet.mentions!) {
+        // Find the @ symbol for this mention in the text
+        final index = tweet.text.indexOf('@$mention');
+        if (index != -1) {
+          entities.add(
+            BlueskyTextEntity(
+              type: 'mention',
+              value: mention,
+              start: index,
+              end: index + mention.length + 1, // +1 for @ symbol
+            ),
+          );
+        }
+      }
+    }
+
+    // Add tags
+    if (tweet.tags != null) {
+      for (final tag in tweet.tags!) {
+        // Find the # symbol for this tag in the text
+        final index = tweet.text.indexOf('#$tag');
+        if (index != -1) {
+          entities.add(
+            BlueskyTextEntity(
+              type: 'hashtag',
+              value: tag,
+              start: index,
+              end: index + tag.length + 1, // +1 for # symbol
+            ),
+          );
+        }
+      }
+    }
+
+    // Add external URLs
+    if (tweet.externalUrls != null) {
+      for (final url in tweet.externalUrls!) {
+        final index = tweet.text.indexOf(url);
+        if (index != -1) {
+          entities.add(
+            BlueskyTextEntity(
+              type: 'url',
+              value: url,
+              start: index,
+              end: index + url.length,
+            ),
+          );
+        }
+      }
+    }
 
     return Padding(
       padding: EdgeInsetsDirectional.only(
@@ -329,14 +389,26 @@ class _OverlayPreviewText extends ConsumerWidget {
                 if (currentChild != null) currentChild,
               ],
             ),
-            child: Text(
+            child: BlueskyText(
               tweet.text,
               key: ObjectKey(tweet),
+              entities: entities,
               style: theme.textTheme.bodyMedium!.copyWith(
                 color: Colors.white,
               ),
+              entityStyle: TextStyle(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              onMentionTap: (mention) {
+                router.push('/user/$mention');
+              },
+              onHashtagTap: (hashtag) {
+                router.push('/harpy_search/tweets?query=%23$hashtag');
+              },
+              onUrlTap: launcher,
             ),
           ),
         ),

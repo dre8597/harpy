@@ -11,7 +11,8 @@ enum TweetSearchResultType {
 @freezed
 class TweetSearchFilterData with _$TweetSearchFilterData {
   factory TweetSearchFilterData({
-    @Default('') String tweetAuthor,
+    @Default('') String author,
+    @Default('') String url,
     @Default('') String replyingTo,
     @Default(TweetSearchResultType.mixed) TweetSearchResultType resultType,
     @Default(<String>[]) List<String> includesPhrases,
@@ -31,22 +32,18 @@ class TweetSearchFilterData with _$TweetSearchFilterData {
 
   TweetSearchFilterData._();
 
-  late final isValid = tweetAuthor.isNotEmpty ||
-      replyingTo.isNotEmpty ||
+  late final isValid = author.isNotEmpty ||
+      url.isNotEmpty ||
       includesPhrases.isNotEmpty ||
       includesHashtags.isNotEmpty ||
-      includesMentions.isNotEmpty ||
-      includesUrls.isNotEmpty;
+      includesMentions.isNotEmpty;
 
   bool isEmpty() => this == TweetSearchFilterData();
 
   String buildQuery() {
     final filters = <String>[];
 
-    if (tweetAuthor.isNotEmpty) filters.add('from:$tweetAuthor');
-    if (replyingTo.isNotEmpty) filters.add('to:$replyingTo');
-
-    // phrases & keywords
+    // Add phrases & keywords
     for (final phrase in includesPhrases) {
       if (phrase.contains(' ')) {
         // multi word phrase
@@ -67,41 +64,14 @@ class TweetSearchFilterData with _$TweetSearchFilterData {
       }
     }
 
-    // hashtags & mentions
+    // Add hashtags & mentions
     includesHashtags.forEach(filters.add);
-    excludesHashtags.forEach(filters.add);
+    for (final tag in excludesHashtags) {
+      filters.add('-$tag');
+    }
     includesMentions.forEach(filters.add);
-    excludesMentions.forEach(filters.add);
-
-    // urls
-    for (final url in includesUrls) {
-      filters.add('url:$url');
-    }
-
-    // retweets
-    if (includesRetweets) {
-      filters.add('filter:retweets');
-    } else if (excludesRetweets) {
-      filters.add('-filter:retweets');
-    }
-
-    // media
-    if (includesImages && includesVideo) {
-      filters.add('filter:media');
-    } else if (excludesImages && excludesVideo) {
-      filters.add('-filter:media');
-    } else {
-      if (includesImages) {
-        filters.add('filter:images');
-      } else if (excludesImages) {
-        filters.add('-filter:images');
-      }
-
-      if (includesVideo) {
-        filters.add('filter:native_video');
-      } else if (excludesVideo) {
-        filters.add('-filter:native_video');
-      }
+    for (final mention in excludesMentions) {
+      filters.add('-$mention');
     }
 
     return filters.join(' ').trim();

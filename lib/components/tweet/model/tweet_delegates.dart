@@ -135,7 +135,8 @@ TweetDelegates defaultTweetDelegates(
     onDelete: (ref) {
       HapticFeedback.lightImpact();
       notifier.delete(
-        onDeleted: () => ref.read(homeTimelineProvider.notifier).removeTweet(tweet),
+        onDeleted: () =>
+            ref.read(homeTimelineProvider.notifier).removeTweet(tweet),
       );
     },
     onOpenTweetExternally: (ref) {

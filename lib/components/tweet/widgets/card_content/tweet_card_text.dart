@@ -5,6 +5,7 @@ import 'package:harpy/api/bluesky/data/bluesky_text_entities.dart';
 import 'package:harpy/api/bluesky/post_translation_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/components/widgets/bluesky_text.dart';
+import 'package:harpy/core/core.dart';
 
 class TweetCardText extends ConsumerWidget {
   const TweetCardText({
@@ -20,6 +21,8 @@ class TweetCardText extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final translationState = ref.watch(postTranslationProvider(post));
+    final router = ref.watch(routerProvider);
+    final launcher = ref.watch(launcherProvider);
 
     final text = translationState.maybeMap(
       translated: (state) => state.translation.text,
@@ -40,15 +43,24 @@ class TweetCardText extends ConsumerWidget {
         style: theme.textTheme.bodyMedium!.apply(
           fontSizeDelta: style.sizeDelta,
         ),
+        entityStyle: TextStyle(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w500,
+        ),
         onMentionTap: (mention) {
-          // Handle mention tap - navigate to profile
+          // Navigate to user profile
+          router.push('/user/$mention');
         },
         onHashtagTap: (hashtag) {
-          // Handle hashtag tap - search for hashtag
+          // Navigate to hashtag search using AT Protocol's tag filter
+          router.push(
+            '/harpy_search/tweets?query=%23$hashtag',
+            extra: {
+              'hashTag': hashtag,
+            },
+          );
         },
-        onUrlTap: (url) {
-          // Handle URL tap - open in browser or webview
-        },
+        onUrlTap: launcher,
       ),
     );
   }

@@ -124,7 +124,7 @@ class _FilterGeneralGroup extends StatelessWidget {
         Padding(
           padding: theme.spacing.symmetric(horizontal: true),
           child: ClearableTextField(
-            text: filter.tweetAuthor,
+            text: filter.author,
             decoration: const InputDecoration(
               labelText: 'tweet author',
               isDense: true,

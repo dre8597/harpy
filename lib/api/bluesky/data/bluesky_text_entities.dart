@@ -25,25 +25,29 @@ extension BlueskyPostTextData on BlueskyPostData {
   List<BlueskyTextEntity> get entities {
     final entities = <BlueskyTextEntity>[];
 
-    // Find all @ mentions in text using regex
-    final mentionRegex = RegExp(r'@[\w.-]+');
+    // Process mentions
     if (mentions != null) {
-      for (final match in mentionRegex.allMatches(text)) {
-        entities.add(
-          BlueskyTextEntity(
-            start: match.start,
-            end: match.end,
-            type: 'mention',
-            value: text.substring(match.start + 1, match.end),
-          ),
-        );
+      for (final mention in mentions!) {
+        // Find the @ symbol for this mention in the text
+        final mentionText = '@$mention';
+        final index = text.indexOf(mentionText);
+        if (index != -1) {
+          entities.add(
+            BlueskyTextEntity(
+              start: index,
+              end: index + mentionText.length,
+              type: 'mention',
+              value: mention,
+            ),
+          );
+        }
       }
     }
 
     // Process hashtags
     if (tags != null) {
       for (final tag in tags!) {
-        // Find the '#tag' in the text
+        // Find the # symbol for this tag in the text
         final tagText = '#$tag';
         final index = text.indexOf(tagText);
         if (index != -1) {
@@ -81,19 +85,7 @@ extension BlueskyPostTextData on BlueskyPostData {
     return entities;
   }
 
-  bool get isRtlLanguage {
-    // A simple implementation - you might want to use a more sophisticated
-    // language detection method
-    final text = this.text.trim();
-    if (text.isEmpty) return false;
-
-    // Check for RTL markers
-    if (text.contains(RegExp(r'@[\w.-]+'))) {
-      return true;
-    }
-
-    return false;
-  }
+  bool get isRtlLanguage => _rtlLanguages.contains(lang);
 
   String? get quoteUrl {
     // In Bluesky, quotes are handled as reposts with embedded posts

@@ -9,9 +9,12 @@ class BlueskyText extends StatelessWidget {
     this.entities,
     this.urlToIgnore,
     this.style,
+    this.entityStyle,
     this.onMentionTap,
     this.onHashtagTap,
     this.onUrlTap,
+    this.maxLines,
+    this.overflow,
     super.key,
   });
 
@@ -19,14 +22,22 @@ class BlueskyText extends StatelessWidget {
   final List<BlueskyTextEntity>? entities;
   final String? urlToIgnore;
   final TextStyle? style;
+  final TextStyle? entityStyle;
   final void Function(String)? onMentionTap;
   final void Function(String)? onHashtagTap;
   final void Function(String)? onUrlTap;
+  final int? maxLines;
+  final TextOverflow? overflow;
 
   @override
   Widget build(BuildContext context) {
     if (entities == null || entities!.isEmpty) {
-      return SelectableText(text, style: style);
+      return Text(
+        text,
+        style: style,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
     }
 
     final spans = <TextSpan>[];
@@ -54,14 +65,15 @@ class BlueskyText extends StatelessWidget {
       }
 
       final entityText = text.substring(entity.start, entity.end);
-      final entityStyle = style?.copyWith(
-        color: _getEntityColor(context, entity.type),
-      );
+      final entityTextStyle = entityStyle ??
+          style?.copyWith(
+            color: _getEntityColor(context, entity.type),
+          );
 
       spans.add(
         TextSpan(
           text: entityText,
-          style: entityStyle,
+          style: entityTextStyle,
           recognizer: TapGestureRecognizer()
             ..onTap = () => _handleEntityTap(entity),
         ),
@@ -80,16 +92,18 @@ class BlueskyText extends StatelessWidget {
       );
     }
 
-    return SelectableText.rich(TextSpan(children: spans));
+    return Text.rich(
+      TextSpan(children: spans),
+      maxLines: maxLines,
+      overflow: overflow,
+    );
   }
 
   Color _getEntityColor(BuildContext context, String type) {
     final theme = Theme.of(context);
     switch (type) {
       case 'mention':
-        return theme.colorScheme.primary;
       case 'hashtag':
-        return theme.colorScheme.secondary;
       case 'url':
         return theme.colorScheme.primary;
       default:
@@ -104,9 +118,9 @@ class BlueskyText extends StatelessWidget {
       case 'hashtag':
         onHashtagTap?.call(entity.value);
       case 'url':
-        onUrlTap?.call(entity.value);
-        // If no custom URL handler, open in browser
-        if (onUrlTap == null) {
+        if (onUrlTap != null) {
+          onUrlTap?.call(entity.value);
+        } else {
           launchUrl(Uri.parse(entity.value));
         }
     }
