@@ -1,5 +1,4 @@
 import 'package:any_link_preview/any_link_preview.dart';
-import 'package:bluesky/core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,9 +34,9 @@ class TweetCardLinkPreview extends ConsumerWidget {
         ),
       ),
       child: AnyLinkPreview.builder(
-        link: tweet.uri.toString(),
+        link: urlString,
         placeholderWidget: const _LinkPreviewPlaceholder(),
-        errorWidget: _LinkPreviewError(url: tweet.uri),
+        errorWidget: _LinkPreviewError(url: urlString),
         itemBuilder: (_, metadata, imageProvider, __) => Container(
           decoration: BoxDecoration(
             borderRadius: theme.shape.borderRadius,
@@ -108,17 +107,17 @@ class _LinkPreviewError extends StatelessWidget {
     required this.url,
   });
 
-  final AtUri url;
+  final String url;
 
-  String get urlStr {
-    final urlString = '$url';
-
-    if (urlString.length > 40) {
-      return '${urlString.substring(0, 40)}...';
-    }
-
-    return urlString;
-  }
+  // String get urlStr {
+  //   final urlString = '$url';
+  //
+  //   if (urlString.length > 40) {
+  //     return '${urlString.substring(0, 40)}...';
+  //   }
+  //
+  //   return urlString;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +155,7 @@ class _LinkPreviewError extends StatelessWidget {
               padding: EdgeInsets.all(theme.spacing.small),
               child: FittedBox(
                 child: Text(
-                  urlStr,
+                  url,
                   style: theme.textTheme.titleSmall,
                 ),
               ),
