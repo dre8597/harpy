@@ -18,8 +18,7 @@ final tweetSearchProvider =
   name: 'TweetSearchProvider',
 );
 
-class TweetSearchNotifier extends StateNotifier<TweetSearchState>
-    with LoggerMixin {
+class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMixin {
   TweetSearchNotifier({
     required Ref ref,
   })  : _ref = ref,
@@ -81,25 +80,32 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
   }) async {
     final query = customQuery ?? filter?.buildQuery();
 
-    if (query == null || query.isEmpty) {
-      log.warning('built search query is empty');
+    if ((query == null || query.isEmpty) && hashTag == null) {
+      log.warning('built search query and hashtag are both empty');
       return;
     }
 
     log.fine('searching posts');
 
-    state = TweetSearchState.loading(query: query, filter: filter);
+    state = TweetSearchState.loading(query: query ?? '', filter: filter);
     _isLoading = true;
 
     try {
       final blueskyApi = _ref.read(blueskyApiProvider);
 
-      final searchResult = await blueskyApi.feed.searchPosts(query,
-          tag: hashTag != null ? [hashTag] : filter?.includesHashtags ?? []);
+      final searchResult = await blueskyApi.feed.searchPosts(
+        query ?? '', // Query can be empty if we're searching by other filters
+        tag: hashTag != null ? [hashTag] : filter?.includesHashtags ?? [],
+        mentions: filter?.includesMentions.firstOrNull,
+        author: filter?.author,
+        cursor: state.cursor,
+        limit: 100,
+        url: filter?.url,
+      );
 
       if (searchResult.data.posts.isEmpty) {
         log.fine('found no posts for query: $query');
-        state = TweetSearchState.noData(query: query, filter: filter);
+        state = TweetSearchState.noData(query: query ?? '', filter: filter);
       } else {
         log.fine(
           'found ${searchResult.data.posts.length} posts for query: $query',
@@ -107,28 +113,15 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
 
         final posts = searchResult.data.posts
             .map(
-              (post) => BlueskyPostData(
-                authorAvatar: post.author.avatar ?? '',
-                authorDid: post.author.did,
-                id: post.cid,
-                uri: post.uri,
-                text: post.record.text,
-                author: post.author.displayName ?? '',
-                handle: post.author.handle,
-                createdAt: post.indexedAt,
-                likeCount: post.likeCount,
-                repostCount: post.repostCount,
-                replyCount: post.replyCount,
-                isLiked: post.viewer.like != null,
-                isReposted: post.viewer.repost != null,
-                media: _processEmbed(post.embed),
+              (post) => BlueskyPostData.fromFeedView(
+                bsky.FeedView(post: post),
               ),
             )
             .toBuiltList();
 
         state = TweetSearchState.data(
           tweets: posts,
-          query: query,
+          query: query ?? '',
           filter: filter,
           cursor: searchResult.data.cursor,
           hasReachedEnd: searchResult.data.cursor == null,
@@ -136,7 +129,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
       }
     } catch (e, st) {
       log.severe('Error searching posts', e, st);
-      state = TweetSearchState.error(query: query, filter: filter);
+      state = TweetSearchState.error(query: query ?? '', filter: filter);
     } finally {
       _isLoading = false;
     }
@@ -167,27 +160,17 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
       final searchResult = await blueskyApi.feed.searchPosts(
         query,
         tag: filter?.includesHashtags ?? [],
+        mentions: filter?.includesMentions.firstOrNull,
+        author: filter?.author,
         cursor: cursor,
+        url: filter?.url,
       );
 
       if (searchResult.data.posts.isNotEmpty) {
         final newPosts = searchResult.data.posts
             .map(
-              (post) => BlueskyPostData(
-                authorAvatar: post.author.avatar ?? '',
-                authorDid: post.author.did,
-                id: post.cid,
-                uri: post.uri,
-                text: post.record.text,
-                author: post.author.displayName ?? '',
-                handle: post.author.handle,
-                createdAt: post.indexedAt,
-                likeCount: post.likeCount,
-                repostCount: post.repostCount,
-                replyCount: post.replyCount,
-                isLiked: post.viewer.like != null,
-                isReposted: post.viewer.repost != null,
-                media: _processEmbed(post.embed),
+              (post) => BlueskyPostData.fromFeedView(
+                bsky.FeedView(post: post),
               ),
             )
             .toList();

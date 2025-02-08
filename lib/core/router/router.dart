@@ -224,6 +224,9 @@ final routesProvider = Provider(
               path: 'tweets',
               builder: (context, state) => TweetSearchPage(
                 initialQuery: state.uri.queryParameters['query'],
+                hashTag: state.extra != null
+                    ? (state.extra as Map<String, String>)['hashTag']
+                    : null,
               ),
               routes: [
                 GoRoute(

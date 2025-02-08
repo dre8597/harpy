@@ -21,7 +21,7 @@ class TweetSearchFilterNotifier extends StateNotifier<TweetSearchFilterData> {
 
   void setTweetAuthor(String tweetAuthor) {
     state = state.copyWith(
-      tweetAuthor: removePrependedSymbol(tweetAuthor, ['@']) ?? '',
+      author: removePrependedSymbol(tweetAuthor, ['@']) ?? '',
     );
   }
 
