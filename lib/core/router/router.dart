@@ -173,6 +173,21 @@ final routesProvider = Provider(
                   builder: (context, state) =>
                       LikesPage(tweetId: state.pathParameters['id']!),
                 ),
+                // GoRoute(
+                //   name: TweetSearchPage.name,
+                //   path: 'search',
+                //   builder: (context, state) => TweetSearchPage(
+                //     hashtag: state.uri.queryParameters['hashTag'],
+                //   ),
+                // ),
+                GoRoute(
+                  name: 'comment',
+                  path: 'comment',
+                  builder: (context, state) => TweetDetailPage(
+                    id: state.pathParameters['id']!,
+                    tweet: state.extra as BlueskyPostData?,
+                  ),
+                )
               ],
             ),
           ],

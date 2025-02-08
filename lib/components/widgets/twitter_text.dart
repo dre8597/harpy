@@ -70,15 +70,16 @@ void defaultOnUrlLongPress(WidgetRef ref, BlueskyLinkData url) {
 }
 
 void defaultOnHashtagTap(WidgetRef ref, BlueskyTagData hashtag) {
-  final searchQuery = '#${hashtag.tag}';
 
   if (ref.read(tweetSearchProvider) != const TweetSearchState.initial()) {
     // active tweet search already exists
-    ref.read(tweetSearchProvider.notifier).search(customQuery: searchQuery);
+    ref
+        .read(tweetSearchProvider.notifier)
+        .search(hashTag: hashtag.tag);
   } else {
     ref.read(routerProvider).pushNamed(
       TweetSearchPage.name,
-      queryParameters: {'query': searchQuery},
+      queryParameters: {'hashTag': hashtag.tag},
     );
   }
 }

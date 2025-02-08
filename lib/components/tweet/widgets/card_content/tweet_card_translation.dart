@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/post_translation_provider.dart';
+import 'package:harpy/api/translate/data/languages.dart';
 import 'package:harpy/components/components.dart';
 
 class TweetCardTranslation extends ConsumerWidget {
@@ -23,12 +25,25 @@ class TweetCardTranslation extends ConsumerWidget {
 
   static const _animationDuration = Duration(milliseconds: 300);
 
+  String _getLanguageName(String languageCode) {
+    return kTranslateLanguages[languageCode.toLowerCase()] ?? languageCode;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final translationState = ref.watch(postTranslationProvider(post));
 
-    final buildTranslation =
-        post.translation != null && post.translation!.isTranslated;
+    final buildTranslation = translationState.maybeMap(
+      translated: (_) => true,
+      orElse: () => false,
+    );
+
+    final sourceLanguage = translationState.maybeMap(
+      translatable: (state) => _getLanguageName(state.detectedLanguage),
+      translated: (state) => _getLanguageName(state.translation.language),
+      orElse: () => '',
+    );
 
     final bottomPadding = requireBottomInnerPadding
         ? innerPadding
@@ -48,22 +63,18 @@ class TweetCardTranslation extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(horizontal: outerPadding)
                     .copyWith(top: innerPadding)
                     .copyWith(bottom: bottomPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      'Translated from ${post.translation!.language}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.textTheme.bodySmall?.color?.withOpacity(0.8),
-                      ),
+                    Icon(
+                      Icons.translate,
+                      size: 16,
+                      color: theme.colorScheme.primary,
                     ),
-                    const SizedBox(height: 4),
-                    SelectableText(
-                      post.translation!.text,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: theme.textTheme.bodyMedium!.fontSize! +
-                            style.sizeDelta,
+                    const SizedBox(width: 4),
+                    Text(
+                      'Translated from $sourceLanguage',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                   ],

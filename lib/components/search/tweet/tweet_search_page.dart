@@ -7,9 +7,11 @@ import 'package:rby/rby.dart';
 class TweetSearchPage extends ConsumerStatefulWidget {
   const TweetSearchPage({
     this.initialQuery,
+    this.hashtag,
   });
 
   final String? initialQuery;
+  final String? hashtag;
 
   static const name = 'tweet_search';
 
@@ -26,7 +28,7 @@ class _TweetSearchPageState extends ConsumerState<TweetSearchPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref
             .read(tweetSearchProvider.notifier)
-            .search(customQuery: widget.initialQuery);
+            .search(customQuery: widget.initialQuery, hashTag: widget.hashtag);
       });
     }
   }

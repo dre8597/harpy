@@ -64,10 +64,12 @@ class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
         );
       } else {
         log.fine('no replies found');
+        if (!mounted) return;
         state = RepliesState.noData(parent: parent);
       }
     } catch (e, st) {
       log.warning('error loading replies', e, st);
+      if (!mounted) return;
       state = const RepliesState.error();
     }
   }

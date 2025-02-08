@@ -76,6 +76,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
 
   Future<void> search({
     String? customQuery,
+    String? hashTag,
     TweetSearchFilterData? filter,
   }) async {
     final query = customQuery ?? filter?.buildQuery();
@@ -93,8 +94,8 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
     try {
       final blueskyApi = _ref.read(blueskyApiProvider);
 
-      final searchResult = await blueskyApi.feed
-          .searchPosts(query, tag: filter?.includesHashtags ?? []);
+      final searchResult = await blueskyApi.feed.searchPosts(query,
+          tag: hashTag != null ? [hashTag] : filter?.includesHashtags ?? []);
 
       if (searchResult.data.posts.isEmpty) {
         log.fine('found no posts for query: $query');
