@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/authentication/provider/profiles_provider.dart';
 import 'package:rby/rby.dart';
 
 class FeedSwitcher extends ConsumerWidget {
@@ -15,18 +16,23 @@ class FeedSwitcher extends ConsumerWidget {
       icon: const Icon(Icons.feed),
       onTap: state is! TimelineStateLoading
           ? () async {
-              final uri =
-                  await showFeedSwitcherDialog(context, feedPreferences);
+              final uri = await showFeedSwitcherDialog(context, feedPreferences);
               if (uri != null && context.mounted) {
                 // Set the active feed
-                await ref
-                    .read(feedPreferencesProvider.notifier)
-                    .setActiveFeed(uri);
+                await ref.read(feedPreferencesProvider.notifier).setActiveFeed(uri);
+
+                // Store the feed preference in the current profile
+                final currentProfile = ref.read(profilesProvider.notifier).getActiveProfile();
+                if (currentProfile != null) {
+                  final updatedProfile = currentProfile.copyWith(
+                    feedPreferences: feedPreferences.copyWith(activeFeedUri: uri),
+                  );
+                  await ref.read(profilesProvider.notifier).addProfile(updatedProfile);
+                }
+
                 // Reload the timeline with the new feed
                 if (context.mounted) {
-                  await ref
-                      .read(homeTimelineProvider.notifier)
-                      .load(clearPrevious: true);
+                  await ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
                 }
               }
             }
@@ -36,7 +42,9 @@ class FeedSwitcher extends ConsumerWidget {
 }
 
 Future<String?> showFeedSwitcherDialog(
-    BuildContext context, FeedPreferences feedPreferences,) {
+  BuildContext context,
+  FeedPreferences feedPreferences,
+) {
   final theme = Theme.of(context);
   final size = MediaQuery.of(context).size;
 
@@ -74,10 +82,9 @@ Future<String?> showFeedSwitcherDialog(
                           title: Text(
                             feed.name,
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight:
-                                  feed.uri == feedPreferences.activeFeedUri
-                                      ? FontWeight.bold
-                                      : null,
+                              fontWeight: feed.uri == feedPreferences.activeFeedUri
+                                  ? FontWeight.bold
+                                  : null,
                             ),
                           ),
                           subtitle: feed.description != null

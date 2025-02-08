@@ -16,7 +16,8 @@ import 'package:logging/logging.dart';
 import 'package:built_collection/built_collection.dart';
 
 /// Provides access to stored profiles and handles profile switching.
-final profilesProvider = StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
+final profilesProvider =
+    StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
   return ProfilesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
     ref: ref,
@@ -71,11 +72,13 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       // Update existing profile with new credentials while preserving preferences
       final existingProfile = profiles[existingIndex];
       profiles[existingIndex] = profile.copyWith(
-        mediaPreferences: existingProfile.mediaPreferences ?? profile.mediaPreferences,
-        feedPreferences: existingProfile.feedPreferences ?? profile.feedPreferences,
-        themeMode: existingProfile.themeMode ?? profile.themeMode,
-        additionalPreferences:
-            existingProfile.additionalPreferences ?? profile.additionalPreferences,
+        mediaPreferences:
+            profile.mediaPreferences ?? existingProfile.mediaPreferences,
+        feedPreferences:
+            profile.feedPreferences ?? existingProfile.feedPreferences,
+        themeMode: profile.themeMode ?? existingProfile.themeMode,
+        additionalPreferences: profile.additionalPreferences ??
+            existingProfile.additionalPreferences,
         isActive: profile.isActive || existingProfile.isActive,
       );
       _log.fine('Updated existing profile for DID: ${profile.did}');
@@ -113,7 +116,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
     if (index == -1) return;
 
     // Deactivate current profile
-    final currentActiveIndex = profiles.indexWhere((profile) => profile.isActive);
+    final currentActiveIndex =
+        profiles.indexWhere((profile) => profile.isActive);
     if (currentActiveIndex != -1) {
       // Store current preferences before switching
       final currentProfile = profiles[currentActiveIndex];
@@ -144,7 +148,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
           .updateFromStoredPreferences(newProfile.feedPreferences!);
     } else {
       // If no feed preferences exist, set default following feed
-      await _ref.read(feedPreferencesProvider.notifier).setActiveFeed('app.bsky.feed.getTimeline');
+      await _ref
+          .read(feedPreferencesProvider.notifier)
+          .setActiveFeed('app.bsky.feed.getTimeline');
     }
     // Always load feeds to ensure we have the latest custom feeds for this profile
     await _ref.read(feedPreferencesProvider.notifier).loadFeeds();
@@ -153,7 +159,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
     final feedPrefs = _ref.read(feedPreferencesProvider);
     final activeFeedUri = feedPrefs.activeFeedUri;
     if (activeFeedUri != null && activeFeedUri != 'app.bsky.feed.getTimeline') {
-      final feedExists = feedPrefs.feeds.any((feed) => feed.uri == activeFeedUri);
+      final feedExists =
+          feedPrefs.feeds.any((feed) => feed.uri == activeFeedUri);
       if (!feedExists) {
         await _ref
             .read(feedPreferencesProvider.notifier)
@@ -232,8 +239,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         id: newProfile.did,
         name: newProfile.displayName,
         handle: newProfile.handle,
-        profileImage:
-            newProfile.avatar != null ? UserProfileImage.fromUrl(newProfile.avatar!) : null,
+        profileImage: newProfile.avatar != null
+            ? UserProfileImage.fromUrl(newProfile.avatar!)
+            : null,
       );
       _ref.read(authenticationStateProvider.notifier).state =
           AuthenticationState.authenticated(user: userData);

@@ -33,15 +33,10 @@ class TweetDetailCard extends StatelessWidget {
                   ),
               onShowUser: (ref) {
                 final router = ref.read(routerProvider);
-
-                if (!(router.state.pathParameters["authorDid"]
-                        ?.contains(tweet.authorDid) ??
-                    false)) {
-                  router.pushNamed(
-                    UserPage.name,
-                    pathParameters: {'authorDid': tweet.authorDid},
-                  );
-                }
+                router.pushNamed(
+                  UserPage.name,
+                  pathParameters: {'authorDid': tweet.authorDid},
+                );
               },
             );
           },

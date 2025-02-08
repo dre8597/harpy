@@ -110,6 +110,7 @@ class FeedPreferencesNotifier extends StateNotifier<FeedPreferences> {
   Future<void> setActiveFeed(String uri) async {
     state = state.copyWith(activeFeedUri: uri);
     await _preferences.setString('activeFeedUri', uri);
+
   }
 
   Future<void> addFeed(FeedPreference feed) async {
