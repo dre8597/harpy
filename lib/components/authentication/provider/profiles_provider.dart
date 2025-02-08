@@ -1,23 +1,23 @@
 import 'dart:convert';
 
+import 'package:bluesky/atproto.dart' show createSession, refreshSession;
 import 'package:bluesky/bluesky.dart' hide Preferences;
 import 'package:bluesky/core.dart';
+import 'package:built_collection/built_collection.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
-import 'package:harpy/api/bluesky/data/profile_data.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
+import 'package:harpy/api/bluesky/data/profile_data.dart';
+import 'package:harpy/api/twitter/data/user_data.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:harpy/core/preferences/preferences.dart';
-import 'package:harpy/api/twitter/data/user_data.dart';
 import 'package:logging/logging.dart';
-import 'package:built_collection/built_collection.dart';
 
 /// Provides access to stored profiles and handles profile switching.
-final profilesProvider =
-    StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
+final profilesProvider = StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
   return ProfilesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
     ref: ref,
@@ -72,13 +72,11 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       // Update existing profile with new credentials while preserving preferences
       final existingProfile = profiles[existingIndex];
       profiles[existingIndex] = profile.copyWith(
-        mediaPreferences:
-            profile.mediaPreferences ?? existingProfile.mediaPreferences,
-        feedPreferences:
-            profile.feedPreferences ?? existingProfile.feedPreferences,
+        mediaPreferences: profile.mediaPreferences ?? existingProfile.mediaPreferences,
+        feedPreferences: profile.feedPreferences ?? existingProfile.feedPreferences,
         themeMode: profile.themeMode ?? existingProfile.themeMode,
-        additionalPreferences: profile.additionalPreferences ??
-            existingProfile.additionalPreferences,
+        additionalPreferences:
+            profile.additionalPreferences ?? existingProfile.additionalPreferences,
         isActive: profile.isActive || existingProfile.isActive,
       );
       _log.fine('Updated existing profile for DID: ${profile.did}');
@@ -116,8 +114,7 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
     if (index == -1) return;
 
     // Deactivate current profile
-    final currentActiveIndex =
-        profiles.indexWhere((profile) => profile.isActive);
+    final currentActiveIndex = profiles.indexWhere((profile) => profile.isActive);
     if (currentActiveIndex != -1) {
       // Store current preferences before switching
       final currentProfile = profiles[currentActiveIndex];
@@ -131,135 +128,160 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
 
     // Activate new profile
     final newProfile = profiles[index];
-    profiles[index] = newProfile.copyWith(isActive: true);
 
-    state = state.copyWith(profiles: profiles);
-    await _saveProfiles();
+    try {
+      // Try to validate/refresh the session before switching
+      final service = _ref.read(blueskyServiceProvider);
 
-    // First invalidate all timeline providers
-    _ref.invalidate(homeTimelineProvider);
-    _ref.invalidate(userTimelineProvider(newProfile.did));
-    _ref.invalidate(mediaTimelineProvider(BuiltList<BlueskyPostData>()));
+      // Attempt to refresh the session
+      try {
+        final refreshed = await refreshSession(
+          service: service,
+          refreshJwt: newProfile.refreshJwt,
+        );
+        // Update profile with new tokens
+        profiles[index] = newProfile.copyWith(
+          isActive: true,
+          accessJwt: refreshed.data.accessJwt,
+          refreshJwt: refreshed.data.refreshJwt,
+        );
+      } catch (e) {
+        // If refresh fails, try to create a new session with stored credentials
+        try {
+          final session = await createSession(
+            service: service,
+            identifier: newProfile.handle,
+            password: newProfile.appPassword,
+          );
+          profiles[index] = newProfile.copyWith(
+            isActive: true,
+            accessJwt: session.data.accessJwt,
+            refreshJwt: session.data.refreshJwt,
+          );
+        } catch (e) {
+          // Both refresh and re-auth failed, show re-authentication modal
+          _ref.read(messageServiceProvider).showText('Session expired, please re-authenticate');
+          throw SessionExpiredException(newProfile);
+        }
+      }
 
-    // Update feed preferences and ensure they're loaded
-    if (newProfile.feedPreferences != null) {
-      await _ref
-          .read(feedPreferencesProvider.notifier)
-          .updateFromStoredPreferences(newProfile.feedPreferences!);
-    } else {
-      // If no feed preferences exist, set default following feed
-      await _ref
-          .read(feedPreferencesProvider.notifier)
-          .setActiveFeed('app.bsky.feed.getTimeline');
-    }
-    // Always load feeds to ensure we have the latest custom feeds for this profile
-    await _ref.read(feedPreferencesProvider.notifier).loadFeeds();
+      state = state.copyWith(profiles: profiles);
+      await _saveProfiles();
 
-    // If the active feed is not in the loaded feeds, default to following feed
-    final feedPrefs = _ref.read(feedPreferencesProvider);
-    final activeFeedUri = feedPrefs.activeFeedUri;
-    if (activeFeedUri != null && activeFeedUri != 'app.bsky.feed.getTimeline') {
-      final feedExists =
-          feedPrefs.feeds.any((feed) => feed.uri == activeFeedUri);
-      if (!feedExists) {
+      // First invalidate all timeline providers
+      _ref.invalidate(homeTimelineProvider);
+      _ref.invalidate(userTimelineProvider(newProfile.did));
+      _ref.invalidate(mediaTimelineProvider(BuiltList<BlueskyPostData>()));
+
+      // Update feed preferences and ensure they're loaded
+      if (newProfile.feedPreferences != null) {
+        await _ref
+            .read(feedPreferencesProvider.notifier)
+            .updateFromStoredPreferences(newProfile.feedPreferences!);
+      } else {
+        // If no feed preferences exist, set default following feed
         await _ref
             .read(feedPreferencesProvider.notifier)
             .setActiveFeed('app.bsky.feed.getTimeline');
       }
-    }
+      // Always load feeds to ensure we have the latest custom feeds for this profile
+      await _ref.read(feedPreferencesProvider.notifier).loadFeeds();
 
-    if (newProfile.themeMode != null) {
-      await _ref.read(themeProvider.notifier).setThemeMode(
-            ThemeMode.values.byName(newProfile.themeMode!),
-          );
-    }
-
-    // Update authentication state
-    await _ref.read(authPreferencesProvider.notifier).setBlueskyAuth(
-          handle: newProfile.handle,
-          password: newProfile.appPassword,
-        );
-
-    await _ref.read(authPreferencesProvider.notifier).setBlueskySession(
-          accessJwt: newProfile.accessJwt,
-          refreshJwt: newProfile.refreshJwt,
-          did: newProfile.did,
-        );
-
-    // Refresh the Bluesky API instance with new credentials
-    final service = _ref.read(blueskyServiceProvider);
-    final bluesky = Bluesky.fromSession(
-      Session(
-        did: newProfile.did,
-        handle: newProfile.handle,
-        accessJwt: newProfile.accessJwt,
-        refreshJwt: newProfile.refreshJwt,
-      ),
-      service: service,
-    );
-    await _ref.read(blueskyApiProvider.notifier).setBlueskySession(bluesky);
-
-    // Fetch latest profile data to update UI
-    try {
-      final profile = await bluesky.actor.getProfile(actor: newProfile.handle);
-
-      // Update authentication state with fresh profile data
-      final userData = UserData.fromBlueskyActorProfile(profile.data);
-      _ref.read(authenticationStateProvider.notifier).state =
-          AuthenticationState.authenticated(user: userData);
-
-      // Update stored profile with latest data
-      final updatedProfile = newProfile.copyWith(
-        displayName: profile.data.displayName ?? profile.data.handle,
-        avatar: profile.data.avatar,
-      );
-
-      final updatedProfiles = List<StoredProfileData>.from(state.profiles);
-      final profileIndex = updatedProfiles.indexWhere((p) => p.did == did);
-      if (profileIndex != -1) {
-        updatedProfiles[profileIndex] = updatedProfile;
-        state = state.copyWith(profiles: updatedProfiles);
-        await _saveProfiles();
+      // If the active feed is not in the loaded feeds, default to following feed
+      final feedPrefs = _ref.read(feedPreferencesProvider);
+      final activeFeedUri = feedPrefs.activeFeedUri;
+      if (activeFeedUri != null && activeFeedUri != 'app.bsky.feed.getTimeline') {
+        final feedExists = feedPrefs.feeds.any((feed) => feed.uri == activeFeedUri);
+        if (!feedExists) {
+          await _ref
+              .read(feedPreferencesProvider.notifier)
+              .setActiveFeed('app.bsky.feed.getTimeline');
+        }
       }
 
-      // Invalidate all timeline providers and reload feeds
-      _ref.invalidate(homeTimelineProvider);
-      _ref.invalidate(userTimelineProvider(userData.id));
-      _ref.invalidate(mediaTimelineProvider(BuiltList<BlueskyPostData>()));
+      if (newProfile.themeMode != null) {
+        await _ref.read(themeProvider.notifier).setThemeMode(
+              ThemeMode.values.byName(newProfile.themeMode!),
+            );
+      }
 
-      // Load feeds for the new profile
-      await _ref.read(feedPreferencesProvider.notifier).loadFeeds();
+      // Update authentication state
+      await _ref.read(authPreferencesProvider.notifier).setBlueskyAuth(
+            handle: newProfile.handle,
+            password: newProfile.appPassword,
+          );
 
-      // Reload the home timeline with the active feed
-      await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
-    } catch (e) {
-      _log.warning('Failed to fetch latest profile data', e);
-      // Still update auth state with stored data
-      final userData = UserData(
-        id: newProfile.did,
-        name: newProfile.displayName,
-        handle: newProfile.handle,
-        profileImage: newProfile.avatar != null
-            ? UserProfileImage.fromUrl(newProfile.avatar!)
-            : null,
+      await _ref.read(authPreferencesProvider.notifier).setBlueskySession(
+            accessJwt: profiles[index].accessJwt,
+            refreshJwt: profiles[index].refreshJwt,
+            did: newProfile.did,
+          );
+
+      // Refresh the Bluesky API instance with new credentials
+      final updatedBluesky = Bluesky.fromSession(
+        Session(
+          did: newProfile.did,
+          handle: newProfile.handle,
+          accessJwt: profiles[index].accessJwt,
+          refreshJwt: profiles[index].refreshJwt,
+        ),
+        service: service,
       );
-      _ref.read(authenticationStateProvider.notifier).state =
-          AuthenticationState.authenticated(user: userData);
+      await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedBluesky);
 
-      // Even if profile fetch fails, still invalidate timelines
-      _ref.invalidate(homeTimelineProvider);
-      _ref.invalidate(userTimelineProvider(userData.id));
-      _ref.invalidate(mediaTimelineProvider(BuiltList<BlueskyPostData>()));
+      // Fetch latest profile data to update UI
+      try {
+        final profile = await updatedBluesky.actor.getProfile(actor: newProfile.handle);
 
-      // Load feeds for the new profile
-      await _ref.read(feedPreferencesProvider.notifier).loadFeeds();
+        // Update authentication state with fresh profile data
+        final userData = UserData.fromBlueskyActorProfile(profile.data);
+        _ref.read(authenticationStateProvider.notifier).state =
+            AuthenticationState.authenticated(user: userData);
 
-      // Reload the home timeline with the active feed
-      await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+        // Update stored profile with latest data
+        final updatedProfile = profiles[index].copyWith(
+          displayName: profile.data.displayName ?? profile.data.handle,
+          avatar: profile.data.avatar,
+        );
+        profiles[index] = updatedProfile;
+        state = state.copyWith(profiles: profiles);
+        await _saveProfiles();
+
+        // Reload the home timeline with the active feed
+        await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+      } catch (e) {
+        _log.warning('Failed to fetch latest profile data', e);
+        // Still update auth state with stored data
+        final userData = UserData(
+          id: newProfile.did,
+          name: newProfile.displayName,
+          handle: newProfile.handle,
+          profileImage:
+              newProfile.avatar != null ? UserProfileImage.fromUrl(newProfile.avatar!) : null,
+        );
+        _ref.read(authenticationStateProvider.notifier).state =
+            AuthenticationState.authenticated(user: userData);
+
+        // Reload the home timeline with the active feed
+        await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+      }
+    } catch (e) {
+      if (e is SessionExpiredException) {
+        // Let the UI handle showing the re-authentication modal
+        rethrow;
+      }
+      _log.severe('Failed to switch profile', e);
+      _ref.read(messageServiceProvider).showText('Failed to switch profile');
     }
   }
 
   StoredProfileData? getActiveProfile() {
     return state.profiles.firstWhereOrNull((profile) => profile.isActive);
   }
+}
+
+/// Exception thrown when a session has expired and needs re-authentication
+class SessionExpiredException implements Exception {
+  SessionExpiredException(this.profile);
+  final StoredProfileData profile;
 }

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:bluesky/atproto.dart';
 import 'package:bluesky/bluesky.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/models.dart' as models;
 import 'package:harpy/api/bluesky/data/profile_data.dart';
@@ -36,50 +35,27 @@ class LoginNotifier {
   }) async {
     log.fine('logging in with Bluesky');
 
-    final environment = _ref.read(environmentProvider);
-    log.fine(
-      'Using AES key: ${environment.aesKey.substring(0, 10)}...',
-    ); // Only log part of the key for security
-
     _ref.read(authenticationStateProvider.notifier).state =
         const AuthenticationState.awaitingAuthentication();
 
     try {
       final service = _ref.read(blueskyServiceProvider);
 
-      // Create session
+      // Create initial session
       final session = await createSession(
         service: service,
         identifier: identifier,
         password: password,
       );
 
-      // Store credentials and session data
-      await _ref.read(authPreferencesProvider.notifier).setBlueskyAuth(
-            handle: identifier,
-            password: password,
-          );
-
-      await _ref.read(authPreferencesProvider.notifier).setBlueskySession(
-            accessJwt: session.data.accessJwt,
-            refreshJwt: session.data.refreshJwt,
-            did: session.data.did,
-          );
-
-      log.fine('successfully authenticated with Bluesky');
-
-      // Get authenticated instance
+      // Get initial profile data to create StoredProfileData
       final bluesky = Bluesky.fromSession(
         session.data,
         service: service,
       );
-
-      await _ref.read(blueskyApiProvider.notifier).setBlueskySession(bluesky);
-
-      // Get user profile
       final profile = await bluesky.actor.getProfile(actor: identifier);
 
-      // Create and store profile data
+      // Create profile data
       final profileData = StoredProfileData.fromProfile(
         profile: models.Profile(
           did: profile.data.did,
@@ -103,22 +79,13 @@ class LoginNotifier {
         isActive: true,
         mediaPreferences: _ref.read(mediaPreferencesProvider),
         feedPreferences: _ref.read(feedPreferencesProvider),
-        themeMode: 'system',
+        themeMode: _ref.read(themeProvider).themeMode.name,
       );
 
-      // Deactivate current profile if exists
-      final profilesNotifier = _ref.read(profilesProvider.notifier);
-      final currentProfile = profilesNotifier.getActiveProfile();
-      if (currentProfile != null) {
-        await profilesNotifier.switchToProfile(currentProfile.did);
-      }
-
-      // Add new profile
-      await profilesNotifier.addProfile(profileData);
-
-      final userData = UserData.fromBlueskyActorProfile(profile.data);
-      _ref.read(authenticationStateProvider.notifier).state =
-          AuthenticationState.authenticated(user: userData);
+      // Add profile and switch to it
+      // This will handle setting up auth state, preferences, and API client
+      await _ref.read(profilesProvider.notifier).addProfile(profileData);
+      await _ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
 
       // Navigate based on setup status
       if (_ref.read(setupPreferencesProvider).performedSetup) {
