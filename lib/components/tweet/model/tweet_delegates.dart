@@ -76,12 +76,12 @@ TweetDelegates defaultTweetDelegates(
       }
     },
     onShowParentPost: (ref) {
-      if (tweet.parentPost != null) {
+      if (tweet.parentPost != null || tweet.parentPostId != null) {
         ref.read(routerProvider).pushNamed(
           TweetDetailPage.name,
           pathParameters: {
             'authorDid': tweet.authorDid,
-            'id': tweet.parentPost!.uri.toString(),
+            'id': (tweet.parentPost?.uri??tweet.parentPostId).toString(),
           },
         );
       }

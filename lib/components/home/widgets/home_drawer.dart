@@ -5,35 +5,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:harpy/api/bluesky/data/profile_data.dart';
+import 'package:harpy/components/authentication/provider/profiles_provider.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/components/login/bluesky_login_form.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
+import 'package:bluesky/bluesky.dart' as bsky;
+import 'package:bluesky/atproto.dart' show createSession;
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
+import 'package:harpy/api/bluesky/data/models.dart' as models;
+import 'package:harpy/components/settings/theme/provider/theme_provider.dart';
 
 typedef AnimatedWidgetBuilder = Widget Function(
   AnimationController controller,
 );
 
 /// A fullscreen-sized navigation drawer for the [HomeTabView].
-class HomeDrawer extends StatelessWidget {
-  const HomeDrawer();
+class HomeDrawer extends ConsumerWidget {
+  const HomeDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return _DrawerAnimationListener(
-      builder: (controller) => ListView(
+      builder: (controller) => SingleChildScrollView(
         padding: theme.spacing.edgeInsets,
-        children: [
-          const HomeTopPadding(),
-          const _AuthenticatedUser(),
-          VerticalSpacer.normal,
-          const _ConnectionsCount(),
-          VerticalSpacer.normal,
-          VerticalSpacer.normal,
-          _Entries(controller),
-          const HomeBottomPadding(),
-        ],
+        child: Column(
+          children: [
+            const HomeTopPadding(),
+            const _AuthenticatedUser(),
+            VerticalSpacer.normal,
+            const _ConnectionsCount(),
+            VerticalSpacer.normal,
+            VerticalSpacer.normal,
+            _Entries(controller),
+            const HomeBottomPadding(),
+          ],
+        ),
       ),
     );
   }
@@ -49,8 +59,7 @@ class _DrawerAnimationListener extends StatefulWidget {
   final AnimatedWidgetBuilder builder;
 
   @override
-  _DrawerAnimationListenerState createState() =>
-      _DrawerAnimationListenerState();
+  _DrawerAnimationListenerState createState() => _DrawerAnimationListenerState();
 }
 
 class _DrawerAnimationListenerState extends State<_DrawerAnimationListener>
@@ -63,8 +72,7 @@ class _DrawerAnimationListenerState extends State<_DrawerAnimationListener>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _tabController = HomeTabController.of(context)!
-      ..animation!.addListener(_tabControllerListener);
+    _tabController = HomeTabController.of(context)!..animation!.addListener(_tabControllerListener);
   }
 
   @override
@@ -103,11 +111,80 @@ class _AuthenticatedUser extends ConsumerWidget {
       return const SizedBox();
     }
 
+    void showProfileMenu(
+      BuildContext context,
+      WidgetRef ref,
+      List<StoredProfileData> profiles,
+    ) {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Switch Account'),
+              ),
+              const Divider(),
+              ...profiles.map(
+                (profile) => ListTile(
+                  leading: profile.avatar != null
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(profile.avatar!),
+                        )
+                      : const CircleAvatar(
+                          child: Icon(Icons.person),
+                        ),
+                  title: Text(profile.displayName),
+                  subtitle: Text('@${profile.handle}'),
+                  trailing: profile.isActive
+                      ? Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () async {
+                    if (!profile.isActive) {
+                      await ref.read(profilesProvider.notifier).switchToProfile(profile.did);
+                    }
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const CircleAvatar(
+                  child: Icon(Icons.add),
+                ),
+                title: const Text('Add Account'),
+                onTap: () {
+                  Navigator.pop(context);
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (context) => const _AddAccountModal(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return InkWell(
       borderRadius: theme.shape.borderRadius,
       onTap: () => context.pushNamed(
         UserPage.name,
         pathParameters: {'authorDid': user.id},
+      ),
+      onLongPress: () => showProfileMenu(
+        context,
+        ref,
+        ref.watch(profilesProvider).profiles,
       ),
       child: Card(
         child: Padding(
@@ -201,6 +278,73 @@ class _ConnectionsCount extends ConsumerWidget {
   }
 }
 
+class _ReAuthenticationModal extends ConsumerWidget {
+  const _ReAuthenticationModal({
+    required this.profile,
+  });
+
+  final StoredProfileData profile;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Re-authenticate ${profile.handle}',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 24),
+          BlueskyLoginForm(
+            initialIdentifier: profile.handle,
+            onLogin: (identifier, password) async {
+              try {
+                // Create session
+                final service = ref.read(blueskyServiceProvider);
+                final session = await createSession(
+                  service: service,
+                  identifier: identifier,
+                  password: password,
+                );
+
+                // Update profile with new credentials
+                final updatedProfile = profile.copyWith(
+                  appPassword: password,
+                  accessJwt: session.data.accessJwt,
+                  refreshJwt: session.data.refreshJwt,
+                  isActive: true,
+                );
+
+                // Update profile and switch to it
+                await ref.read(profilesProvider.notifier).addProfile(updatedProfile);
+                await ref.read(profilesProvider.notifier).switchToProfile(profile.did);
+
+                ref.read(messageServiceProvider).showText('Successfully re-authenticated');
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              } catch (error) {
+                ref.read(messageServiceProvider).showText('Failed to re-authenticate');
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Entries extends ConsumerWidget {
   const _Entries(this.controller);
 
@@ -237,6 +381,74 @@ class _Entries extends ConsumerWidget {
     }
 
     return animated;
+  }
+
+  Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
+    final profilesNotifier = ref.read(profilesProvider.notifier);
+    final currentProfile = profilesNotifier.getActiveProfile();
+
+    if (currentProfile == null) {
+      // No active profile, just go to login
+      ref.read(routerProvider).goNamed(LoginPage.name);
+      return;
+    }
+
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => Theme(
+        data: Theme.of(context),
+        child: const LogoutDialog(),
+      ),
+    );
+
+    if (shouldLogout != true) return;
+
+    // Get all profiles except current one
+    final remainingProfiles =
+        ref.read(profilesProvider).profiles.where((p) => p.did != currentProfile.did).toList();
+
+    // Remove current profile
+    await profilesNotifier.removeProfile(currentProfile.did);
+
+    if (remainingProfiles.isEmpty) {
+      // No other profiles, go to login page
+      ref.read(authenticationStateProvider.notifier).state =
+          const AuthenticationState.unauthenticated();
+      ref.read(routerProvider).goNamed(LoginPage.name);
+      return;
+    }
+
+    // Try to switch to next profile
+    final nextProfile = remainingProfiles.first;
+    try {
+      // Try to validate the session
+      final service = ref.read(blueskyServiceProvider);
+      final session = await createSession(
+        service: service,
+        identifier: nextProfile.handle,
+        password: nextProfile.appPassword,
+      );
+
+      // Session is valid, update profile and switch
+      final updatedProfile = nextProfile.copyWith(
+        accessJwt: session.data.accessJwt,
+        refreshJwt: session.data.refreshJwt,
+      );
+      await profilesNotifier.addProfile(updatedProfile);
+      await profilesNotifier.switchToProfile(nextProfile.did);
+
+      ref.read(messageServiceProvider).showText('Switched to ${nextProfile.handle}');
+    } catch (e) {
+      // Session is invalid, show re-authentication modal
+      if (context.mounted) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => _ReAuthenticationModal(profile: nextProfile),
+        );
+      }
+    }
   }
 
   @override
@@ -315,17 +527,7 @@ class _Entries extends ConsumerWidget {
           color: theme.colorScheme.error,
         ),
         title: Text('logout', style: textStyle),
-        onTap: () async {
-          final result = await showDialog<bool>(
-            context: context,
-            builder: (context) => Theme(
-              data: Theme.of(context),
-              child: const LogoutDialog(),
-            ),
-          );
-
-          if (result ?? false) ref.read(logoutProvider).logout().ignore();
-        },
+        onTap: () => _handleLogout(context, ref),
       ),
     ];
 
@@ -338,6 +540,115 @@ class _Entries extends ConsumerWidget {
                 children,
                 directionality: directionality,
               ),
+      ),
+    );
+  }
+}
+
+class _AddAccountModal extends ConsumerWidget {
+  const _AddAccountModal();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Add Account',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 24),
+          BlueskyLoginForm(
+            onLogin: (identifier, password) async {
+              try {
+                // Create session
+                final service = ref.read(blueskyServiceProvider);
+                final session = await createSession(
+                  service: service,
+                  identifier: identifier,
+                  password: password,
+                );
+
+                // Get authenticated instance
+                final bluesky = bsky.Bluesky.fromSession(
+                  session.data,
+                  service: service,
+                );
+
+                // Get user profile
+                final profile = await bluesky.actor.getProfile(actor: identifier);
+
+                // Create profile data
+                final profileData = StoredProfileData.fromProfile(
+                  profile: models.Profile(
+                    did: profile.data.did,
+                    handle: profile.data.handle,
+                    displayName: profile.data.displayName,
+                    description: profile.data.description,
+                    avatar: profile.data.avatar,
+                    banner: profile.data.banner,
+                    followersCount: profile.data.followersCount,
+                    followsCount: profile.data.followsCount,
+                    postsCount: profile.data.postsCount,
+                    viewer: models.ProfileViewer(
+                      following: profile.data.viewer.following?.toString(),
+                      followedBy: profile.data.viewer.followedBy?.toString(),
+                      blocking: profile.data.viewer.blocking?.toString(),
+                    ),
+                  ),
+                  appPassword: password,
+                  accessJwt: session.data.accessJwt,
+                  refreshJwt: session.data.refreshJwt,
+                  isActive: true,
+                  mediaPreferences: ref.read(mediaPreferencesProvider),
+                  feedPreferences: ref.read(feedPreferencesProvider),
+                  themeMode: ref.read(themeProvider).themeMode.name,
+                );
+
+                // Check if profile already exists
+                final existingProfiles = ref.read(profilesProvider).profiles;
+                final existingProfile = existingProfiles.firstWhere(
+                  (p) => p.did == profile.data.did,
+                  orElse: () => profileData,
+                );
+
+                if (existingProfile != profileData) {
+                  // Profile exists, update it
+                  final updatedProfile = existingProfile.copyWith(
+                    appPassword: password,
+                    accessJwt: session.data.accessJwt,
+                    refreshJwt: session.data.refreshJwt,
+                    isActive: true,
+                  );
+                  await ref.read(profilesProvider.notifier).addProfile(updatedProfile);
+                  await ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
+                  ref.read(messageServiceProvider).showText('Successfully updated account');
+                } else {
+                  // Add new profile
+                  await ref.read(profilesProvider.notifier).addProfile(profileData);
+                  await ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
+                  ref.read(messageServiceProvider).showText('Successfully added account');
+                }
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              } catch (error) {
+                ref.read(messageServiceProvider).showText('Failed to add account: $error');
+              }
+            },
+          ),
+        ],
       ),
     );
   }

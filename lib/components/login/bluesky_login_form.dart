@@ -6,9 +6,11 @@ class BlueskyLoginForm extends ConsumerStatefulWidget {
   const BlueskyLoginForm({
     super.key,
     required this.onLogin,
+    this.initialIdentifier,
   });
 
   final void Function(String identifier, String password) onLogin;
+  final String? initialIdentifier;
 
   @override
   ConsumerState<BlueskyLoginForm> createState() => _BlueskyLoginFormState();
@@ -16,9 +18,15 @@ class BlueskyLoginForm extends ConsumerStatefulWidget {
 
 class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
   final _formKey = GlobalKey<FormState>();
-  final _identifierController = TextEditingController();
+  late final TextEditingController _identifierController;
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _identifierController = TextEditingController(text: widget.initialIdentifier);
+  }
 
   @override
   void dispose() {
@@ -47,6 +55,7 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
         children: [
           TextFormField(
             controller: _identifierController,
+            enabled: widget.initialIdentifier == null,
             decoration: const InputDecoration(
               labelText: 'Handle or Email',
               hintText: 'e.g. username.bsky.social',
@@ -68,9 +77,7 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 ),
                 onPressed: () {
                   setState(() {

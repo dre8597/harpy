@@ -11,8 +11,7 @@ part 'feed_preferences_provider.freezed.dart';
 
 part 'feed_preferences_provider.g.dart';
 
-final feedPreferencesProvider =
-    StateNotifierProvider<FeedPreferencesNotifier, FeedPreferences>(
+final feedPreferencesProvider = StateNotifierProvider<FeedPreferencesNotifier, FeedPreferences>(
   (ref) => FeedPreferencesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
     ref: ref,
@@ -30,8 +29,7 @@ class FeedPreference with _$FeedPreference {
     @Default(false) bool isDefault,
   }) = _FeedPreference;
 
-  factory FeedPreference.fromJson(Map<String, dynamic> json) =>
-      _$FeedPreferenceFromJson(json);
+  factory FeedPreference.fromJson(Map<String, dynamic> json) => _$FeedPreferenceFromJson(json);
 
   factory FeedPreference.fromGeneratorView(bsky.FeedGenerator generator) {
     final view = generator.view;
@@ -47,12 +45,11 @@ class FeedPreference with _$FeedPreference {
 @freezed
 class FeedPreferences with _$FeedPreferences {
   const factory FeedPreferences({
-    required List<FeedPreference> feeds,
+    @Default([]) List<FeedPreference> feeds,
     String? activeFeedUri,
   }) = _FeedPreferences;
 
-  factory FeedPreferences.fromJson(Map<String, dynamic> json) =>
-      _$FeedPreferencesFromJson(json);
+  factory FeedPreferences.fromJson(Map<String, dynamic> json) => _$FeedPreferencesFromJson(json);
 }
 
 class FeedPreferencesNotifier extends StateNotifier<FeedPreferences> {
@@ -89,12 +86,8 @@ class FeedPreferencesNotifier extends StateNotifier<FeedPreferences> {
 
       // Get saved feed generators
       final preferences = await blueskyApi.actor.getPreferences();
-      final allFeeds = preferences.data.preferences
-          .whereType<bsky.UPreferenceSavedFeeds>();
-      final savedFeeds = allFeeds
-          .expand((pref) => (pref.data).savedUris)
-          .whereType<AtUri>()
-          .toList();
+      final allFeeds = preferences.data.preferences.whereType<bsky.UPreferenceSavedFeeds>();
+      final savedFeeds = allFeeds.expand((pref) => pref.data.savedUris).whereType<AtUri>().toList();
 
       // Get feed info for each saved feed
       for (final feedUri in savedFeeds) {
@@ -131,5 +124,12 @@ class FeedPreferencesNotifier extends StateNotifier<FeedPreferences> {
     final feeds = List<FeedPreference>.from(state.feeds);
     feeds.removeWhere((f) => f.uri == uri && !f.isDefault);
     state = state.copyWith(feeds: feeds);
+  }
+
+  Future<void> updateFromStoredPreferences(FeedPreferences preferences) async {
+    state = preferences;
+    if (preferences.activeFeedUri != null) {
+      await setActiveFeed(preferences.activeFeedUri!);
+    }
   }
 }

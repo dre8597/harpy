@@ -5,32 +5,24 @@ import 'package:bluesky/bluesky.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
+import 'package:harpy/api/bluesky/data/models.dart' as models;
+import 'package:harpy/api/bluesky/data/profile_data.dart';
+import 'package:harpy/components/authentication/provider/profiles_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
-
-import 'package:rby/rby.dart';
+import 'package:logging/logging.dart';
 
 /// Handles login using Bluesky authentication.
 ///
 /// Authentication logic used to be split between Twitter and Bluesky, but is now
 /// updated to exclusively use Bluesky authentication via loginWithBluesky.
-final loginProvider = Provider(
-  (ref) => _Login(
-    ref: ref,
-    environment: ref.watch(environmentProvider),
-  ),
-  name: 'LoginProvider',
-);
+final loginProvider = Provider.autoDispose(LoginNotifier.new);
 
-class _Login with LoggerMixin {
-  const _Login({
-    required Ref ref,
-    required Environment environment,
-  })  : _ref = ref,
-        _environment = environment;
+class LoginNotifier {
+  LoginNotifier(this._ref) : log = Logger('LoginNotifier');
 
   final Ref _ref;
-  final Environment _environment;
+  final Logger log;
 
   /// Initializes a Bluesky authentication.
   ///
@@ -87,6 +79,43 @@ class _Login with LoggerMixin {
       // Get user profile
       final profile = await bluesky.actor.getProfile(actor: identifier);
 
+      // Create and store profile data
+      final profileData = StoredProfileData.fromProfile(
+        profile: models.Profile(
+          did: profile.data.did,
+          handle: profile.data.handle,
+          displayName: profile.data.displayName,
+          description: profile.data.description,
+          avatar: profile.data.avatar,
+          banner: profile.data.banner,
+          followersCount: profile.data.followersCount,
+          followsCount: profile.data.followsCount,
+          postsCount: profile.data.postsCount,
+          viewer: models.ProfileViewer(
+            following: profile.data.viewer.following?.toString(),
+            followedBy: profile.data.viewer.followedBy?.toString(),
+            blocking: profile.data.viewer.blocking?.toString(),
+          ),
+        ),
+        appPassword: password,
+        accessJwt: session.data.accessJwt,
+        refreshJwt: session.data.refreshJwt,
+        isActive: true,
+        mediaPreferences: _ref.read(mediaPreferencesProvider),
+        feedPreferences: _ref.read(feedPreferencesProvider),
+        themeMode: 'system',
+      );
+
+      // Deactivate current profile if exists
+      final profilesNotifier = _ref.read(profilesProvider.notifier);
+      final currentProfile = profilesNotifier.getActiveProfile();
+      if (currentProfile != null) {
+        await profilesNotifier.switchToProfile(currentProfile.did);
+      }
+
+      // Add new profile
+      await profilesNotifier.addProfile(profileData);
+
       final userData = UserData.fromBlueskyActorProfile(profile.data);
       _ref.read(authenticationStateProvider.notifier).state =
           AuthenticationState.authenticated(user: userData);
@@ -97,11 +126,11 @@ class _Login with LoggerMixin {
       } else {
         _ref.read(routerProvider).goNamed(SetupPage.name);
       }
-    } catch (e) {
-      log.warning('error authenticating with Bluesky', e);
+    } catch (error) {
+      log.severe('Failed to authenticate with Bluesky', error);
       _ref.read(authenticationStateProvider.notifier).state =
           const AuthenticationState.unauthenticated();
-      _ref.read(messageServiceProvider).showText('authentication failed');
+      _ref.read(messageServiceProvider).showText('Authentication failed');
     }
   }
 }

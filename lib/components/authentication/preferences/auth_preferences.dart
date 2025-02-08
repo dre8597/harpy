@@ -7,16 +7,14 @@ import 'package:rby/rby.dart' hide Preferences;
 part 'auth_preferences.freezed.dart';
 
 /// Handles storing and updating the authentication data for sessions.
-final authPreferencesProvider =
-    StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
+final authPreferencesProvider = StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
   (ref) => AuthPreferencesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
   ),
   name: 'AuthPreferencesProvider',
 );
 
-class AuthPreferencesNotifier extends StateNotifier<AuthPreferences>
-    with LoggerMixin {
+class AuthPreferencesNotifier extends StateNotifier<AuthPreferences> with LoggerMixin {
   AuthPreferencesNotifier({
     required Preferences preferences,
   })  : _preferences = preferences,
@@ -91,18 +89,17 @@ class AuthPreferencesNotifier extends StateNotifier<AuthPreferences>
     log.fine('Stored Bluesky session preferences');
   }
 
-  void clearAuth() {
+  Future<void> clearAuth() async {
     state = AuthPreferences.empty();
 
-    _preferences
-      ..remove('userToken')
-      ..remove('userSecret')
-      ..remove('userId')
-      ..remove('blueskyHandle')
-      ..remove('blueskyAppPassword')
-      ..remove('blueskyAccessJwt')
-      ..remove('blueskyRefreshJwt')
-      ..remove('blueskyDid');
+    await _preferences.remove('userToken');
+    await _preferences.remove('userSecret');
+    await _preferences.remove('userId');
+    await _preferences.remove('blueskyHandle');
+    await _preferences.remove('blueskyAppPassword');
+    await _preferences.remove('blueskyAccessJwt');
+    await _preferences.remove('blueskyRefreshJwt');
+    await _preferences.remove('blueskyDid');
   }
 }
 
@@ -132,13 +129,10 @@ class AuthPreferences with _$AuthPreferences {
 
   AuthPreferences._();
 
-  late final bool isValid =
-      userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
+  late final bool isValid = userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
 
-  late final bool hasBlueskyCredentials =
-      blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
+  late final bool hasBlueskyCredentials = blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
 
-  late final bool hasBlueskySession = blueskyAccessJwt.isNotEmpty &&
-      blueskyRefreshJwt.isNotEmpty &&
-      blueskyDid.isNotEmpty;
+  late final bool hasBlueskySession =
+      blueskyAccessJwt.isNotEmpty && blueskyRefreshJwt.isNotEmpty && blueskyDid.isNotEmpty;
 }

@@ -5,9 +5,9 @@ import 'package:harpy/core/core.dart';
 import 'package:harpy/core/preferences/preferences.dart';
 
 part 'media_preferences.freezed.dart';
+part 'media_preferences.g.dart';
 
-final mediaPreferencesProvider =
-    StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
+final mediaPreferencesProvider = StateNotifierProvider<MediaPreferencesNotifier, MediaPreferences>(
   (ref) => MediaPreferencesNotifier(
     preferences: ref.watch(preferencesProvider(null)),
   ),
@@ -109,94 +109,66 @@ class MediaPreferencesNotifier extends StateNotifier<MediaPreferences> {
     _preferences.setBool('showDownloadDialog', value);
   }
 
-  void setDownloadPathData(String value) {
+  void setDownloadPathData(String? value) {
+    if(value == null) return;
     state = state.copyWith(downloadPathData: value);
     _preferences.setString('downloadPathData', value);
+  }
+
+  void updateFromStoredPreferences(MediaPreferences preferences) {
+    state = preferences;
+
+    // Update all individual preferences
+    setBestMediaQuality(preferences.bestMediaQuality);
+    setCropImage(preferences.cropImage);
+    setAutoplayGifs(preferences.autoplayGifs);
+    setAutoplayVideos(preferences.autoplayVideos);
+    setStartVideoPlaybackMuted(preferences.startVideoPlaybackMuted);
+    setUseReelsVideoMode(preferences.useReelsVideoMode);
+    setPreloadVideos(preferences.preloadVideos);
+    setHidePossiblySensitive(preferences.hidePossiblySensitive);
+    setOpenLinksExternally(preferences.openLinksExternally);
+    setShowDownloadDialog(preferences.showDownloadDialog);
+    setDownloadPathData(preferences.downloadPathData);
   }
 }
 
 @freezed
 class MediaPreferences with _$MediaPreferences {
-  factory MediaPreferences({
-    /// Whether the best media quality should be used.
-    ///
-    /// Right now this only affects the image quality because the second best
-    /// video / gif quality is way worse than the best video quality.
-    ///
-    /// 0: always use best quality
-    /// 1: only use best quality when using wifi
-    /// 2: never use best quality
-    required int bestMediaQuality,
-
-    /// Whether the image height of a tweet with a single image should be
-    /// constrained to a 16 / 9 aspect ratio.
-    required bool cropImage,
-
-    /// Whether gifs should play automatically.
-    ///
-    /// 0: always autoplay
-    /// 1: only autoplay when using wifi
-    /// 2: never autoplay
-    required int autoplayGifs,
-
-    /// Whether videos should play automatically.
-    ///
-    /// 0: always autoplay
-    /// 1: only autoplay when using wifi
-    /// 2: never autoplay
-    required int autoplayVideos,
-
-    /// Whether video playback should start with volume 0 by default.
-    required bool startVideoPlaybackMuted,
-
-    /// Whether to use TikTok/Reels style video feed mode.
-    required bool useReelsVideoMode,
-
-    /// Whether videos should be preloaded when they become visible.
-    ///
-    /// 0: always preload
-    /// 1: only preload when using wifi
-    /// 2: never preload
-    required int preloadVideos,
-
-    /// Whether possibly sensitive (NSFW) media should be hidden by default.
-    required bool hidePossiblySensitive,
-
-    /// Whether links should open externally instead of using a built in web
-    /// view.
-    // NOTE: not currently used
-    required bool openLinksExternally,
-
-    /// Whether the download dialog should show when downloading media.
-    required bool showDownloadDialog,
-
-    /// Encoded download path data that maps a media type with its download
-    /// path.
-    required String downloadPathData,
+  const factory MediaPreferences({
+    @Default(2) int bestMediaQuality,
+    @Default(false) bool cropImage,
+    @Default(1) int autoplayGifs,
+    @Default(2) int autoplayVideos,
+    @Default(false) bool startVideoPlaybackMuted,
+    @Default(false) bool useReelsVideoMode,
+    @Default(1) int preloadVideos,
+    @Default(false) bool hidePossiblySensitive,
+    @Default(false) bool openLinksExternally,
+    @Default(true) bool showDownloadDialog,
+    String? downloadPathData,
   }) = _MediaPreferences;
 
-  MediaPreferences._();
+  factory MediaPreferences.fromJson(Map<String, dynamic> json) => _$MediaPreferencesFromJson(json);
 
-  /// Whether gifs should play automatically, taking the connectivity into
+  const MediaPreferences._();
+
+  /// Whether GIFs should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayGifs(ConnectivityResult connectivity) =>
-      autoplayGifs == 0 ||
-      autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayGifs == 0 || autoplayGifs == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether videos should play automatically, taking the connectivity into
   /// account.
   bool shouldAutoplayVideos(ConnectivityResult connectivity) =>
-      autoplayVideos == 0 ||
-      autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
+      autoplayVideos == 0 || autoplayVideos == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether the best media quality should be used, taking the connectivity
   /// into account.
   bool shouldUseBestMediaQuality(ConnectivityResult connectivity) =>
-      bestMediaQuality == 0 ||
-      bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
+      bestMediaQuality == 0 || bestMediaQuality == 1 && connectivity == ConnectivityResult.wifi;
 
   /// Whether videos should be preloaded, taking the connectivity into account.
   bool shouldPreloadVideos(ConnectivityResult connectivity) =>
-      preloadVideos == 0 ||
-      preloadVideos == 1 && connectivity == ConnectivityResult.wifi;
+      preloadVideos == 0 || preloadVideos == 1 && connectivity == ConnectivityResult.wifi;
 }

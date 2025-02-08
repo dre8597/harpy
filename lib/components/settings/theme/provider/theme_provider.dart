@@ -6,15 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:logging/logging.dart';
+import 'package:harpy/components/settings/theme/preferences/theme_preferences.dart';
+import 'package:harpy/core/preferences/preferences.dart';
 
 final harpyThemeProvider = StateProvider(
   (ref) {
     final lightTheme = ref.watch(lightThemeProvider);
     final darkTheme = ref.watch(darkThemeProvider);
 
-    return ref.watch(platformBrightnessProvider) == Brightness.light
-        ? lightTheme
-        : darkTheme;
+    return ref.watch(platformBrightnessProvider) == Brightness.light ? lightTheme : darkTheme;
   },
   name: 'HarpyThemeProvider',
 );
@@ -113,8 +113,47 @@ HarpyThemeData? _decodeThemeData(String themeDataJson) {
       jsonDecode(themeDataJson) as Map<String, dynamic>,
     );
   } catch (e, st) {
-    Logger.detached('_decodeThemeData')
-        .warning('unable to decode custom theme data', e, st);
+    Logger.detached('_decodeThemeData').warning('unable to decode custom theme data', e, st);
     return null;
+  }
+}
+
+final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeState>((ref) {
+  return ThemeNotifier(
+    preferences: ref.watch(preferencesProvider(null)),
+  );
+});
+
+class ThemeNotifier extends StateNotifier<ThemeState> {
+  ThemeNotifier({
+    required Preferences preferences,
+  })  : _preferences = preferences,
+        super(ThemeState(
+          themeMode: ThemeMode.values.byName(
+            preferences.getString('themeMode', 'system'),
+          ),
+        ));
+
+  final Preferences _preferences;
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    state = state.copyWith(themeMode: mode);
+    await _preferences.setString('themeMode', mode.name);
+  }
+}
+
+class ThemeState {
+  const ThemeState({
+    required this.themeMode,
+  });
+
+  final ThemeMode themeMode;
+
+  ThemeState copyWith({
+    ThemeMode? themeMode,
+  }) {
+    return ThemeState(
+      themeMode: themeMode ?? this.themeMode,
+    );
   }
 }

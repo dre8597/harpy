@@ -42,7 +42,7 @@ class DownloadPathNotifier extends StateNotifier<DownloadPathState>
     final downloadPathData =
         _ref.read(mediaPreferencesProvider).downloadPathData;
 
-    if (downloadPathData.isEmpty) {
+    if (downloadPathData?.isEmpty??true) {
       // use default
       state = DownloadPathState.data(
         mediaPaths: mediaPaths,
@@ -50,7 +50,7 @@ class DownloadPathNotifier extends StateNotifier<DownloadPathState>
       );
     } else {
       try {
-        final json = jsonDecode(downloadPathData) as Map<String, dynamic>;
+        final json = jsonDecode(downloadPathData!) as Map<String, dynamic>;
 
         final data = DownloadPathData.fromJson(json);
 

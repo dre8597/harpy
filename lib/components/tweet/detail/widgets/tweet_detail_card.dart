@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/core/router/router.dart';
 import 'package:rby/rby.dart';
 
 class TweetDetailCard extends StatelessWidget {
@@ -22,7 +23,26 @@ class TweetDetailCard extends StatelessWidget {
           tweet: tweet,
           createDelegates: (tweet, notifier) {
             return defaultTweetDelegates(tweet, notifier).copyWith(
-              onShowTweet: null,
+              onShowTweet: (ref) => ref.read(routerProvider).pushNamed(
+                    TweetDetailPage.name,
+                    pathParameters: {
+                      'authorDid': tweet.authorDid,
+                      'id': tweet.id
+                    },
+                    extra: tweet,
+                  ),
+              onShowUser: (ref) {
+                final router = ref.read(routerProvider);
+
+                if (!(router.state.pathParameters["authorDid"]
+                        ?.contains(tweet.authorDid) ??
+                    false)) {
+                  router.pushNamed(
+                    UserPage.name,
+                    pathParameters: {'authorDid': tweet.authorDid},
+                  );
+                }
+              },
             );
           },
           config: _detailTweetCardConfig,
