@@ -7,16 +7,14 @@ import 'package:rby/rby.dart' hide Preferences;
 part 'auth_preferences.freezed.dart';
 
 /// Handles storing and updating the authentication data for sessions.
-final authPreferencesProvider =
-    StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
+final authPreferencesProvider = StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
   (ref) => AuthPreferencesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
   ),
   name: 'AuthPreferencesProvider',
 );
 
-class AuthPreferencesNotifier extends StateNotifier<AuthPreferences>
-    with LoggerMixin {
+class AuthPreferencesNotifier extends StateNotifier<AuthPreferences> with LoggerMixin {
   AuthPreferencesNotifier({
     required Preferences preferences,
   })  : _preferences = preferences,
@@ -92,16 +90,36 @@ class AuthPreferencesNotifier extends StateNotifier<AuthPreferences>
   }
 
   Future<void> clearAuth() async {
+    log.fine('Clearing all auth preferences');
     state = AuthPreferences.empty();
 
-    await _preferences.remove('userToken');
-    await _preferences.remove('userSecret');
-    await _preferences.remove('userId');
-    await _preferences.remove('blueskyHandle');
-    await _preferences.remove('blueskyAppPassword');
-    await _preferences.remove('blueskyAccessJwt');
-    await _preferences.remove('blueskyRefreshJwt');
-    await _preferences.remove('blueskyDid');
+    await Future.wait([
+      _preferences.remove('userToken'),
+      _preferences.remove('userSecret'),
+      _preferences.remove('userId'),
+      _preferences.remove('blueskyHandle'),
+      _preferences.remove('blueskyAppPassword'),
+      _preferences.remove('blueskyAccessJwt'),
+      _preferences.remove('blueskyRefreshJwt'),
+      _preferences.remove('blueskyDid'),
+    ]);
+    log.fine('Cleared all auth preferences');
+  }
+
+  Future<void> clearBlueskySession() async {
+    log.fine('Clearing Bluesky session only');
+    state = state.copyWith(
+      blueskyAccessJwt: '',
+      blueskyRefreshJwt: '',
+      blueskyDid: '',
+    );
+
+    await Future.wait([
+      _preferences.remove('blueskyAccessJwt'),
+      _preferences.remove('blueskyRefreshJwt'),
+      _preferences.remove('blueskyDid'),
+    ]);
+    log.fine('Cleared Bluesky session preferences');
   }
 }
 
@@ -131,13 +149,10 @@ class AuthPreferences with _$AuthPreferences {
 
   AuthPreferences._();
 
-  late final bool isValid =
-      userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
+  late final bool isValid = userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
 
-  late final bool hasBlueskyCredentials =
-      blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
+  late final bool hasBlueskyCredentials = blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
 
-  late final bool hasBlueskySession = blueskyAccessJwt.isNotEmpty &&
-      blueskyRefreshJwt.isNotEmpty &&
-      blueskyDid.isNotEmpty;
+  late final bool hasBlueskySession =
+      blueskyAccessJwt.isNotEmpty && blueskyRefreshJwt.isNotEmpty && blueskyDid.isNotEmpty;
 }

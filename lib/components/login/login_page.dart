@@ -44,8 +44,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  void _handleBlueskyLogin(String identifier, String password) {
-    ref.read(loginProvider).loginWithBluesky(
+  Future<void> _handleBlueskyLogin(String identifier, String password) async {
+    await ref.read(loginProvider).loginWithBluesky(
           identifier: identifier,
           password: password,
         );
@@ -60,7 +60,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       safeArea: true,
       child: authenticationState.when(
         awaitingAuthentication: () => const Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Authenticating...',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
         authenticated: (_) => const SizedBox(),
         unauthenticated: () => Stack(

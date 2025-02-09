@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
+import 'package:harpy/components/authentication/provider/profiles_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -38,11 +39,69 @@ class Authentication with LoggerMixin {
   Future<void> restoreSession() async {
     final authPreferences = _ref.read(authPreferencesProvider);
 
-    if (authPreferences.isValid || authPreferences.hasBlueskyCredentials) {
-      log.fine('session restored');
-      await onLogin(authPreferences);
+    // Set state to awaiting authentication while we restore
+    _ref.read(authenticationStateProvider.notifier).state =
+        const AuthenticationState.awaitingAuthentication();
+
+    // First try to restore session from stored profiles
+    if (authPreferences.hasBlueskySession) {
+      log.fine('attempting to restore session from stored profiles');
+      try {
+        // Wait for the Bluesky API to be ready before proceeding
+        await _ref.read(blueskyApiProvider.notifier).initialize();
+
+        final autoLoginSuccessful = await _ref.read(profilesProvider.notifier).attemptAutoLogin();
+
+        if (autoLoginSuccessful) {
+          log.fine('session restored from stored profiles');
+          return;
+        } else {
+          log.fine('auto-login failed, clearing session');
+          await _ref.read(authPreferencesProvider.notifier).clearBlueskySession();
+          _ref.read(authenticationStateProvider.notifier).state =
+              const AuthenticationState.unauthenticated();
+          // Navigate back to login on failure
+          _ref.read(routerProvider).goNamed(LoginPage.name);
+          _ref.read(messageServiceProvider).showText(
+                'Welcome back! Please sign in to continue using Harpy',
+              );
+        }
+      } catch (e, st) {
+        logErrorHandler(e, st);
+        // Clear the invalid session
+        await _ref.read(authPreferencesProvider.notifier).clearBlueskySession();
+        _ref.read(authenticationStateProvider.notifier).state =
+            const AuthenticationState.unauthenticated();
+        // Navigate back to login on error
+        _ref.read(routerProvider).goNamed(LoginPage.name);
+        _ref.read(messageServiceProvider).showText(
+              'Unable to restore your previous session. Please sign in again',
+            );
+      }
+    } else if (authPreferences.hasBlueskyCredentials) {
+      log.fine('attempting to restore session from credentials');
+      try {
+        _ref.read(messageServiceProvider).showText(
+              'Restoring your previous session...',
+            );
+        await onLogin(authPreferences);
+      } catch (e, st) {
+        logErrorHandler(e, st);
+        // Clear auth and navigate to login on error
+        await _ref.read(authPreferencesProvider.notifier).clearAuth();
+        _ref.read(authenticationStateProvider.notifier).state =
+            const AuthenticationState.unauthenticated();
+        _ref.read(routerProvider).goNamed(LoginPage.name);
+        _ref.read(messageServiceProvider).showText(
+              'Unable to sign you in automatically. Please try signing in again',
+            );
+      }
     } else {
       log.fine('no previous session exists');
+      _ref.read(authenticationStateProvider.notifier).state =
+          const AuthenticationState.unauthenticated();
+      // Navigate to login since no session exists
+      _ref.read(routerProvider).goNamed(LoginPage.name);
     }
   }
 
@@ -50,11 +109,41 @@ class Authentication with LoggerMixin {
   Future<void> onLogin(AuthPreferences auth) async {
     log.fine('on login');
 
+    _ref.read(authenticationStateProvider.notifier).state =
+        const AuthenticationState.awaitingAuthentication();
+
     UserData? user;
 
     // Try Bluesky authentication first if credentials exist
     if (auth.hasBlueskyCredentials) {
-      user = await _initializeBlueskyUser(auth.blueskyHandle);
+      try {
+        // First try to initialize the Bluesky API with stored session if available
+        if (auth.hasBlueskySession) {
+          _ref.read(messageServiceProvider).showText(
+                'Checking your saved session...',
+              );
+          // Ensure Bluesky API is initialized
+          await _ref.read(blueskyApiProvider.notifier).initialize();
+          final bluesky = _ref.read(blueskyApiProvider);
+          user = await _initializeBlueskyUser(auth.blueskyHandle);
+        }
+
+        // If that fails or no session exists, try creating a new session
+        if (user == null) {
+          _ref.read(messageServiceProvider).showText(
+                'Creating a new session for you...',
+              );
+          await _ref.read(loginProvider).loginWithBluesky(
+                identifier: auth.blueskyHandle,
+                password: auth.blueskyAppPassword,
+              );
+          // loginWithBluesky handles setting up the user state
+          return;
+        }
+      } catch (e, st) {
+        logErrorHandler(e, st);
+        user = null;
+      }
     } else if (auth.isValid) {
       // Fall back to Twitter authentication
       user = await _initializeTwitterUser(auth.userId);
@@ -62,11 +151,17 @@ class Authentication with LoggerMixin {
 
     if (user != null) {
       log.info('authenticated user successfully initialized');
+      _ref.read(messageServiceProvider).showText(
+            'Welcome back, ${user.name}!',
+          );
 
       _ref.read(authenticationStateProvider.notifier).state =
           AuthenticationState.authenticated(user: user);
     } else {
       log.info('authenticated user not initialized');
+      _ref.read(messageServiceProvider).showText(
+            'Unable to sign you in. Please check your connection and try again',
+          );
 
       // failed initializing login
       // remove retrieved session assuming it's not valid anymore
@@ -93,16 +188,25 @@ class Authentication with LoggerMixin {
     // Handle Bluesky logout
     if (authPreferences.hasBlueskyCredentials) {
       try {
-        // No need to explicitly invalidate the session
-        // The session will be cleared when we clear the auth preferences
-        log.fine('clearing Bluesky session');
+        // Clear the active profile if any
+        final activeProfile = _ref.read(profilesProvider.notifier).getActiveProfile();
+        if (activeProfile != null) {
+          await _ref.read(profilesProvider.notifier).removeProfile(activeProfile.did);
+        }
+        log.fine('cleared active Bluesky profile');
+        _ref.read(messageServiceProvider).showText(
+              'You have been signed out successfully',
+            );
       } catch (e, st) {
         logErrorHandler(e, st);
+        _ref.read(messageServiceProvider).showText(
+              'There was an issue signing you out. Please try again',
+            );
       }
     }
 
     // clear saved session
-    _ref.read(authPreferencesProvider.notifier).clearAuth();
+    await _ref.read(authPreferencesProvider.notifier).clearAuth();
 
     _ref.read(authenticationStateProvider.notifier).state =
         const AuthenticationState.unauthenticated();
@@ -167,8 +271,7 @@ class AuthenticationState with _$AuthenticationState {
 
   const factory AuthenticationState.unauthenticated() = _Unauthenticated;
 
-  const factory AuthenticationState.awaitingAuthentication() =
-      _AwaitingAuthentication;
+  const factory AuthenticationState.awaitingAuthentication() = _AwaitingAuthentication;
 }
 
 extension AuthenticationStateExtension on AuthenticationState {

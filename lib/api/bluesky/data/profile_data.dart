@@ -60,8 +60,8 @@ class StoredProfileData with _$StoredProfileData {
 class StoredProfiles with _$StoredProfiles {
   const factory StoredProfiles({
     @Default([]) List<StoredProfileData> profiles,
+    @Default(false) bool isProfileSwitching,
   }) = _StoredProfiles;
 
-  factory StoredProfiles.fromJson(Map<String, dynamic> json) =>
-      _$StoredProfilesFromJson(json);
+  factory StoredProfiles.fromJson(Map<String, dynamic> json) => _$StoredProfilesFromJson(json);
 }

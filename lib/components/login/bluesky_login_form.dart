@@ -9,7 +9,7 @@ class BlueskyLoginForm extends ConsumerStatefulWidget {
     this.initialIdentifier,
   });
 
-  final void Function(String identifier, String password) onLogin;
+  final Future<void> Function(String identifier, String password) onLogin;
   final String? initialIdentifier;
 
   @override
@@ -21,12 +21,12 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
   late final TextEditingController _identifierController;
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _identifierController =
-        TextEditingController(text: widget.initialIdentifier);
+    _identifierController = TextEditingController(text: widget.initialIdentifier);
   }
 
   @override
@@ -36,12 +36,19 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
     super.dispose();
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
-      widget.onLogin(
-        _identifierController.text.trim(),
-        _passwordController.text,
-      );
+      setState(() => _isLoading = true);
+      try {
+        await widget.onLogin(
+          _identifierController.text.trim(),
+          _passwordController.text,
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
@@ -56,7 +63,7 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
         children: [
           TextFormField(
             controller: _identifierController,
-            enabled: widget.initialIdentifier == null,
+            enabled: widget.initialIdentifier == null && !_isLoading,
             decoration: const InputDecoration(
               labelText: 'Handle or Email',
               hintText: 'e.g. username.bsky.social',
@@ -73,20 +80,21 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
+            enabled: !_isLoading,
             decoration: InputDecoration(
               labelText: 'App Password',
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
               ),
             ),
             obscureText: _obscurePassword,
@@ -101,15 +109,25 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
           ),
           const SizedBox(height: 24),
           RbyButton.elevated(
-            label: const Text('Login'),
-            onTap: _handleSubmit,
+            label: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text('Login'),
+            onTap: _isLoading ? null : _handleSubmit,
           ),
           const SizedBox(height: 16),
           TextButton(
-            onPressed: () {
-              // TODO: Add link to Bluesky app password creation guide
-              // launcher.call('https://bsky.app/settings/app-passwords');
-            },
+            onPressed: _isLoading
+                ? null
+                : () {
+                    // TODO: Add link to Bluesky app password creation guide
+                    // launcher.call('https://bsky.app/settings/app-passwords');
+                  },
             child: Text(
               'Need an app password?',
               style: theme.textTheme.bodyMedium?.copyWith(

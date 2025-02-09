@@ -1,21 +1,20 @@
 import 'dart:ui';
 
+import 'package:bluesky/atproto.dart' show createSession;
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
+import 'package:harpy/api/bluesky/data/models.dart' as models;
 import 'package:harpy/api/bluesky/data/profile_data.dart';
 import 'package:harpy/components/authentication/provider/profiles_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/components/login/bluesky_login_form.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
-import 'package:bluesky/bluesky.dart' as bsky;
-import 'package:bluesky/atproto.dart' show createSession;
-import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
-import 'package:harpy/api/bluesky/data/models.dart' as models;
-import 'package:harpy/components/settings/theme/provider/theme_provider.dart';
 
 typedef AnimatedWidgetBuilder = Widget Function(
   AnimationController controller,
@@ -108,6 +107,7 @@ class _AuthenticatedUser extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final user = ref.watch(authenticationStateProvider).user;
+    final isProfileSwitching = ref.watch(profilesProvider).isProfileSwitching;
 
     if (user == null) {
       return const SizedBox();
@@ -131,6 +131,7 @@ class _AuthenticatedUser extends ConsumerWidget {
               const Divider(),
               ...profiles.map(
                 (profile) => ListTile(
+                  enabled: !isProfileSwitching,
                   leading: profile.avatar != null
                       ? CircleAvatar(
                           backgroundImage: NetworkImage(profile.avatar!),
@@ -141,10 +142,18 @@ class _AuthenticatedUser extends ConsumerWidget {
                   title: Text(profile.displayName),
                   subtitle: Text('@${profile.handle}'),
                   trailing: profile.isActive
-                      ? Icon(
-                          Icons.check_circle,
-                          color: Theme.of(context).colorScheme.primary,
-                        )
+                      ? isProfileSwitching
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Icon(
+                              Icons.check_circle,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
                       : null,
                   onTap: () async {
                     if (!profile.isActive) {
@@ -160,6 +169,7 @@ class _AuthenticatedUser extends ConsumerWidget {
               ),
               const Divider(),
               ListTile(
+                enabled: !isProfileSwitching,
                 leading: const CircleAvatar(
                   child: Icon(Icons.add),
                 ),

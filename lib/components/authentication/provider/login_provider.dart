@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bluesky/atproto.dart';
 import 'package:bluesky/bluesky.dart';
+import 'package:bluesky/core.dart' show XRPCError;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/models.dart' as models;
@@ -42,6 +43,7 @@ class LoginNotifier {
       final service = _ref.read(blueskyServiceProvider);
 
       // Create initial session
+      _ref.read(messageServiceProvider).showText('Authenticating...');
       final session = await createSession(
         service: service,
         identifier: identifier,
@@ -49,6 +51,7 @@ class LoginNotifier {
       );
 
       // Get initial profile data to create StoredProfileData
+      _ref.read(messageServiceProvider).showText('Loading profile...');
       final bluesky = Bluesky.fromSession(
         session.data,
         service: service,
@@ -84,10 +87,9 @@ class LoginNotifier {
 
       // Add profile and switch to it
       // This will handle setting up auth state, preferences, and API client
+      _ref.read(messageServiceProvider).showText('Setting up profile...');
       await _ref.read(profilesProvider.notifier).addProfile(profileData);
-      await _ref
-          .read(profilesProvider.notifier)
-          .switchToProfile(profile.data.did);
+      await _ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
 
       // Navigate based on setup status
       if (_ref.read(setupPreferencesProvider).performedSetup) {
@@ -99,7 +101,13 @@ class LoginNotifier {
       log.severe('Failed to authenticate with Bluesky', error);
       _ref.read(authenticationStateProvider.notifier).state =
           const AuthenticationState.unauthenticated();
-      _ref.read(messageServiceProvider).showText('Authentication failed');
+
+      // Show more descriptive error messages
+      if (error is XRPCError) {
+        _ref.read(messageServiceProvider).showText('Authentication failed: ${error.message}');
+      } else {
+        _ref.read(messageServiceProvider).showText('Authentication failed: $error');
+      }
     }
   }
 }

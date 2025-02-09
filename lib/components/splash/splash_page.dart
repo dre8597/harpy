@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:harpy/api/bluesky/data/profile_data.dart';
+import 'package:harpy/components/authentication/provider/profiles_provider.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:rby/rby.dart';
@@ -44,22 +46,47 @@ class _SplashPageState extends ConsumerState<SplashPage> with LoggerMixin {
       // Initialize app
       await ref.read(applicationProvider).initialize(redirect: widget.redirect);
 
-      // Check for stored credentials
-      final authPreferences = ref.read(authPreferencesProvider);
+      if (!mounted) return;
 
-      if (authPreferences.hasBlueskyCredentials && !mounted) {
-        // If we have credentials but the widget is no longer mounted,
-        // let the application provider handle navigation
+      // First try to auto-login with stored profiles
+      final profilesNotifier = ref.read(profilesProvider.notifier);
+      final autoLoginSuccessful = await profilesNotifier.attemptAutoLogin();
+
+      if (!mounted) return;
+
+      if (autoLoginSuccessful) {
+        // Successfully logged in with stored profile, navigate to home
+        ref.read(routerProvider).goNamed(
+          HomePage.name,
+          queryParameters: {'transition': 'fade'},
+        );
         return;
       }
 
-      if (authPreferences.hasBlueskyCredentials && mounted) {
+      // If auto-login with profiles failed, check for stored credentials as fallback
+      final authPreferences = ref.read(authPreferencesProvider);
+
+      if (authPreferences.hasBlueskyCredentials) {
         // Attempt auto-login with stored credentials
-        await ref.read(loginProvider).loginWithBluesky(
-              identifier: authPreferences.blueskyHandle,
-              password: authPreferences.blueskyAppPassword,
+        try {
+          await ref.read(loginProvider).loginWithBluesky(
+                identifier: authPreferences.blueskyHandle,
+                password: authPreferences.blueskyAppPassword,
+              );
+        } catch (e) {
+          log.warning('Fallback auto-login failed', e);
+          if (mounted) {
+            // Show login page with re-authentication message
+            ref.read(messageServiceProvider).showText(
+                  'Session expired, please re-authenticate',
+                );
+            ref.read(routerProvider).goNamed(
+              LoginPage.name,
+              queryParameters: {'transition': 'fade'},
             );
-      } else if (mounted) {
+          }
+        }
+      } else {
         // No stored credentials, navigate to login
         ref.read(routerProvider).goNamed(
           LoginPage.name,
@@ -102,7 +129,18 @@ class _SplashPageState extends ConsumerState<SplashPage> with LoggerMixin {
             opacity: _showLoading ? 1 : 0,
             duration: theme.animation.long,
             curve: Curves.easeInOut,
-            child: const CircularProgressIndicator(),
+            child: Column(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  'Loading...',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -43,7 +43,10 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
     return client;
   }
 
-  Future<void> _initialize() async {
+  /// Initializes the Bluesky client with proper authentication.
+  /// Returns immediately if the client is already initialized.
+  /// Throws an exception if initialization fails.
+  Future<void> initialize() async {
     if (_status == BlueskyStatus.ready) return;
 
     _status = BlueskyStatus.loading;
@@ -55,19 +58,29 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
 
       if (!authPreferences.hasBlueskyCredentials) {
         state = Bluesky.anonymous(service: service);
+        ref.read(authenticationStateProvider.notifier).state =
+            const AuthenticationState.unauthenticated();
       } else {
         Bluesky client;
 
         // Try to restore from stored session first
         if (authPreferences.hasBlueskySession) {
+          ref.read(messageServiceProvider).showText(
+                'Connecting to Bluesky...',
+              );
           client = await _restoreSession(service);
+          // Don't set authentication state here as it will be handled by profilesProvider
         } else {
           // No stored session, create new one
+          ref.read(messageServiceProvider).showText(
+                'Establishing connection to Bluesky...',
+              );
           client = await _createAuthenticatedClient(
             service: service,
             identifier: authPreferences.blueskyHandle,
             password: authPreferences.blueskyAppPassword,
           );
+          // Don't set authentication state here as it will be handled by profilesProvider
         }
 
         state = client;
@@ -81,9 +94,20 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
       // Keep the anonymous client in error state and clear auth
       final service = ref.read(blueskyServiceProvider);
       state = Bluesky.anonymous(service: service);
-      ref.read(authPreferencesProvider.notifier).clearAuth();
+
+      // Clear auth and set unauthenticated state
+      await ref.read(authPreferencesProvider.notifier).clearAuth();
+      ref.read(authenticationStateProvider.notifier).state =
+          const AuthenticationState.unauthenticated();
+
+      // Show error message
+      ref.read(messageServiceProvider).showText(
+            'Unable to connect to Bluesky. Please check your connection and try again',
+          );
+
       // Navigate back to login
       ref.read(routerProvider).goNamed(LoginPage.name);
+      rethrow;
     }
   }
 
@@ -112,6 +136,9 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
         return client;
       } catch (e) {
         // Try to refresh the session first
+        ref.read(messageServiceProvider).showText(
+              'Refreshing your session...',
+            );
         try {
           return await _refreshSession(
             service: service,
@@ -119,6 +146,9 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
           );
         } catch (refreshError) {
           // If refresh fails, create new session
+          ref.read(messageServiceProvider).showText(
+                'Creating a new session...',
+              );
           return await _createAuthenticatedClient(
             service: service,
             identifier: authPreferences.blueskyHandle,
@@ -215,7 +245,10 @@ class BlueskyClientNotifier extends Notifier<Bluesky> {
   Future<void> reinitialize() async {
     _refreshTimer?.cancel();
     _status = BlueskyStatus.initial;
-    await _initialize();
+    ref.read(messageServiceProvider).showText(
+          'Reconnecting to Bluesky...',
+        );
+    await initialize();
   }
 
   /// Returns the current initialization status
