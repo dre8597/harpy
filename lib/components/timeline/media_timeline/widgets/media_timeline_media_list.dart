@@ -17,7 +17,8 @@ class MediaTimelineMediaList extends ConsumerWidget {
   });
 
   final BuiltList<MediaTimelineEntry> entries;
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
+      provider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,7 +46,9 @@ class MediaTimelineMediaList extends ConsumerWidget {
             final timelineNotifier = ref.read(provider.notifier);
             await timelineNotifier.load(clearPrevious: true);
           },
-          onLoadMore: timelineState.canLoadMore ? () => ref.read(provider.notifier).load() : null,
+          onLoadMore: timelineState.canLoadMore
+              ? () => ref.read(provider.notifier).load()
+              : null,
         ),
       );
     }

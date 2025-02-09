@@ -89,7 +89,9 @@ class LoginNotifier {
       // This will handle setting up auth state, preferences, and API client
       _ref.read(messageServiceProvider).showText('Setting up profile...');
       await _ref.read(profilesProvider.notifier).addProfile(profileData);
-      await _ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
+      await _ref
+          .read(profilesProvider.notifier)
+          .switchToProfile(profile.data.did);
 
       // Navigate based on setup status
       if (_ref.read(setupPreferencesProvider).performedSetup) {
@@ -104,9 +106,13 @@ class LoginNotifier {
 
       // Show more descriptive error messages
       if (error is XRPCError) {
-        _ref.read(messageServiceProvider).showText('Authentication failed: ${error.message}');
+        _ref
+            .read(messageServiceProvider)
+            .showText('Authentication failed: ${error.message}');
       } else {
-        _ref.read(messageServiceProvider).showText('Authentication failed: $error');
+        _ref
+            .read(messageServiceProvider)
+            .showText('Authentication failed: $error');
       }
     }
   }

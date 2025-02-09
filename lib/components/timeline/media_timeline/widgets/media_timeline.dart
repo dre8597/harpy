@@ -14,7 +14,8 @@ class MediaTimeline extends ConsumerStatefulWidget {
     this.endSlivers = const [SliverBottomPadding()],
   });
 
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
+      provider;
 
   final double? scrollToTopOffset;
   final List<Widget> beginSlivers;
@@ -102,7 +103,8 @@ class _MediaTimelineState extends ConsumerState<MediaTimeline> {
                       const SliverLoadingIndicator(),
                   ],
                   noData: (_) => [
-                    const SliverFillInfoMessage(secondaryMessage: Text('no media')),
+                    const SliverFillInfoMessage(
+                        secondaryMessage: Text('no media')),
                   ],
                 ),
                 ...widget.endSlivers,

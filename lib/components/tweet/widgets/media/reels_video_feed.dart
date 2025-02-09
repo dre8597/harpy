@@ -313,7 +313,9 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     });
 
     // Load more content when reaching second to last video
-    if (!_isLoadingMore && widget.onLoadMore != null && index >= widget.entries.length - 2) {
+    if (!_isLoadingMore &&
+        widget.onLoadMore != null &&
+        index >= widget.entries.length - 2) {
       setState(() => _isLoadingMore = true);
       widget.onLoadMore!();
 
@@ -354,8 +356,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final spacing =
-        theme.extension<RbySpacingTheme>() ?? const RbySpacingTheme(base: 8, small: 4, large: 16);
+    final spacing = theme.extension<RbySpacingTheme>() ??
+        const RbySpacingTheme(base: 8, small: 4, large: 16);
 
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
@@ -389,7 +391,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                       if (entry.media.thumb != null)
                         Positioned.fill(
                           child: ImageFiltered(
-                            imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                            imageFilter:
+                                ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                             child: HarpyImage(
                               imageUrl: entry.media.thumb!,
                               fit: BoxFit.cover,
@@ -443,7 +446,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                   curve: Curves.easeInOut,
                   left: 0,
                   right: 0,
-                  bottom: _isCaptionVisible ? spacing.base : -(spacing.large * 4),
+                  bottom:
+                      _isCaptionVisible ? spacing.base : -(spacing.large * 4),
                   child: GestureDetector(
                     onTap: () {
                       // Pause video before navigating
@@ -541,7 +545,9 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                               backgroundImage: tweet.authorAvatar.isNotEmpty
                                   ? NetworkImage(tweet.authorAvatar)
                                   : null,
-                              child: tweet.authorAvatar.isEmpty ? const Icon(Icons.person) : null,
+                              child: tweet.authorAvatar.isEmpty
+                                  ? const Icon(Icons.person)
+                                  : null,
                             ),
                           ),
                           SizedBox(height: spacing.small),
@@ -628,7 +634,8 @@ class _ScrollingText extends StatefulWidget {
   State<_ScrollingText> createState() => _ScrollingTextState();
 }
 
-class _ScrollingTextState extends State<_ScrollingText> with SingleTickerProviderStateMixin {
+class _ScrollingTextState extends State<_ScrollingText>
+    with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   late AnimationController _animationController;
   late double _textWidth;

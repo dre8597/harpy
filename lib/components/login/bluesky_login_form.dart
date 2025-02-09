@@ -26,7 +26,8 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
   @override
   void initState() {
     super.initState();
-    _identifierController = TextEditingController(text: widget.initialIdentifier);
+    _identifierController =
+        TextEditingController(text: widget.initialIdentifier);
   }
 
   @override
@@ -86,7 +87,9 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                 ),
                 onPressed: _isLoading
                     ? null

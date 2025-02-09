@@ -50,14 +50,17 @@ class Authentication with LoggerMixin {
         // Wait for the Bluesky API to be ready before proceeding
         await _ref.read(blueskyApiProvider.notifier).initialize();
 
-        final autoLoginSuccessful = await _ref.read(profilesProvider.notifier).attemptAutoLogin();
+        final autoLoginSuccessful =
+            await _ref.read(profilesProvider.notifier).attemptAutoLogin();
 
         if (autoLoginSuccessful) {
           log.fine('session restored from stored profiles');
           return;
         } else {
           log.fine('auto-login failed, clearing session');
-          await _ref.read(authPreferencesProvider.notifier).clearBlueskySession();
+          await _ref
+              .read(authPreferencesProvider.notifier)
+              .clearBlueskySession();
           _ref.read(authenticationStateProvider.notifier).state =
               const AuthenticationState.unauthenticated();
           // Navigate back to login on failure
@@ -189,9 +192,12 @@ class Authentication with LoggerMixin {
     if (authPreferences.hasBlueskyCredentials) {
       try {
         // Clear the active profile if any
-        final activeProfile = _ref.read(profilesProvider.notifier).getActiveProfile();
+        final activeProfile =
+            _ref.read(profilesProvider.notifier).getActiveProfile();
         if (activeProfile != null) {
-          await _ref.read(profilesProvider.notifier).removeProfile(activeProfile.did);
+          await _ref
+              .read(profilesProvider.notifier)
+              .removeProfile(activeProfile.did);
         }
         log.fine('cleared active Bluesky profile');
         _ref.read(messageServiceProvider).showText(
@@ -271,7 +277,8 @@ class AuthenticationState with _$AuthenticationState {
 
   const factory AuthenticationState.unauthenticated() = _Unauthenticated;
 
-  const factory AuthenticationState.awaitingAuthentication() = _AwaitingAuthentication;
+  const factory AuthenticationState.awaitingAuthentication() =
+      _AwaitingAuthentication;
 }
 
 extension AuthenticationStateExtension on AuthenticationState {
