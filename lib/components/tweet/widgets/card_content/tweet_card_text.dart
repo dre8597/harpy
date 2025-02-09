@@ -30,7 +30,8 @@ class TweetCardText extends ConsumerWidget {
     );
 
     final entities = translationState.maybeMap(
-      translated: (_) => <BlueskyTextEntity>[], // No entities in translated text
+      translated: (_) =>
+          <BlueskyTextEntity>[], // No entities in translated text
       orElse: () => post.entities,
     );
 

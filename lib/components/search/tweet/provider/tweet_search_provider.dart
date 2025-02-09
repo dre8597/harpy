@@ -18,7 +18,8 @@ final tweetSearchProvider =
   name: 'TweetSearchProvider',
 );
 
-class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMixin {
+class TweetSearchNotifier extends StateNotifier<TweetSearchState>
+    with LoggerMixin {
   TweetSearchNotifier({
     required Ref ref,
   })  : _ref = ref,
@@ -30,47 +31,65 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
 
   bool _isLoading = false;
 
-  List<BlueskyMediaData>? _processEmbed(bsky.EmbedView? embed) {
-    if (embed == null) return null;
+  bool _matchesFilter(BlueskyPostData post, TweetSearchFilterData filter) {
+    // Handle exclusions first
+    if (filter.excludesRetweets && post.isRepost) return false;
+    if (filter.excludesImages && post.hasImages) return false;
+    if (filter.excludesVideo && post.hasVideo) return false;
 
-    return embed.map(
-      record: (_) => null,
-      images: (images) => images.data.images
-          .map(
-            (img) => BlueskyMediaData(
-              url: img.fullsize,
-              alt: img.alt,
-            ),
-          )
-          .toList(),
-      external: (_) => null,
-      recordWithMedia: (recordWithMedia) {
-        return recordWithMedia.data.media.map(
-          images: (images) => images.data.images
-              .map(
-                (img) => BlueskyMediaData(
-                  url: img.fullsize,
-                  alt: img.alt,
-                ),
-              )
-              .toList(),
-          external: (_) => null,
-          video: (video) => [
-            BlueskyMediaData.fromUEmbedViewMediaVideo(video),
-          ],
-          unknown: (_) => null,
-        );
-      },
-      video: (video) => [
-        BlueskyMediaData(
-          url: video.data.playlist,
-          alt: video.data.alt ?? '',
-          type: MediaType.video,
-          thumb: video.data.thumbnail,
-        ),
-      ],
-      unknown: (_) => null,
-    );
+    for (final phrase in filter.excludesPhrases) {
+      if (post.text.toLowerCase().contains(phrase.toLowerCase())) return false;
+    }
+
+    for (final hashtag in filter.excludesHashtags) {
+      if (post.text.toLowerCase().contains(hashtag.toLowerCase())) return false;
+    }
+
+    for (final mention in filter.excludesMentions) {
+      if (post.text.toLowerCase().contains(mention.toLowerCase())) return false;
+    }
+
+    // Handle inclusions
+    if (filter.includesRetweets && !post.isRepost) return false;
+    if (filter.includesImages && !post.hasImages) return false;
+    if (filter.includesVideo && !post.hasVideo) return false;
+
+    var matchesAnyPhrase = filter.includesPhrases.isEmpty;
+    for (final phrase in filter.includesPhrases) {
+      if (post.text.toLowerCase().contains(phrase.toLowerCase())) {
+        matchesAnyPhrase = true;
+        break;
+      }
+    }
+    if (!matchesAnyPhrase) return false;
+
+    var matchesAnyHashtag = filter.includesHashtags.isEmpty;
+    for (final hashtag in filter.includesHashtags) {
+      if (post.text.toLowerCase().contains(hashtag.toLowerCase())) {
+        matchesAnyHashtag = true;
+        break;
+      }
+    }
+    if (!matchesAnyHashtag) return false;
+
+    var matchesAnyMention = filter.includesMentions.isEmpty;
+    for (final mention in filter.includesMentions) {
+      if (post.text.toLowerCase().contains(mention.toLowerCase())) {
+        matchesAnyMention = true;
+        break;
+      }
+    }
+    if (!matchesAnyMention) return false;
+
+    return true;
+  }
+
+  List<BlueskyPostData> _filterPosts(
+    List<BlueskyPostData> posts,
+    TweetSearchFilterData filter,
+  ) {
+    if (filter.isEmpty()) return posts;
+    return posts.where((post) => _matchesFilter(post, filter)).toList();
   }
 
   Future<void> search({
@@ -93,6 +112,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
     try {
       final blueskyApi = _ref.read(blueskyApiProvider);
 
+      // Use API-level filtering where possible
       final searchResult = await blueskyApi.feed.searchPosts(
         query ?? '', // Query can be empty if we're searching by other filters
         tag: hashTag != null ? [hashTag] : filter?.includesHashtags ?? [],
@@ -111,20 +131,25 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
           'found ${searchResult.data.posts.length} posts for query: $query',
         );
 
-        final posts = searchResult.data.posts
+        var posts = searchResult.data.posts
             .map(
               (post) => BlueskyPostData.fromFeedView(
                 bsky.FeedView(post: post),
               ),
             )
-            .toBuiltList();
+            .toList();
+
+        // Apply client-side filtering if needed
+        if (filter != null) {
+          posts = _filterPosts(posts, filter);
+        }
 
         state = TweetSearchState.data(
-          tweets: posts,
+          tweets: posts.toBuiltList(),
           query: query ?? '',
           filter: filter,
           cursor: searchResult.data.cursor,
-          hasReachedEnd: searchResult.data.cursor == null,
+          hasReachedEnd: searchResult.data.cursor == null || posts.isEmpty,
         );
       }
     } catch (e, st) {
@@ -164,10 +189,11 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
         author: filter?.author,
         cursor: cursor,
         url: filter?.url,
+        limit: 100,
       );
 
       if (searchResult.data.posts.isNotEmpty) {
-        final newPosts = searchResult.data.posts
+        var newPosts = searchResult.data.posts
             .map(
               (post) => BlueskyPostData.fromFeedView(
                 bsky.FeedView(post: post),
@@ -175,13 +201,19 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState> with LoggerMix
             )
             .toList();
 
+        // Apply client-side filtering if needed
+        if (filter != null) {
+          newPosts = _filterPosts(newPosts, filter);
+        }
+
         state = currentState.maybeMap(
           data: (data) => TweetSearchState.data(
             tweets: data.tweets.rebuild((b) => b..addAll(newPosts)),
             query: query,
             filter: filter,
             cursor: searchResult.data.cursor,
-            hasReachedEnd: searchResult.data.cursor == null,
+            hasReachedEnd:
+                searchResult.data.cursor == state.cursor || data.cursor == null,
           ),
           orElse: () => state,
         );

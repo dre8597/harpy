@@ -32,7 +32,8 @@ class _UserPageAvatarState extends State<UserPageAvatar> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _controller ??= PrimaryScrollController.of(context)..addListener(_scrollListener);
+    _controller ??= PrimaryScrollController.of(context)
+      ..addListener(_scrollListener);
   }
 
   @override
@@ -44,13 +45,15 @@ class _UserPageAvatarState extends State<UserPageAvatar> {
 
   void _scrollListener() {
     final theme = Theme.of(context);
-    final maxExtent = -UserPageAvatar.minAvatarRadius * 2 - theme.spacing.base * 2;
+    final maxExtent =
+        -UserPageAvatar.minAvatarRadius * 2 - theme.spacing.base * 2;
 
     // interpolate from min radius to max radius when scrolling from 0 to maxExtent
     _radiusNotifier.value = lerpDouble(
       UserPageAvatar.maxAvatarRadius,
       UserPageAvatar.minAvatarRadius,
-      (_controller!.offset / (maxExtent.abs() - UserPageAvatar.maxAvatarRadius)).clamp(0, 1),
+      (_controller!.offset / (maxExtent.abs() - UserPageAvatar.maxAvatarRadius))
+          .clamp(0, 1),
     )!;
   }
 
@@ -67,8 +70,10 @@ class _UserPageAvatarState extends State<UserPageAvatar> {
     // Leave comfortable margins at top and bottom for interaction
     // Use 15% of screen height for margins
     final verticalMargin = screenSize.height * 0.15;
-    final availableHeight = screenSize.height - (verticalMargin * 2) - padding.top - padding.bottom;
-    final availableWidth = screenSize.width - (mediaQuery.padding.left + mediaQuery.padding.right);
+    final availableHeight =
+        screenSize.height - (verticalMargin * 2) - padding.top - padding.bottom;
+    final availableWidth =
+        screenSize.width - (mediaQuery.padding.left + mediaQuery.padding.right);
 
     // Set aspect ratio to fill available space while maintaining square or portrait orientation
     final aspectRatio = availableWidth / availableHeight;
@@ -91,7 +96,8 @@ class _UserPageAvatarState extends State<UserPageAvatar> {
           actions: const {MediaOverlayActions.download},
           child: GestureDetector(
             onVerticalDragEnd: (details) {
-              if (details.primaryVelocity != null && details.primaryVelocity!.abs() > 300) {
+              if (details.primaryVelocity != null &&
+                  details.primaryVelocity!.abs() > 300) {
                 Navigator.of(context).pop();
               }
             },

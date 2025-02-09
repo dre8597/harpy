@@ -17,7 +17,8 @@ import 'package:harpy/core/preferences/preferences.dart';
 import 'package:logging/logging.dart';
 
 /// Provides access to stored profiles and handles profile switching.
-final profilesProvider = StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
+final profilesProvider =
+    StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
   return ProfilesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
     ref: ref,
@@ -72,11 +73,13 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       // Update existing profile with new credentials while preserving preferences
       final existingProfile = profiles[existingIndex];
       profiles[existingIndex] = profile.copyWith(
-        mediaPreferences: profile.mediaPreferences ?? existingProfile.mediaPreferences,
-        feedPreferences: profile.feedPreferences ?? existingProfile.feedPreferences,
+        mediaPreferences:
+            profile.mediaPreferences ?? existingProfile.mediaPreferences,
+        feedPreferences:
+            profile.feedPreferences ?? existingProfile.feedPreferences,
         themeMode: profile.themeMode ?? existingProfile.themeMode,
-        additionalPreferences:
-            profile.additionalPreferences ?? existingProfile.additionalPreferences,
+        additionalPreferences: profile.additionalPreferences ??
+            existingProfile.additionalPreferences,
         isActive: profile.isActive || existingProfile.isActive,
       );
       _log.fine('Updated existing profile for DID: ${profile.did}');
@@ -114,7 +117,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
     if (index == -1) return;
 
     // Deactivate current profile
-    final currentActiveIndex = profiles.indexWhere((profile) => profile.isActive);
+    final currentActiveIndex =
+        profiles.indexWhere((profile) => profile.isActive);
     if (currentActiveIndex >= 0) {
       // Store current preferences before switching
       final currentProfile = profiles[currentActiveIndex];
@@ -160,7 +164,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
           );
         } catch (e) {
           // Both refresh and re-auth failed, show re-authentication modal
-          _ref.read(messageServiceProvider).showText('Session expired, please re-authenticate');
+          _ref
+              .read(messageServiceProvider)
+              .showText('Session expired, please re-authenticate');
           throw SessionExpiredException(newProfile);
         }
       }
@@ -190,8 +196,10 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       // If the active feed is not in the loaded feeds, default to following feed
       final feedPrefs = _ref.read(feedPreferencesProvider);
       final activeFeedUri = feedPrefs.activeFeedUri;
-      if (activeFeedUri != null && activeFeedUri != 'app.bsky.feed.getTimeline') {
-        final feedExists = feedPrefs.feeds.any((feed) => feed.uri == activeFeedUri);
+      if (activeFeedUri != null &&
+          activeFeedUri != 'app.bsky.feed.getTimeline') {
+        final feedExists =
+            feedPrefs.feeds.any((feed) => feed.uri == activeFeedUri);
         if (!feedExists) {
           await _ref
               .read(feedPreferencesProvider.notifier)
@@ -227,11 +235,14 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         ),
         service: service,
       );
-      await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedBluesky);
+      await _ref
+          .read(blueskyApiProvider.notifier)
+          .setBlueskySession(updatedBluesky);
 
       // Fetch latest profile data to update UI
       try {
-        final profile = await updatedBluesky.actor.getProfile(actor: newProfile.handle);
+        final profile =
+            await updatedBluesky.actor.getProfile(actor: newProfile.handle);
 
         // Update authentication state with fresh profile data
         final userData = UserData.fromBlueskyActorProfile(profile.data);
@@ -248,7 +259,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         await _saveProfiles();
 
         // Reload the home timeline with the active feed
-        await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+        await _ref
+            .read(homeTimelineProvider.notifier)
+            .load(clearPrevious: true);
       } catch (e) {
         _log.warning('Failed to fetch latest profile data', e);
         // Still update auth state with stored data
@@ -256,14 +269,17 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
           id: newProfile.did,
           name: newProfile.displayName,
           handle: newProfile.handle,
-          profileImage:
-              newProfile.avatar != null ? UserProfileImage.fromUrl(newProfile.avatar!) : null,
+          profileImage: newProfile.avatar != null
+              ? UserProfileImage.fromUrl(newProfile.avatar!)
+              : null,
         );
         _ref.read(authenticationStateProvider.notifier).state =
             AuthenticationState.authenticated(user: userData);
 
         // Reload the home timeline with the active feed
-        await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+        await _ref
+            .read(homeTimelineProvider.notifier)
+            .load(clearPrevious: true);
       }
     } catch (e) {
       if (e is SessionExpiredException) {

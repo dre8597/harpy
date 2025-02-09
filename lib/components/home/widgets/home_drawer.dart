@@ -59,7 +59,8 @@ class _DrawerAnimationListener extends StatefulWidget {
   final AnimatedWidgetBuilder builder;
 
   @override
-  _DrawerAnimationListenerState createState() => _DrawerAnimationListenerState();
+  _DrawerAnimationListenerState createState() =>
+      _DrawerAnimationListenerState();
 }
 
 class _DrawerAnimationListenerState extends State<_DrawerAnimationListener>
@@ -72,7 +73,8 @@ class _DrawerAnimationListenerState extends State<_DrawerAnimationListener>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    _tabController = HomeTabController.of(context)!..animation!.addListener(_tabControllerListener);
+    _tabController = HomeTabController.of(context)!
+      ..animation!.addListener(_tabControllerListener);
   }
 
   @override
@@ -146,7 +148,9 @@ class _AuthenticatedUser extends ConsumerWidget {
                       : null,
                   onTap: () async {
                     if (!profile.isActive) {
-                      await ref.read(profilesProvider.notifier).switchToProfile(profile.did);
+                      await ref
+                          .read(profilesProvider.notifier)
+                          .switchToProfile(profile.did);
                     }
                     if (context.mounted) {
                       Navigator.pop(context);
@@ -326,16 +330,24 @@ class _ReAuthenticationModal extends ConsumerWidget {
                 );
 
                 // Update profile and switch to it
-                await ref.read(profilesProvider.notifier).addProfile(updatedProfile);
-                await ref.read(profilesProvider.notifier).switchToProfile(profile.did);
+                await ref
+                    .read(profilesProvider.notifier)
+                    .addProfile(updatedProfile);
+                await ref
+                    .read(profilesProvider.notifier)
+                    .switchToProfile(profile.did);
 
-                ref.read(messageServiceProvider).showText('Successfully re-authenticated');
+                ref
+                    .read(messageServiceProvider)
+                    .showText('Successfully re-authenticated');
 
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
               } catch (error) {
-                ref.read(messageServiceProvider).showText('Failed to re-authenticate');
+                ref
+                    .read(messageServiceProvider)
+                    .showText('Failed to re-authenticate');
               }
             },
           ),
@@ -405,8 +417,11 @@ class _Entries extends ConsumerWidget {
     if (shouldLogout != true) return;
 
     // Get all profiles except current one
-    final remainingProfiles =
-        ref.read(profilesProvider).profiles.where((p) => p.did != currentProfile.did).toList();
+    final remainingProfiles = ref
+        .read(profilesProvider)
+        .profiles
+        .where((p) => p.did != currentProfile.did)
+        .toList();
 
     // Remove current profile
     await profilesNotifier.removeProfile(currentProfile.did);
@@ -438,7 +453,9 @@ class _Entries extends ConsumerWidget {
       await profilesNotifier.addProfile(updatedProfile);
       await profilesNotifier.switchToProfile(nextProfile.did);
 
-      ref.read(messageServiceProvider).showText('Switched to ${nextProfile.handle}');
+      ref
+          .read(messageServiceProvider)
+          .showText('Switched to ${nextProfile.handle}');
     } catch (e) {
       // Session is invalid, show re-authentication modal
       if (context.mounted) {
@@ -586,7 +603,8 @@ class _AddAccountModal extends ConsumerWidget {
                 );
 
                 // Get user profile
-                final profile = await bluesky.actor.getProfile(actor: identifier);
+                final profile =
+                    await bluesky.actor.getProfile(actor: identifier);
 
                 // Create profile data
                 final profileData = StoredProfileData.fromProfile(
@@ -630,21 +648,35 @@ class _AddAccountModal extends ConsumerWidget {
                     refreshJwt: session.data.refreshJwt,
                     isActive: true,
                   );
-                  await ref.read(profilesProvider.notifier).addProfile(updatedProfile);
-                  await ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
-                  ref.read(messageServiceProvider).showText('Successfully updated account');
+                  await ref
+                      .read(profilesProvider.notifier)
+                      .addProfile(updatedProfile);
+                  await ref
+                      .read(profilesProvider.notifier)
+                      .switchToProfile(profile.data.did);
+                  ref
+                      .read(messageServiceProvider)
+                      .showText('Successfully updated account');
                 } else {
                   // Add new profile
-                  await ref.read(profilesProvider.notifier).addProfile(profileData);
-                  await ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
-                  ref.read(messageServiceProvider).showText('Successfully added account');
+                  await ref
+                      .read(profilesProvider.notifier)
+                      .addProfile(profileData);
+                  await ref
+                      .read(profilesProvider.notifier)
+                      .switchToProfile(profile.data.did);
+                  ref
+                      .read(messageServiceProvider)
+                      .showText('Successfully added account');
                 }
 
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
               } catch (error) {
-                ref.read(messageServiceProvider).showText('Failed to add account: $error');
+                ref
+                    .read(messageServiceProvider)
+                    .showText('Failed to add account: $error');
               }
             },
           ),

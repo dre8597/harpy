@@ -62,5 +62,6 @@ class StoredProfiles with _$StoredProfiles {
     @Default([]) List<StoredProfileData> profiles,
   }) = _StoredProfiles;
 
-  factory StoredProfiles.fromJson(Map<String, dynamic> json) => _$StoredProfilesFromJson(json);
+  factory StoredProfiles.fromJson(Map<String, dynamic> json) =>
+      _$StoredProfilesFromJson(json);
 }

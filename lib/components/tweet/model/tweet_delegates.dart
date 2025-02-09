@@ -58,7 +58,9 @@ TweetDelegates defaultTweetDelegates(
     onShowUser: (ref) {
       final router = ref.read(routerProvider);
 
-      if (!(router.state.pathParameters["authorDid"]?.contains(tweet.authorDid) ?? false)) {
+      if (!(router.state.pathParameters["authorDid"]
+              ?.contains(tweet.authorDid) ??
+          false)) {
         router.pushNamed(
           UserPage.name,
           pathParameters: {'authorDid': tweet.authorDid},
@@ -68,7 +70,9 @@ TweetDelegates defaultTweetDelegates(
     onShowRetweeter: (ref) {
       final router = ref.read(routerProvider);
 
-      if (!(router.state.pathParameters["authorDid"]?.contains(tweet.authorDid) ?? false)) {
+      if (!(router.state.pathParameters["authorDid"]
+              ?.contains(tweet.authorDid) ??
+          false)) {
         router.pushNamed(
           UserPage.name,
           pathParameters: {'authorDid': tweet.authorDid},
@@ -81,7 +85,7 @@ TweetDelegates defaultTweetDelegates(
           TweetDetailPage.name,
           pathParameters: {
             'authorDid': tweet.authorDid,
-            'id': (tweet.parentPost?.uri??tweet.parentPostId).toString(),
+            'id': (tweet.parentPost?.uri ?? tweet.parentPostId).toString(),
           },
         );
       }

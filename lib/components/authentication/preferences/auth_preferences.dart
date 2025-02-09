@@ -7,14 +7,16 @@ import 'package:rby/rby.dart' hide Preferences;
 part 'auth_preferences.freezed.dart';
 
 /// Handles storing and updating the authentication data for sessions.
-final authPreferencesProvider = StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
+final authPreferencesProvider =
+    StateNotifierProvider<AuthPreferencesNotifier, AuthPreferences>(
   (ref) => AuthPreferencesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
   ),
   name: 'AuthPreferencesProvider',
 );
 
-class AuthPreferencesNotifier extends StateNotifier<AuthPreferences> with LoggerMixin {
+class AuthPreferencesNotifier extends StateNotifier<AuthPreferences>
+    with LoggerMixin {
   AuthPreferencesNotifier({
     required Preferences preferences,
   })  : _preferences = preferences,
@@ -129,10 +131,13 @@ class AuthPreferences with _$AuthPreferences {
 
   AuthPreferences._();
 
-  late final bool isValid = userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
+  late final bool isValid =
+      userToken.isNotEmpty && userSecret.isNotEmpty && userId.isNotEmpty;
 
-  late final bool hasBlueskyCredentials = blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
+  late final bool hasBlueskyCredentials =
+      blueskyHandle.isNotEmpty && blueskyAppPassword.isNotEmpty;
 
-  late final bool hasBlueskySession =
-      blueskyAccessJwt.isNotEmpty && blueskyRefreshJwt.isNotEmpty && blueskyDid.isNotEmpty;
+  late final bool hasBlueskySession = blueskyAccessJwt.isNotEmpty &&
+      blueskyRefreshJwt.isNotEmpty &&
+      blueskyDid.isNotEmpty;
 }

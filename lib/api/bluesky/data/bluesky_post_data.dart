@@ -57,11 +57,6 @@ class BlueskyPostData with _$BlueskyPostData {
     @Default('und') String lang,
   }) = _BlueskyPostData;
 
-  const BlueskyPostData._();
-
-  factory BlueskyPostData.fromJson(Map<String, dynamic> json) =>
-      _$BlueskyPostDataFromJson(json);
-
   /// Improved factory that creates a [BlueskyPostData] from a Bluesky [bsky.FeedView] and
   /// handles both image and video embeds.
   factory BlueskyPostData.fromFeedView(bsky.FeedView post) {
@@ -145,6 +140,20 @@ class BlueskyPostData with _$BlueskyPostData {
           .toList(),
     );
   }
+
+  const BlueskyPostData._();
+
+  factory BlueskyPostData.fromJson(Map<String, dynamic> json) =>
+      _$BlueskyPostDataFromJson(json);
+
+  /// Whether this post is a repost
+  bool get isRepost => repostOf != null;
+
+  /// Whether this post has images
+  bool get hasImages => media?.any((m) => m.type == MediaType.image) ?? false;
+
+  /// Whether this post has video
+  bool get hasVideo => media?.any((m) => m.type == MediaType.video) ?? false;
 }
 
 /// Data class representing media in a Bluesky post.

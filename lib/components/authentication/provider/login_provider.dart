@@ -85,7 +85,9 @@ class LoginNotifier {
       // Add profile and switch to it
       // This will handle setting up auth state, preferences, and API client
       await _ref.read(profilesProvider.notifier).addProfile(profileData);
-      await _ref.read(profilesProvider.notifier).switchToProfile(profile.data.did);
+      await _ref
+          .read(profilesProvider.notifier)
+          .switchToProfile(profile.data.did);
 
       // Navigate based on setup status
       if (_ref.read(setupPreferencesProvider).performedSetup) {

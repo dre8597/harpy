@@ -16,23 +16,32 @@ class FeedSwitcher extends ConsumerWidget {
       icon: const Icon(Icons.feed),
       onTap: state is! TimelineStateLoading
           ? () async {
-              final uri = await showFeedSwitcherDialog(context, feedPreferences);
+              final uri =
+                  await showFeedSwitcherDialog(context, feedPreferences);
               if (uri != null && context.mounted) {
                 // Set the active feed
-                await ref.read(feedPreferencesProvider.notifier).setActiveFeed(uri);
+                await ref
+                    .read(feedPreferencesProvider.notifier)
+                    .setActiveFeed(uri);
 
                 // Store the feed preference in the current profile
-                final currentProfile = ref.read(profilesProvider.notifier).getActiveProfile();
+                final currentProfile =
+                    ref.read(profilesProvider.notifier).getActiveProfile();
                 if (currentProfile != null) {
                   final updatedProfile = currentProfile.copyWith(
-                    feedPreferences: feedPreferences.copyWith(activeFeedUri: uri),
+                    feedPreferences:
+                        feedPreferences.copyWith(activeFeedUri: uri),
                   );
-                  await ref.read(profilesProvider.notifier).addProfile(updatedProfile);
+                  await ref
+                      .read(profilesProvider.notifier)
+                      .addProfile(updatedProfile);
                 }
 
                 // Reload the timeline with the new feed
                 if (context.mounted) {
-                  await ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+                  await ref
+                      .read(homeTimelineProvider.notifier)
+                      .load(clearPrevious: true);
                 }
               }
             }
@@ -82,9 +91,10 @@ Future<String?> showFeedSwitcherDialog(
                           title: Text(
                             feed.name,
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: feed.uri == feedPreferences.activeFeedUri
-                                  ? FontWeight.bold
-                                  : null,
+                              fontWeight:
+                                  feed.uri == feedPreferences.activeFeedUri
+                                      ? FontWeight.bold
+                                      : null,
                             ),
                           ),
                           subtitle: feed.description != null
