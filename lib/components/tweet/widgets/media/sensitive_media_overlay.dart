@@ -27,16 +27,34 @@ class _SensitiveMediaOverlayState extends ConsumerState<SensitiveMediaOverlay> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final media = ref.watch(mediaPreferencesProvider);
-
+    final warningLabels = [
+      'warn',
+      'sensitive',
+      'nsfw',
+      '18+',
+      'explicit',
+      'adult',
+      'mature',
+      'graphic',
+      'violence',
+      'gore',
+      'blood',
+      'death',
+      'porn',
+      'nudity',
+      'sexual'
+    ];
+    final hideImage = media.hidePossiblySensitive &&
+        (widget.tweet.labels
+                ?.any((label) => warningLabels.contains(label.val)) ??
+            false) &&
+        _showOverlay;
     return Stack(
       children: [
         widget.child,
         Positioned.fill(
           child: RbyAnimatedSwitcher(
-            child: media.hidePossiblySensitive &&
-                    widget.tweet.labels?.any((label) => label.val == 'warn') ==
-                        true &&
-                    _showOverlay
+            child: hideImage
                 ? GestureDetector(
                     onTap: () => setState(() => _showOverlay = false),
                     child: ColoredBox(

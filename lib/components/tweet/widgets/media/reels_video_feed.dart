@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/components/tweet/widgets/button/replies_button.dart';
 import 'package:rby/rby.dart';
@@ -34,6 +35,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
   bool _isManuallyPaused = false;
   bool _isCaptionVisible = true;
   Timer? _captionTimer;
+  bool _hasVideoEnded = false;
+  bool _wasScrolledAway = false;
 
   // Increased duration for better readability
   static const _captionDisplayDuration = Duration(seconds: 5);
@@ -141,12 +144,62 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     }
   }
 
+  void _handleVideoPlayer(VideoPlayerNotifier notifier, int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      if (index == _currentIndex) {
+        final previousNotifier = _currentNotifier;
+        _currentNotifier = notifier;
+
+        // Only add listener if it's a new notifier
+        if (previousNotifier != notifier) {
+          notifier.controller.addListener(() {
+            if (!mounted) return;
+
+            final position = notifier.controller.value.position;
+            final duration = notifier.controller.value.duration;
+            final isPlaying = notifier.controller.value.isPlaying;
+
+            // Check if video has ended
+            if (position >= duration) {
+              _hasVideoEnded = true;
+            }
+
+            // Update manual pause state
+            if (!isPlaying && _isActive && !_hasVideoEnded) {
+              setState(() => _isManuallyPaused = true);
+            }
+          });
+
+          // Determine if we should play the video
+          final shouldPlay = _isActive &&
+              !_isManuallyPaused &&
+              !notifier.controller.value.isPlaying &&
+              (_wasScrolledAway || !_hasVideoEnded);
+
+          if (shouldPlay) {
+            notifier.controller.setVolume(1);
+            notifier.controller.play();
+          }
+
+          // Reset scroll state
+          _wasScrolledAway = false;
+        }
+      } else if (index == _currentIndex - 1) {
+        _previousNotifier = notifier;
+      }
+    });
+  }
+
   void _onPageChanged(int index) {
     setState(() {
+      // Mark that we scrolled away from the current video
+      _wasScrolledAway = true;
       _currentIndex = index;
-      // Reset manual pause state when changing videos
+      // Reset states for new video
       _isManuallyPaused = false;
-      // Show caption for new video
+      _hasVideoEnded = false;
       _isCaptionVisible = true;
     });
 
@@ -162,25 +215,11 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
 
       // Handle previous video
       if (_previousNotifier != null) {
-        try {
-          final controller = _previousNotifier!.controller;
-          if (!controller.value.isPlaying) return;
-          _previousNotifier!.pause();
-        } catch (e) {
-          // Ignore errors from disposed controllers
-        }
-      }
-
-      // Handle current video
-      if (_currentNotifier != null) {
-        try {
-          final controller = _currentNotifier!.controller;
-          if (!controller.value.isInitialized) return;
-          if (!mounted) return;
-          controller.play();
-        } catch (e) {
-          // Ignore errors from disposed controllers
-        }
+        _safeVideoOperation(_previousNotifier, (notifier) {
+          if (notifier.controller.value.isPlaying) {
+            notifier.pause();
+          }
+        });
       }
     });
 
@@ -190,51 +229,36 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     }
   }
 
-  void _handleVideoPlayer(VideoPlayerNotifier notifier, int index) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      if (index == _currentIndex) {
-        _currentNotifier = notifier;
-        // Listen to player state changes to detect manual pause/play
-        notifier.controller.addListener(() {
-          if (!mounted) return;
-          final isPlaying = notifier.controller.value.isPlaying;
-          if (!isPlaying && _isActive && !_isManuallyPaused) {
-            setState(() => _isManuallyPaused = true);
-          }
-        });
-
-        // Only start playing if reels mode is active and not manually paused
-        if (_isActive && !_isManuallyPaused) {
-          notifier.controller.setVolume(1);
-          notifier.controller.play();
-        }
-      } else if (index == _currentIndex - 1) {
-        _previousNotifier = notifier;
-      }
-    });
-  }
-
   void _handleTap() {
     if (!mounted || !_isActive) return;
     setState(() {
-      _isManuallyPaused = !_isManuallyPaused;
-      _safeVideoOperation(_currentNotifier, (notifier) {
-        if (_isManuallyPaused) {
-          notifier.pause();
-        } else {
+      if (_hasVideoEnded) {
+        // If video has ended, restart it
+        _hasVideoEnded = false;
+        _isManuallyPaused = false;
+        _safeVideoOperation(_currentNotifier, (notifier) {
+          notifier.controller.seekTo(Duration.zero);
           notifier.controller.play();
-        }
-      });
+        });
+      } else {
+        // Toggle pause state
+        _isManuallyPaused = !_isManuallyPaused;
+        _safeVideoOperation(_currentNotifier, (notifier) {
+          if (_isManuallyPaused) {
+            notifier.pause();
+          } else {
+            notifier.controller.play();
+          }
+        });
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final spacing = theme.extension<RbySpacingTheme>() ??
-        const RbySpacingTheme(base: 8, small: 4, large: 16);
+    final spacing =
+        theme.extension<RbySpacingTheme>() ?? const RbySpacingTheme(base: 8, small: 4, large: 16);
 
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
@@ -268,8 +292,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                       if (entry.media.thumb != null)
                         Positioned.fill(
                           child: ImageFiltered(
-                            imageFilter:
-                                ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                            imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                             child: HarpyImage(
                               imageUrl: entry.media.thumb!,
                               fit: BoxFit.cover,
@@ -323,8 +346,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                   curve: Curves.easeInOut,
                   left: 0,
                   right: 0,
-                  bottom:
-                      _isCaptionVisible ? spacing.base : -(spacing.large * 4),
+                  bottom: _isCaptionVisible ? spacing.base : -(spacing.large * 4),
                   child: GestureDetector(
                     onTap: () {
                       // Pause video before navigating
@@ -399,6 +421,50 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to user profile
+                        context.pushNamed(
+                          UserPage.name,
+                          pathParameters: {'authorDid': tweet.authorDid},
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundImage: tweet.authorAvatar.isNotEmpty
+                                  ? NetworkImage(tweet.authorAvatar)
+                                  : null,
+                              child: tweet.authorAvatar.isEmpty ? const Icon(Icons.person) : null,
+                            ),
+                          ),
+                          SizedBox(height: spacing.small),
+                          _ScrollingText(
+                            text: tweet.author,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.5),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            maxWidth: 80,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: spacing.base),
                     Builder(
                       builder: (context) => FavoriteButton(
                         tweet: tweet,
@@ -409,7 +475,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                         foregroundColor: Colors.white,
                       ),
                     ),
-                    SizedBox(height: spacing.large),
+                    SizedBox(height: spacing.base),
                     Builder(
                       builder: (context) => RetweetButton(
                         tweet: tweet,
@@ -421,13 +487,13 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                         foregroundColor: Colors.white,
                       ),
                     ),
-                    SizedBox(height: spacing.large),
+                    SizedBox(height: spacing.base),
                     Repliesbutton(
                       tweet: tweet,
                       onShowReplies: delegates.onShowTweet,
                       sizeDelta: 2,
                     ),
-                    SizedBox(height: spacing.large),
+                    SizedBox(height: spacing.base),
                     MoreActionsButton(
                       tweet: tweet,
                       sizeDelta: 2,
@@ -444,6 +510,106 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// A scrolling text widget that animates horizontally if the text overflows
+class _ScrollingText extends StatefulWidget {
+  const _ScrollingText({
+    required this.text,
+    required this.style,
+    this.maxWidth = 100.0,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final double maxWidth;
+
+  @override
+  State<_ScrollingText> createState() => _ScrollingTextState();
+}
+
+class _ScrollingTextState extends State<_ScrollingText> with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
+  late AnimationController _animationController;
+  late double _textWidth;
+  final _textKey = GlobalKey();
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureText();
+      _startScrollingIfNeeded();
+    });
+  }
+
+  void _measureText() {
+    if (!mounted) return;
+    final renderBox = _textKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      _textWidth = renderBox.size.width;
+      if (_textWidth > widget.maxWidth) {
+        _startScrolling();
+      }
+    }
+  }
+
+  void _startScrollingIfNeeded() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (!mounted) return;
+      if (_textWidth > widget.maxWidth) {
+        _startScrolling();
+      }
+    });
+  }
+
+  void _startScrolling() {
+    if (!mounted) return;
+    _scrollController
+        .animateTo(
+      _textWidth,
+      duration: const Duration(seconds: 2),
+      curve: Curves.easeInOut,
+    )
+        .then((_) {
+      if (!mounted) return;
+      _scrollController.jumpTo(0);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _animationController.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: widget.maxWidth,
+      height: 20,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        child: Text(
+          widget.text,
+          key: _textKey,
+          style: widget.style,
+        ),
       ),
     );
   }

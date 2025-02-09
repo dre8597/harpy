@@ -39,7 +39,7 @@ class UserTimelineNotifier extends TimelineNotifier {
 
   @override
   Future<TimelineResponse> request({String? cursor}) async {
-    final blueskyApi = ref.read(blueskyApiProvider);
+    final blueskyApi =ref.read(blueskyApiProvider);
     if (state.tweets.isEmpty) {
       state = const TimelineState.loading();
     }

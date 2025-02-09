@@ -3,7 +3,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
 //TODO: Make a forked version with all code updated to latest version
-class HarpyPhotoGallery extends StatelessWidget {
+class HarpyPhotoGallery extends StatefulWidget {
   const HarpyPhotoGallery({
     required this.builder,
     required this.itemCount,
@@ -19,23 +19,57 @@ class HarpyPhotoGallery extends StatelessWidget {
   final ValueChanged<int>? onPageChanged;
 
   @override
+  State<HarpyPhotoGallery> createState() => _HarpyPhotoGalleryState();
+}
+
+class _HarpyPhotoGalleryState extends State<HarpyPhotoGallery> {
+  late final PageController _pageController;
+  final Map<int, PhotoViewController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  PhotoViewController _getController(int index) {
+    return _controllers.putIfAbsent(index, PhotoViewController.new);
+  }
+
+  void _handleDoubleTap(BuildContext context, int index) {
+    final controller = _getController(index);
+    controller.scale = controller.scale == 1.0 ? 2.0 : 1.0;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return PhotoViewGallery.builder(
-      itemCount: itemCount,
-      pageController: PageController(initialPage: initialIndex),
+      itemCount: widget.itemCount,
+      pageController: _pageController,
       backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-      onPageChanged: onPageChanged,
+      onPageChanged: widget.onPageChanged,
       builder: (_, index) => PhotoViewGalleryPageOptions.customChild(
-        initialScale: PhotoViewComputedScale.covered,
+        controller: _getController(index),
+        initialScale: PhotoViewComputedScale.contained,
         minScale: PhotoViewComputedScale.contained,
         maxScale: PhotoViewComputedScale.covered * 3,
         scaleStateCycle: _scaleStateCycle,
-        disableGestures: !enableGestures,
-        child: Stack(
-          children: [
-            GestureDetector(onTap: Navigator.of(context).pop),
-            Center(child: builder(context, index)),
-          ],
+        disableGestures: !widget.enableGestures,
+        child: GestureDetector(
+          onTap: Navigator.of(context).pop,
+          onDoubleTap: widget.enableGestures
+              ? () => _handleDoubleTap(context, index)
+              : null,
+          child: Center(child: widget.builder(context, index)),
         ),
       ),
     );
