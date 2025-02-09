@@ -115,7 +115,7 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
 
     // Deactivate current profile
     final currentActiveIndex = profiles.indexWhere((profile) => profile.isActive);
-    if (currentActiveIndex != -1) {
+    if (currentActiveIndex >= 0) {
       // Store current preferences before switching
       final currentProfile = profiles[currentActiveIndex];
       profiles[currentActiveIndex] = currentProfile.copyWith(
@@ -174,7 +174,7 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       _ref.invalidate(mediaTimelineProvider(BuiltList<BlueskyPostData>()));
 
       // Update feed preferences and ensure they're loaded
-      if (newProfile.feedPreferences != null) {
+      if (newProfile.feedPreferences?.feeds.isNotEmpty ?? false) {
         await _ref
             .read(feedPreferencesProvider.notifier)
             .updateFromStoredPreferences(newProfile.feedPreferences!);
