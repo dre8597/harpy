@@ -17,14 +17,14 @@ class MediaTimelineMediaList extends ConsumerWidget {
   });
 
   final BuiltList<MediaTimelineEntry> entries;
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
-      provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final layout = ref.watch(layoutPreferencesProvider);
     final media = ref.watch(mediaPreferencesProvider);
+    final timelineState = ref.watch(provider);
 
     if (media.useReelsVideoMode && !layout.mediaTiled) {
       // Filter only video entries
@@ -45,6 +45,7 @@ class MediaTimelineMediaList extends ConsumerWidget {
             final timelineNotifier = ref.read(provider.notifier);
             await timelineNotifier.load(clearPrevious: true);
           },
+          onLoadMore: timelineState.canLoadMore ? () => ref.read(provider.notifier).load() : null,
         ),
       );
     }

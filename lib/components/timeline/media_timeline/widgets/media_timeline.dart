@@ -14,8 +14,7 @@ class MediaTimeline extends ConsumerStatefulWidget {
     this.endSlivers = const [SliverBottomPadding()],
   });
 
-  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState>
-      provider;
+  final AutoDisposeStateNotifierProvider<TimelineNotifier, TimelineState> provider;
 
   final double? scrollToTopOffset;
   final List<Widget> beginSlivers;
@@ -59,56 +58,104 @@ class _MediaTimelineState extends ConsumerState<MediaTimeline> {
     final timelineState = ref.watch(widget.provider);
     final timelineNotifier = ref.watch(widget.provider.notifier);
     final mediaEntries = ref.watch(mediaTimelineProvider(timelineState.tweets));
+    final media = ref.watch(mediaPreferencesProvider);
+    final layout = ref.watch(layoutPreferencesProvider);
+
+    final isReelsMode = media.useReelsVideoMode && !layout.mediaTiled;
 
     return ScrollToTop(
       controller: _controller,
       bottomPadding: widget.scrollToTopOffset,
-      child: LoadMoreHandler(
-        controller: _controller!,
-        listen: timelineState.canLoadMore,
-        onLoadMore: timelineNotifier.load,
-        child: CustomScrollView(
-          key: const PageStorageKey('media_timeline'),
-          controller: _controller,
-          slivers: [
-            ...widget.beginSlivers,
-            if (mediaEntries.isNotEmpty) ...[
-              _TopActions(
-                onRefresh: () {
-                  HapticFeedback.lightImpact();
-                  timelineNotifier.load(clearPrevious: true);
-                },
-              ),
-              SliverPadding(
-                padding: theme.spacing.edgeInsets,
-                sliver: MediaTimelineMediaList(
-                  entries: mediaEntries,
-                  provider: widget.provider,
-                ),
-              ),
-            ],
-            ...?timelineState.mapOrNull(
-              data: (_) => [
-                if (mediaEntries.isEmpty)
-                  const SliverFillInfoMessage(
-                    secondaryMessage: Text('no media'),
+      child: isReelsMode
+          ? CustomScrollView(
+              key: const PageStorageKey('media_timeline'),
+              controller: _controller,
+              slivers: [
+                ...widget.beginSlivers,
+                if (mediaEntries.isNotEmpty) ...[
+                  _TopActions(
+                    onRefresh: () {
+                      HapticFeedback.lightImpact();
+                      timelineNotifier.load(clearPrevious: true);
+                    },
                   ),
+                  SliverPadding(
+                    padding: theme.spacing.edgeInsets,
+                    sliver: MediaTimelineMediaList(
+                      entries: mediaEntries,
+                      provider: widget.provider,
+                    ),
+                  ),
+                ],
+                ...?timelineState.mapOrNull(
+                  data: (_) => [
+                    if (mediaEntries.isEmpty)
+                      const SliverFillInfoMessage(
+                        secondaryMessage: Text('no media'),
+                      ),
+                  ],
+                  loading: (_) => [const SliverFillLoadingIndicator()],
+                  loadingMore: (state) => [
+                    if (mediaEntries.isEmpty)
+                      const SliverFillLoadingIndicator()
+                    else
+                      const SliverLoadingIndicator(),
+                  ],
+                  noData: (_) => [
+                    const SliverFillInfoMessage(secondaryMessage: Text('no media')),
+                  ],
+                ),
+                ...widget.endSlivers,
               ],
-              loading: (_) => [const SliverFillLoadingIndicator()],
-              loadingMore: (state) => [
-                if (mediaEntries.isEmpty)
-                  const SliverFillLoadingIndicator()
-                else
-                  const SliverLoadingIndicator(),
-              ],
-              noData: (_) => [
-                const SliverFillInfoMessage(secondaryMessage: Text('no media')),
-              ],
+            )
+          : LoadMoreHandler(
+              controller: _controller!,
+              listen: timelineState.canLoadMore,
+              onLoadMore: timelineNotifier.load,
+              child: CustomScrollView(
+                key: const PageStorageKey('media_timeline'),
+                controller: _controller,
+                slivers: [
+                  ...widget.beginSlivers,
+                  if (mediaEntries.isNotEmpty) ...[
+                    _TopActions(
+                      onRefresh: () {
+                        HapticFeedback.lightImpact();
+                        timelineNotifier.load(clearPrevious: true);
+                      },
+                    ),
+                    SliverPadding(
+                      padding: theme.spacing.edgeInsets,
+                      sliver: MediaTimelineMediaList(
+                        entries: mediaEntries,
+                        provider: widget.provider,
+                      ),
+                    ),
+                  ],
+                  ...?timelineState.mapOrNull(
+                    data: (_) => [
+                      if (mediaEntries.isEmpty)
+                        const SliverFillInfoMessage(
+                          secondaryMessage: Text('no media'),
+                        ),
+                    ],
+                    loading: (_) => [const SliverFillLoadingIndicator()],
+                    loadingMore: (state) => [
+                      if (mediaEntries.isEmpty)
+                        const SliverFillLoadingIndicator()
+                      else
+                        const SliverLoadingIndicator(),
+                    ],
+                    noData: (_) => [
+                      const SliverFillInfoMessage(
+                        secondaryMessage: Text('no media'),
+                      ),
+                    ],
+                  ),
+                  ...widget.endSlivers,
+                ],
+              ),
             ),
-            ...widget.endSlivers,
-          ],
-        ),
-      ),
     );
   }
 }

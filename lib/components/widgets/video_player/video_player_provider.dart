@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/components/components.dart';
+import 'package:harpy/core/misc/provider_utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:rby/rby.dart';
 import 'package:video_player/video_player.dart';
@@ -15,6 +16,9 @@ part 'video_player_provider.freezed.dart';
 final videoPlayerProvider = StateNotifierProvider.autoDispose
     .family<VideoPlayerNotifier, VideoPlayerState, VideoPlayerArguments>(
   (ref, arguments) {
+    // This keeps the provider alive long even to scroll it into view when in reels mode to keep it's preloaded status
+    ref.cacheFor(const Duration(seconds: 30));
+
     final handler = ref.watch(videoPlayerHandlerProvider);
 
     final notifier = VideoPlayerNotifier(

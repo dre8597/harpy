@@ -143,7 +143,7 @@ class TweetSearchNotifier extends StateNotifier<TweetSearchState>
         if (filter != null) {
           posts = _filterPosts(posts, filter);
         }
-
+        if (!mounted) return;
         state = TweetSearchState.data(
           tweets: posts.toBuiltList(),
           query: query ?? '',

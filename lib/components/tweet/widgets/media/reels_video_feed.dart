@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:harpy/api/api.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/components/tweet/widgets/button/replies_button.dart';
+import 'package:harpy/components/widgets/video_player/video_player_provider.dart';
+import 'package:harpy/components/tweet/widgets/media/utils/video_utils.dart';
 import 'package:rby/rby.dart';
 
 /// A TikTok/Instagram Reels style video feed that displays videos in fullscreen
@@ -31,12 +35,14 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
   int _currentIndex = 0;
   VideoPlayerNotifier? _currentNotifier;
   VideoPlayerNotifier? _previousNotifier;
+  VideoPlayerNotifier? _nextNotifier;
   bool _isActive = true;
   bool _isManuallyPaused = false;
   bool _isCaptionVisible = true;
   Timer? _captionTimer;
   bool _hasVideoEnded = false;
   bool _wasScrolledAway = false;
+  bool _isLoadingMore = false;
 
   // Increased duration for better readability
   static const _captionDisplayDuration = Duration(seconds: 5);
@@ -58,6 +64,9 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
       }
       if (_previousNotifier != null) {
         _previousNotifier!.pause();
+      }
+      if (_nextNotifier != null) {
+        _nextNotifier!.pause();
       }
     });
     _captionTimer?.cancel();
@@ -144,6 +153,36 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     }
   }
 
+  /// Helper method to preload the next video in the queue
+  void _preloadNextVideo(int currentIndex) {
+    if (currentIndex >= widget.entries.length - 1) return;
+
+    final nextEntry = widget.entries[currentIndex + 1];
+    final nextProvider = tweetProvider(nextEntry.tweet.id);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      // Initialize the next tweet if needed
+      ref.read(nextProvider.notifier).initialize(nextEntry.tweet);
+
+      // Get the video notifier for preloading
+      final tweet = ref.read(nextProvider) ?? nextEntry.tweet;
+      final videoData = tweet.media
+          ?.firstWhereOrNull(
+            (m) => m.type == MediaType.video,
+          )
+          ?.toVideoMediaData();
+
+      if (videoData != null) {
+        final arguments = createVideoArguments(videoData);
+        final provider = videoPlayerProvider(arguments);
+        _nextNotifier = ref.read(provider.notifier);
+        _nextNotifier?.preload();
+      }
+    });
+  }
+
   void _handleVideoPlayer(VideoPlayerNotifier notifier, int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -185,9 +224,14 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
 
           // Reset scroll state
           _wasScrolledAway = false;
+
+          // Preload the next video
+          _preloadNextVideo(index);
         }
       } else if (index == _currentIndex - 1) {
         _previousNotifier = notifier;
+      } else if (index == _currentIndex + 1) {
+        _nextNotifier = notifier;
       }
     });
   }
@@ -221,11 +265,22 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
           }
         });
       }
+
+      // Preload the next video
+      _preloadNextVideo(index);
     });
 
-    // Load more content when reaching the end
-    if (index == widget.entries.length - 1 && widget.onLoadMore != null) {
+    // Load more content when reaching second to last video
+    if (!_isLoadingMore && widget.onLoadMore != null && index >= widget.entries.length - 2) {
+      setState(() => _isLoadingMore = true);
       widget.onLoadMore!();
+
+      // Reset loading flag after a delay to prevent multiple calls
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() => _isLoadingMore = false);
+        }
+      });
     }
   }
 
@@ -257,8 +312,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final spacing = theme.extension<RbySpacingTheme>() ??
-        const RbySpacingTheme(base: 8, small: 4, large: 16);
+    final spacing =
+        theme.extension<RbySpacingTheme>() ?? const RbySpacingTheme(base: 8, small: 4, large: 16);
 
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
@@ -292,8 +347,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                       if (entry.media.thumb != null)
                         Positioned.fill(
                           child: ImageFiltered(
-                            imageFilter:
-                                ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                            imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                             child: HarpyImage(
                               imageUrl: entry.media.thumb!,
                               fit: BoxFit.cover,
@@ -347,8 +401,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                   curve: Curves.easeInOut,
                   left: 0,
                   right: 0,
-                  bottom:
-                      _isCaptionVisible ? spacing.base : -(spacing.large * 4),
+                  bottom: _isCaptionVisible ? spacing.base : -(spacing.large * 4),
                   child: GestureDetector(
                     onTap: () {
                       // Pause video before navigating
@@ -446,9 +499,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
                               backgroundImage: tweet.authorAvatar.isNotEmpty
                                   ? NetworkImage(tweet.authorAvatar)
                                   : null,
-                              child: tweet.authorAvatar.isEmpty
-                                  ? const Icon(Icons.person)
-                                  : null,
+                              child: tweet.authorAvatar.isEmpty ? const Icon(Icons.person) : null,
                             ),
                           ),
                           SizedBox(height: spacing.small),
@@ -535,8 +586,7 @@ class _ScrollingText extends StatefulWidget {
   State<_ScrollingText> createState() => _ScrollingTextState();
 }
 
-class _ScrollingTextState extends State<_ScrollingText>
-    with SingleTickerProviderStateMixin {
+class _ScrollingTextState extends State<_ScrollingText> with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   late AnimationController _animationController;
   late double _textWidth;
@@ -564,7 +614,7 @@ class _ScrollingTextState extends State<_ScrollingText>
     if (renderBox != null) {
       _textWidth = renderBox.size.width;
       if (_textWidth > widget.maxWidth) {
-        _startScrolling();
+        _startScrollingIfNeeded();
       }
     }
   }
