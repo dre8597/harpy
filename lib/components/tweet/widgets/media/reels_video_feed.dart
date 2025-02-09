@@ -70,6 +70,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
       }
     });
     _captionTimer?.cancel();
+    // Clear active providers when disposing
+    ref.read(activeReelsProvidersProvider.notifier).state = {};
     super.dispose();
   }
 
@@ -225,6 +227,9 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
           // Reset scroll state
           _wasScrolledAway = false;
 
+          // Update active providers
+          _updateActiveProviders(index);
+
           // Preload the next video
           _preloadNextVideo(index);
         }
@@ -234,6 +239,40 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
         _nextNotifier = notifier;
       }
     });
+  }
+
+  void _updateActiveProviders(int currentIndex) {
+    final activeProviders = <VideoPlayerArguments>{};
+
+    // Add current video
+    if (currentIndex < widget.entries.length) {
+      final currentEntry = widget.entries[currentIndex];
+      final videoData = currentEntry.media.toVideoMediaData();
+      if (videoData != null) {
+        activeProviders.add(createVideoArguments(videoData));
+      }
+    }
+
+    // Add previous video
+    if (currentIndex > 0) {
+      final previousEntry = widget.entries[currentIndex - 1];
+      final videoData = previousEntry.media.toVideoMediaData();
+      if (videoData != null) {
+        activeProviders.add(createVideoArguments(videoData));
+      }
+    }
+
+    // Add next video
+    if (currentIndex < widget.entries.length - 1) {
+      final nextEntry = widget.entries[currentIndex + 1];
+      final videoData = nextEntry.media.toVideoMediaData();
+      if (videoData != null) {
+        activeProviders.add(createVideoArguments(videoData));
+      }
+    }
+
+    // Update the active providers
+    ref.read(activeReelsProvidersProvider.notifier).state = activeProviders;
   }
 
   void _onPageChanged(int index) {
@@ -265,6 +304,9 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
           }
         });
       }
+
+      // Update active providers for the new index
+      _updateActiveProviders(index);
 
       // Preload the next video
       _preloadNextVideo(index);

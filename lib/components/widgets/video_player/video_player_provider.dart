@@ -13,11 +13,23 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 part 'video_player_provider.freezed.dart';
 
+/// Provider to track which video players are currently active in the reels feed
+final activeReelsProvidersProvider = StateProvider<Set<VideoPlayerArguments>>((ref) => {});
+
 final videoPlayerProvider = StateNotifierProvider.autoDispose
     .family<VideoPlayerNotifier, VideoPlayerState, VideoPlayerArguments>(
   (ref, arguments) {
-    // This keeps the provider alive long even to scroll it into view when in reels mode to keep it's preloaded status
-    ref.cacheFor(const Duration(seconds: 30));
+    // Get the active providers set
+    final activeProviders = ref.watch(activeReelsProvidersProvider);
+
+    // If this is one of the active providers (current, previous, or next),
+    // keep it alive indefinitely
+    if (activeProviders.contains(arguments)) {
+      ref.keepAlive();
+    } else {
+      // For non-active providers, cache for a short duration to handle quick scrolling
+      ref.cacheFor(const Duration(seconds: 10));
+    }
 
     final handler = ref.watch(videoPlayerHandlerProvider);
 
@@ -25,14 +37,20 @@ final videoPlayerProvider = StateNotifierProvider.autoDispose
       urls: arguments.urls,
       loop: arguments.loop,
       ref: ref,
-      onInitialized: arguments.isVideo
-          ? () => handler.act((notifier) => notifier.pause())
-          : null,
+      onInitialized: arguments.isVideo ? () => handler.act((notifier) => notifier.pause()) : null,
     );
 
     if (arguments.isVideo) {
       handler.add(notifier);
-      ref.onDispose(() => handler.remove(notifier));
+      ref.onDispose(() {
+        handler.remove(notifier);
+        // When disposing, also remove from active providers if it's there
+        if (activeProviders.contains(arguments)) {
+          ref.read(activeReelsProvidersProvider.notifier).update(
+                (state) => state.difference({arguments}),
+              );
+        }
+      });
     }
 
     return notifier;
@@ -108,8 +126,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
         // Check if this is an M3U8 playlist
         if (m3u8Data.trim().startsWith('#EXTM3U')) {
-          final regex =
-              RegExp(r'^#EXT-X-STREAM-INF:.*?\n(.*?)$', multiLine: true);
+          final regex = RegExp(r'^#EXT-X-STREAM-INF:.*?\n(.*?)$', multiLine: true);
           final matches = regex.allMatches(m3u8Data);
 
           String? streamUrl;
@@ -145,8 +162,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         await _controller!.initialize();
         _controller!.addListener(_controllerListener);
 
-        final startMuted =
-            _ref.read(mediaPreferencesProvider).startVideoPlaybackMuted;
+        final startMuted = _ref.read(mediaPreferencesProvider).startVideoPlaybackMuted;
         await _controller!.setVolume(startMuted ? 0.0 : 1.0);
         await _controller!.setLooping(_loop);
 
@@ -185,9 +201,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   Future<void> togglePlayback() async {
     if (!mounted || _controller == null) return;
-    return _controller!.value.isPlaying
-        ? _controller!.pause()
-        : _controller!.play();
+    return _controller!.value.isPlaying ? _controller!.pause() : _controller!.play();
   }
 
   Future<void> pause() async {
@@ -197,9 +211,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   Future<void> toggleMute() async {
     if (!mounted || _controller == null) return;
-    return _controller!.value.volume == 0
-        ? _controller!.setVolume(1)
-        : _controller!.setVolume(0);
+    return _controller!.value.volume == 0 ? _controller!.setVolume(1) : _controller!.setVolume(0);
   }
 
   Future<void> forward() async {
@@ -235,8 +247,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       oldController!.removeListener(_controllerListener);
 
       try {
-        final controller =
-            VideoPlayerController.networkUrl(Uri.dataFromString(url));
+        final controller = VideoPlayerController.networkUrl(Uri.dataFromString(url));
 
         _quality = quality;
 
@@ -291,8 +302,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
 @freezed
 class VideoPlayerState with _$VideoPlayerState {
-  const factory VideoPlayerState.uninitialized() =
-      VideoPlayerStateUninitialized;
+  const factory VideoPlayerState.uninitialized() = VideoPlayerStateUninitialized;
 
   const factory VideoPlayerState.loading() = VideoPlayerStateLoading;
 
