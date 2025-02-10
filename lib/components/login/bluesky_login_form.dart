@@ -7,10 +7,14 @@ class BlueskyLoginForm extends ConsumerStatefulWidget {
     super.key,
     required this.onLogin,
     this.initialIdentifier,
+    this.showTitle = true,
+    this.showAppPasswordHelp = true,
   });
 
   final Future<void> Function(String identifier, String password) onLogin;
   final String? initialIdentifier;
+  final bool showTitle;
+  final bool showAppPasswordHelp;
 
   @override
   ConsumerState<BlueskyLoginForm> createState() => _BlueskyLoginFormState();
@@ -26,8 +30,7 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
   @override
   void initState() {
     super.initState();
-    _identifierController =
-        TextEditingController(text: widget.initialIdentifier);
+    _identifierController = TextEditingController(text: widget.initialIdentifier);
   }
 
   @override
@@ -62,6 +65,13 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (widget.showTitle) ...[
+            Text(
+              'Sign in with Bluesky',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 24),
+          ],
           TextFormField(
             controller: _identifierController,
             enabled: widget.initialIdentifier == null && !_isLoading,
@@ -87,9 +97,7 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 ),
                 onPressed: _isLoading
                     ? null
@@ -123,21 +131,23 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
                 : const Text('Login'),
             onTap: _isLoading ? null : _handleSubmit,
           ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: _isLoading
-                ? null
-                : () {
-                    // TODO: Add link to Bluesky app password creation guide
-                    // launcher.call('https://bsky.app/settings/app-passwords');
-                  },
-            child: Text(
-              'Need an app password?',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
+          if (widget.showAppPasswordHelp) ...[
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      // TODO: Add link to Bluesky app password creation guide
+                      // launcher.call('https://bsky.app/settings/app-passwords');
+                    },
+              child: Text(
+                'Need an app password?',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
