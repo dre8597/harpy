@@ -192,7 +192,7 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
 
       // Try to switch to the profile - this will handle all the session management
       try {
-        await switchToProfile(activeProfile.did);
+        await switchToProfile(activeProfile.did, suppressMessages: true);
         _log.fine('Auto-login successful for profile: ${activeProfile.handle}');
 
         // Navigate based on setup status, just like in manual login
@@ -276,7 +276,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
     await _saveProfiles();
   }
 
-  Future<void> switchToProfile(String did) async {
+  Future<void> switchToProfile(String did,
+      {bool suppressMessages = false}) async {
     state = state.copyWith(isProfileSwitching: true);
     try {
       final profiles = List<StoredProfileData>.from(state.profiles);
@@ -304,9 +305,11 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       final newProfile = profiles[index];
 
       // Show switching message
-      _ref.read(messageServiceProvider).showText(
-            "Switching to ${newProfile.displayName}'s profile...",
-          );
+      if (!suppressMessages) {
+        _ref.read(messageServiceProvider).showText(
+              "Switching to ${newProfile.displayName}'s profile...",
+            );
+      }
 
       // Refresh the session before switching
       try {
@@ -315,9 +318,11 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
             state.profiles[index]; // Get the updated profile with new tokens
       } catch (e) {
         if (e is SessionExpiredException) {
-          _ref.read(messageServiceProvider).showText(
-                'Your session has expired. Please sign in again to continue',
-              );
+          if (!suppressMessages) {
+            _ref.read(messageServiceProvider).showText(
+                  'Your session has expired. Please sign in again to continue',
+                );
+          }
           _ref.read(authenticationStateProvider.notifier).state =
               const AuthenticationState.unauthenticated();
           rethrow;
@@ -446,9 +451,11 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       }
 
       // Show success message at the end
-      _ref.read(messageServiceProvider).showText(
-            'Welcome back, ${newProfile.displayName}!',
-          );
+      if (!suppressMessages) {
+        _ref.read(messageServiceProvider).showText(
+              'Welcome back, ${newProfile.displayName}!',
+            );
+      }
     } catch (e) {
       if (e is SessionExpiredException) {
         rethrow;
