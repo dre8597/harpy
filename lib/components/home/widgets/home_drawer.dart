@@ -5,7 +5,9 @@ import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/models.dart' as models;
@@ -120,71 +122,93 @@ class _AuthenticatedUser extends ConsumerWidget {
     ) {
       showModalBottomSheet(
         context: context,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Switch Account'),
-              ),
-              const Divider(),
-              ...profiles.map(
-                (profile) => ListTile(
-                  enabled: !isProfileSwitching,
-                  leading: profile.avatar != null
-                      ? CircleAvatar(
-                          backgroundImage: NetworkImage(profile.avatar!),
-                        )
-                      : const CircleAvatar(
-                          child: Icon(Icons.person),
+        builder: (context) => HookBuilder(
+          builder: (context) {
+            final switchingProfileDid = useState<String?>(null);
+
+            return Consumer(
+              builder: (context, ref, _) {
+                final isProfileSwitching =
+                    ref.watch(profilesProvider).isProfileSwitching;
+
+                return SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('Switch Account'),
+                      ),
+                      const Divider(),
+                      ...profiles.map(
+                        (profile) => ListTile(
+                          enabled: !isProfileSwitching,
+                          leading: profile.avatar != null
+                              ? CircleAvatar(
+                                  backgroundImage:
+                                      NetworkImage(profile.avatar!),
+                                )
+                              : const CircleAvatar(
+                                  child: Icon(Icons.person),
+                                ),
+                          title: Text(profile.displayName),
+                          subtitle: Text('@${profile.handle}'),
+                          trailing: isProfileSwitching &&
+                                  switchingProfileDid.value == profile.did
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : profile.isActive
+                                  ? Icon(
+                                      Icons.check_circle,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    )
+                                  : null,
+                          onTap: isProfileSwitching
+                              ? null
+                              : () async {
+                                  if (!profile.isActive) {
+                                    switchingProfileDid.value = profile.did;
+                                    try {
+                                      await ref
+                                          .read(profilesProvider.notifier)
+                                          .switchToProfile(profile.did);
+                                    } finally {
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+                                    }
+                                  }
+                                },
                         ),
-                  title: Text(profile.displayName),
-                  subtitle: Text('@${profile.handle}'),
-                  trailing: profile.isActive
-                      ? isProfileSwitching
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Icon(
-                              Icons.check_circle,
-                              color: Theme.of(context).colorScheme.primary,
-                            )
-                      : null,
-                  onTap: () async {
-                    if (!profile.isActive) {
-                      await ref
-                          .read(profilesProvider.notifier)
-                          .switchToProfile(profile.did);
-                    }
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-              ),
-              const Divider(),
-              ListTile(
-                enabled: !isProfileSwitching,
-                leading: const CircleAvatar(
-                  child: Icon(Icons.add),
-                ),
-                title: const Text('Add Account'),
-                onTap: () {
-                  Navigator.pop(context);
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (context) => const _AddAccountModal(),
-                  );
-                },
-              ),
-            ],
-          ),
+                      ),
+                      const Divider(),
+                      ListTile(
+                        enabled: !isProfileSwitching,
+                        leading: const CircleAvatar(
+                          child: Icon(Icons.add),
+                        ),
+                        title: const Text('Add Account'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (context) => const _AddAccountModal(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
         ),
       );
     }

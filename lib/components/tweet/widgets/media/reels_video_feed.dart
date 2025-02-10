@@ -370,6 +370,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
       child: PageView.builder(
+        physics: const ClampingScrollPhysics(),
         controller: _pageController,
         scrollDirection: Axis.vertical,
         itemCount: widget.entries.length,

@@ -267,7 +267,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         _log.fine('New session created for profile: ${profile.handle}');
       } catch (e) {
         _log.warning(
-            'Session creation failed for profile: ${profile.handle}', e);
+          'Session creation failed for profile: ${profile.handle}',
+          e,
+        );
         throw SessionExpiredException(profile);
       }
     }
@@ -276,8 +278,10 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
     await _saveProfiles();
   }
 
-  Future<void> switchToProfile(String did,
-      {bool suppressMessages = false}) async {
+  Future<void> switchToProfile(
+    String did, {
+    bool suppressMessages = false,
+  }) async {
     state = state.copyWith(isProfileSwitching: true);
     try {
       final profiles = List<StoredProfileData>.from(state.profiles);
@@ -413,7 +417,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         _ref.invalidate(homeTimelineProvider);
         _ref.invalidate(userTimelineProvider(newProfile.did));
         _ref.invalidate(
-            mediaTimelineProvider(BuiltList<BlueskyPostData>.of([])));
+          mediaTimelineProvider(BuiltList<BlueskyPostData>.of([])),
+        );
 
         // Reload the home timeline with the active feed
         await _ref
@@ -442,7 +447,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         _ref.invalidate(homeTimelineProvider);
         _ref.invalidate(userTimelineProvider(newProfile.did));
         _ref.invalidate(
-            mediaTimelineProvider(BuiltList<BlueskyPostData>.of([])));
+          mediaTimelineProvider(BuiltList<BlueskyPostData>.of([])),
+        );
 
         // Reload the home timeline with the active feed
         await _ref
