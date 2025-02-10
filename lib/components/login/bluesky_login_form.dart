@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:harpy/core/misc/url_launcher.dart';
 import 'package:rby/rby.dart';
 
 class BlueskyLoginForm extends ConsumerStatefulWidget {
@@ -30,7 +31,8 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
   @override
   void initState() {
     super.initState();
-    _identifierController = TextEditingController(text: widget.initialIdentifier);
+    _identifierController =
+        TextEditingController(text: widget.initialIdentifier);
   }
 
   @override
@@ -97,7 +99,9 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                 ),
                 onPressed: _isLoading
                     ? null
@@ -137,8 +141,8 @@ class _BlueskyLoginFormState extends ConsumerState<BlueskyLoginForm> {
               onPressed: _isLoading
                   ? null
                   : () {
-                      // TODO: Add link to Bluesky app password creation guide
-                      // launcher.call('https://bsky.app/settings/app-passwords');
+                      final launcher = ref.read(launcherProvider);
+                      launcher('https://bsky.app/settings/app-passwords');
                     },
               child: Text(
                 'Need an app password?',
