@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/components/components.dart';
@@ -14,31 +15,37 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 part 'video_player_provider.freezed.dart';
 
 /// Provider to track which video players are currently active in the reels feed
-final activeReelsProvidersProvider =
-    StateProvider<Set<VideoPlayerArguments>>((ref) => {});
+final activeReelsProvidersProvider = StateProvider<Set<VideoPlayerArguments>>(
+  (ref) => const {},
+);
 
 final videoPlayerProvider = StateNotifierProvider.autoDispose
     .family<VideoPlayerNotifier, VideoPlayerState, VideoPlayerArguments>(
   (ref, arguments) {
     // Get the active providers set
     final activeProviders = ref.watch(activeReelsProvidersProvider);
+    final mediaPreferences = ref.watch(mediaPreferencesProvider);
+    final handler = ref.watch(videoPlayerHandlerProvider);
 
-    // If this is one of the active providers (current, previous, or next),
-    // keep it alive indefinitely
+    // Set up a listener to handle keep-alive status changes
+    ref.listen(activeReelsProvidersProvider, (previous, next) {
+      if (next.contains(arguments)) {
+        ref.keepAlive();
+      }
+    });
+
+    // Initial keep-alive check
     if (activeProviders.contains(arguments)) {
       ref.keepAlive();
     } else {
-      // For non-active providers, cache for a short duration to handle quick scrolling
       ref.cacheFor(const Duration(seconds: 10));
     }
-
-    final handler = ref.watch(videoPlayerHandlerProvider);
 
     final notifier = VideoPlayerNotifier(
       urls: arguments.urls,
       loop: arguments.loop,
       ref: ref,
-      onInitialized: arguments.isVideo
+      onInitialized: arguments.isVideo && !mediaPreferences.useReelsVideoMode
           ? () => handler.act((notifier) => notifier.pause())
           : null,
     );
@@ -47,12 +54,6 @@ final videoPlayerProvider = StateNotifierProvider.autoDispose
       handler.add(notifier);
       ref.onDispose(() {
         handler.remove(notifier);
-        // When disposing, also remove from active providers if it's there
-        if (activeProviders.contains(arguments)) {
-          ref.read(activeReelsProvidersProvider.notifier).update(
-                (state) => state.difference({arguments}),
-              );
-        }
       });
     }
 

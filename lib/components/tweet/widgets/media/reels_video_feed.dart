@@ -10,6 +10,7 @@ import 'package:harpy/components/components.dart';
 import 'package:harpy/components/tweet/widgets/button/replies_button.dart';
 import 'package:harpy/components/widgets/video_player/video_player_provider.dart';
 import 'package:harpy/components/tweet/widgets/media/utils/video_utils.dart';
+import 'package:harpy/core/services/connectivity_service.dart';
 import 'package:rby/rby.dart';
 
 /// A TikTok/Instagram Reels style video feed that displays videos in fullscreen
@@ -57,7 +58,8 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
   @override
   void dispose() {
     _pageController.dispose();
-    // Delay video player state changes to avoid modifying providers during widget lifecycle
+
+    // Pause all videos before clearing active providers
     Future(() {
       if (_currentNotifier != null) {
         _currentNotifier!.pause();
@@ -68,10 +70,14 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
       if (_nextNotifier != null) {
         _nextNotifier!.pause();
       }
+
+      // Clear active providers after pausing videos
+      if (mounted) {
+        ref.read(activeReelsProvidersProvider.notifier).state = {};
+      }
     });
+
     _captionTimer?.cancel();
-    // Clear active providers when disposing
-    ref.read(activeReelsProvidersProvider.notifier).state = {};
     super.dispose();
   }
 
@@ -185,68 +191,16 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     });
   }
 
-  void _handleVideoPlayer(VideoPlayerNotifier notifier, int index) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      if (index == _currentIndex) {
-        final previousNotifier = _currentNotifier;
-        _currentNotifier = notifier;
-
-        // Only add listener if it's a new notifier
-        if (previousNotifier != notifier) {
-          notifier.controller.addListener(() {
-            if (!mounted) return;
-
-            final position = notifier.controller.value.position;
-            final duration = notifier.controller.value.duration;
-            final isPlaying = notifier.controller.value.isPlaying;
-
-            // Check if video has ended
-            if (position >= duration) {
-              _hasVideoEnded = true;
-            }
-
-            // Update manual pause state
-            if (!isPlaying && _isActive && !_hasVideoEnded) {
-              setState(() => _isManuallyPaused = true);
-            }
-          });
-
-          // Determine if we should play the video
-          final shouldPlay = _isActive &&
-              !_isManuallyPaused &&
-              !notifier.controller.value.isPlaying &&
-              (_wasScrolledAway || !_hasVideoEnded);
-
-          if (shouldPlay) {
-            notifier.controller.setVolume(1);
-            notifier.controller.play();
-          }
-
-          // Reset scroll state
-          _wasScrolledAway = false;
-
-          // Update active providers
-          _updateActiveProviders(index);
-
-          // Preload the next video
-          _preloadNextVideo(index);
-        }
-      } else if (index == _currentIndex - 1) {
-        _previousNotifier = notifier;
-      } else if (index == _currentIndex + 1) {
-        _nextNotifier = notifier;
-      }
-    });
-  }
-
   void _updateActiveProviders(int currentIndex) {
+    final activeProvidersNotifier =
+        ref.read(activeReelsProvidersProvider.notifier);
+    final entries = widget.entries;
+
     final activeProviders = <VideoPlayerArguments>{};
 
     // Add current video
-    if (currentIndex < widget.entries.length) {
-      final currentEntry = widget.entries[currentIndex];
+    if (currentIndex < entries.length) {
+      final currentEntry = entries[currentIndex];
       final videoData = currentEntry.media.toVideoMediaData();
       if (videoData != null) {
         activeProviders.add(createVideoArguments(videoData));
@@ -255,7 +209,7 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
 
     // Add previous video
     if (currentIndex > 0) {
-      final previousEntry = widget.entries[currentIndex - 1];
+      final previousEntry = entries[currentIndex - 1];
       final videoData = previousEntry.media.toVideoMediaData();
       if (videoData != null) {
         activeProviders.add(createVideoArguments(videoData));
@@ -263,16 +217,75 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
     }
 
     // Add next video
-    if (currentIndex < widget.entries.length - 1) {
-      final nextEntry = widget.entries[currentIndex + 1];
+    if (currentIndex < entries.length - 1) {
+      final nextEntry = entries[currentIndex + 1];
       final videoData = nextEntry.media.toVideoMediaData();
       if (videoData != null) {
         activeProviders.add(createVideoArguments(videoData));
       }
     }
 
-    // Update the active providers
-    ref.read(activeReelsProvidersProvider.notifier).state = activeProviders;
+    // Update the active providers immediately
+    activeProvidersNotifier.state = activeProviders;
+  }
+
+  void _handleVideoPlayer(VideoPlayerNotifier notifier, int index) {
+    if (!mounted) return;
+
+    if (index == _currentIndex) {
+      final previousNotifier = _currentNotifier;
+      _currentNotifier = notifier;
+
+      // Only add listener if it's a new notifier
+      if (previousNotifier != notifier) {
+        notifier.controller.addListener(() {
+          if (!mounted) return;
+
+          final position = notifier.controller.value.position;
+          final duration = notifier.controller.value.duration;
+          final isPlaying = notifier.controller.value.isPlaying;
+
+          // Check if video has ended
+          if (position >= duration) {
+            setState(() => _hasVideoEnded = true);
+          }
+
+          // Update manual pause state only if user explicitly paused
+          if (!isPlaying &&
+              _isActive &&
+              !_hasVideoEnded &&
+              !_isManuallyPaused) {
+            setState(() => _isManuallyPaused = true);
+          }
+        });
+
+        // Get media preferences
+        final mediaPreferences = ref.read(mediaPreferencesProvider);
+        final shouldAutoPlay = mediaPreferences.useReelsVideoMode &&
+            mediaPreferences
+                .shouldAutoplayVideos(ref.read(connectivityProvider));
+
+        // Determine if we should play the video
+        final shouldPlay = _isActive &&
+            !_isManuallyPaused &&
+            !_hasVideoEnded &&
+            shouldAutoPlay;
+
+        if (shouldPlay) {
+          notifier.controller.setVolume(
+            mediaPreferences.startVideoPlaybackMuted ? 0.0 : 1.0,
+          );
+          notifier.controller.play();
+        }
+
+        // Reset scroll state
+        _wasScrolledAway = false;
+      }
+    } else if (index == _currentIndex - 1) {
+      _previousNotifier = notifier;
+    } else if (index == _currentIndex + 1) {
+      _nextNotifier = notifier;
+    }
   }
 
   void _onPageChanged(int index) {
@@ -286,31 +299,26 @@ class _ReelsVideoFeedState extends ConsumerState<ReelsVideoFeed> {
       _isCaptionVisible = true;
     });
 
+    // Update active providers for the new index immediately
+    _updateActiveProviders(index);
+
+    // Preload the next video
+    _preloadNextVideo(index);
+
     // Reset caption timer for new video
     _startCaptionTimer();
 
     // Only handle video state changes if reels mode is active
     if (!_isActive) return;
 
-    // Schedule video operations for the next frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      // Handle previous video
-      if (_previousNotifier != null) {
-        _safeVideoOperation(_previousNotifier, (notifier) {
-          if (notifier.controller.value.isPlaying) {
-            notifier.pause();
-          }
-        });
-      }
-
-      // Update active providers for the new index
-      _updateActiveProviders(index);
-
-      // Preload the next video
-      _preloadNextVideo(index);
-    });
+    // Handle previous video
+    if (_previousNotifier != null) {
+      _safeVideoOperation(_previousNotifier, (notifier) {
+        if (notifier.controller.value.isPlaying) {
+          notifier.pause();
+        }
+      });
+    }
 
     // Load more content when reaching second to last video
     if (!_isLoadingMore &&
