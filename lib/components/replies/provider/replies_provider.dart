@@ -1,76 +1,89 @@
+import 'package:bluesky/bluesky.dart' as bsky;
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:harpy/api/api.dart';
+import 'package:harpy/api/bluesky/bluesky_api_provider.dart';
 import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
-import 'package:harpy/api/bluesky/find_post_replies.dart';
 import 'package:logging/logging.dart';
 import 'package:rby/rby.dart';
 
 part 'replies_provider.freezed.dart';
 
-final repliesProvider = StateNotifierProvider.autoDispose
-    .family<RepliesNotifier, RepliesState, BlueskyPostData>(
-  (ref, tweet) => RepliesNotifier(
-    findPostReplies: ref.watch(findPostRepliesProvider),
-    tweet: tweet,
+final repliesProvider =
+    StateNotifierProvider.autoDispose.family<RepliesNotifier, RepliesState, BlueskyPostData>(
+  (ref, post) => RepliesNotifier(
+    ref: ref,
+    post: post,
   ),
   name: 'RepliesProvider',
 );
 
 class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
   RepliesNotifier({
-    required FindPostReplies findPostReplies,
-    required BlueskyPostData tweet,
-  })  : _findPostReplies = findPostReplies,
-        _tweet = tweet,
+    required Ref ref,
+    required BlueskyPostData post,
+  })  : _ref = ref,
+        _post = post,
         super(const RepliesState.loading()) {
     load();
   }
 
-  final FindPostReplies _findPostReplies;
-  final BlueskyPostData _tweet;
-  String? _cursor;
-  bool _hasMore = true;
+  final Ref _ref;
+  final BlueskyPostData _post;
 
   @override
   final log = Logger('RepliesNotifier');
 
-  Future<void> load() async {
-    log.fine('loading replies for ${_tweet.id}');
+  final bool _hasMore = true;
 
-    // Keep the parent in loading state if we have it
+  Future<void> load() async {
     final currentParent = state.parent;
     state = RepliesState.loading(parent: currentParent);
 
     try {
-      // First get the parent post if this is a reply
-      BlueskyPostData? parent;
-      if (_tweet.parentPostId != null) {
-        parent = await _findPostReplies.findParentPost(_tweet);
-      }
+      final blueskyApi = _ref.read(blueskyApiProvider);
 
-      // Then get the first page of replies
-      final result = await _findPostReplies.findRepliesWithPagination(_tweet);
-      _cursor = result.cursor;
-      _hasMore = result.hasMore;
+      final response = await blueskyApi.feed.getPostThread(
+        uri: _post.uri,
+        parentHeight: 0,
+        depth: 1,
+      );
 
-      if (result.replies.isNotEmpty) {
-        log.fine('found ${result.replies.length} replies');
-        state = RepliesState.data(
-          replies: result.replies.toBuiltList(),
-          parent: parent,
-          hasMore: _hasMore,
-        );
-      } else {
-        log.fine('no replies found');
-        if (!mounted) return;
-        state = RepliesState.noData(parent: parent);
-      }
-    } catch (e, st) {
-      log.warning('error loading replies', e, st);
       if (!mounted) return;
-      state = const RepliesState.error();
+
+      if (response.data.thread is bsky.UPostThreadViewRecord) {
+        final threadView = (response.data.thread as bsky.UPostThreadViewRecord).data;
+
+        final replies = threadView.replies
+            ?.map(
+              (reply) => reply.map(
+                record: (record) => BlueskyPostData.fromFeedView(
+                  bsky.FeedView(post: record.data.post),
+                ),
+                notFound: (_) => null,
+                blocked: (_) => null,
+                unknown: (_) => null,
+              ),
+            )
+            .whereType<BlueskyPostData>()
+            .toList();
+
+        if (replies == null || replies.isEmpty) {
+          state = RepliesState.noData(parent: currentParent);
+        } else {
+          state = RepliesState.data(
+            replies: BuiltList<BlueskyPostData>.of(replies),
+            hasMore: false,
+            parent: currentParent,
+          );
+        }
+      } else {
+        state = RepliesState.noData(parent: currentParent);
+      }
+    } catch (e, stack) {
+      log.severe('error loading replies', e, stack);
+      state = RepliesState.error(error: e, parent: state.parent);
     }
   }
 
@@ -78,37 +91,62 @@ class RepliesNotifier extends StateNotifier<RepliesState> with LoggerMixin {
     if (!_hasMore) return;
 
     final currentState = state;
-    if (!currentState.maybeMap(
-      data: (_) => true,
-      orElse: () => false,
-    )) {
-      return;
-    }
+    if (currentState is! _Data) return;
 
     try {
-      final result = await _findPostReplies.findRepliesWithPagination(
-        _tweet,
-        cursor: _cursor,
+      final blueskyApi = _ref.read(blueskyApiProvider);
+
+      final response = await blueskyApi.feed.getPostThread(
+        uri: _post.uri,
+        parentHeight: 0,
+        depth: 1,
       );
 
-      _cursor = result.cursor;
-      _hasMore = result.hasMore;
+      if (!mounted) return;
 
-      if (result.replies.isNotEmpty) {
-        state = currentState.maybeMap(
-          data: (data) => RepliesState.data(
-            replies:
-                (data.replies.toList()..addAll(result.replies)).toBuiltList(),
-            parent: data.parent,
-            hasMore: _hasMore,
-          ),
-          orElse: () => currentState,
-        );
+      if (response.data.thread is bsky.UPostThreadViewRecord) {
+        final threadView = (response.data.thread as bsky.UPostThreadViewRecord).data;
+
+        final newReplies = threadView.replies
+            ?.map(
+              (reply) => reply.map(
+                record: (record) => BlueskyPostData.fromFeedView(
+                  bsky.FeedView(post: record.data.post),
+                ),
+                notFound: (_) => null,
+                blocked: (_) => null,
+                unknown: (_) => null,
+              ),
+            )
+            .whereType<BlueskyPostData>()
+            .toList();
+
+        if (newReplies != null && newReplies.isNotEmpty) {
+          state = RepliesState.data(
+            replies: currentState.replies.rebuild((b) => b.addAll(newReplies)),
+            hasMore: false,
+            parent: currentState.parent,
+          );
+        }
       }
-    } catch (e, st) {
-      log.warning('error loading more replies', e, st);
-      // Don't update state on error, keep existing replies
+    } catch (e, stack) {
+      log.severe('error loading more replies', e, stack);
     }
+  }
+
+  /// Updates the parent post in the replies state.
+  /// This is called when a parent post is loaded by the ThreadView.
+  void setParent(BlueskyPostData parent) {
+    state = state.map(
+      loading: (s) => RepliesState.loading(parent: parent),
+      data: (s) => RepliesState.data(
+        replies: s.replies,
+        hasMore: s.hasMore,
+        parent: parent,
+      ),
+      noData: (s) => RepliesState.noData(parent: parent),
+      error: (_) => RepliesState.error(parent: parent),
+    );
   }
 }
 
@@ -130,6 +168,7 @@ class RepliesState with _$RepliesState {
 
   const factory RepliesState.error({
     BlueskyPostData? parent,
+    Object? error,
   }) = _Error;
 }
 

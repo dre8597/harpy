@@ -12,14 +12,14 @@ import 'package:harpy/api/bluesky/data/bluesky_post_data.dart';
 import 'package:harpy/api/bluesky/data/profile_data.dart';
 import 'package:harpy/api/bluesky/data/session_data.dart';
 import 'package:harpy/api/twitter/data/user_data.dart';
-import 'package:harpy/components/authentication/widgets/retry_authentication_dialog.dart';
 import 'package:harpy/components/components.dart';
 import 'package:harpy/core/core.dart';
 import 'package:harpy/core/preferences/preferences.dart';
 import 'package:logging/logging.dart';
 
 /// Provides access to stored profiles and handles profile switching.
-final profilesProvider = StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
+final profilesProvider =
+    StateNotifierProvider<ProfilesNotifier, StoredProfiles>((ref) {
   return ProfilesNotifier(
     preferences: ref.watch(encryptedPreferencesProvider(null)),
     ref: ref,
@@ -61,7 +61,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       );
     } catch (e) {
       _log.severe('Failed to save profiles', e);
-      _ref.read(messageServiceProvider).showText('Failed to save profile changes');
+      _ref
+          .read(messageServiceProvider)
+          .showText('Failed to save profile changes');
       rethrow;
     }
   }
@@ -78,15 +80,19 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         // Update existing profile with new credentials while preserving preferences
         final existingProfile = profiles[existingIndex];
         profiles[existingIndex] = profile.copyWith(
-          mediaPreferences: profile.mediaPreferences ?? existingProfile.mediaPreferences,
-          feedPreferences: profile.feedPreferences ?? existingProfile.feedPreferences,
+          mediaPreferences:
+              profile.mediaPreferences ?? existingProfile.mediaPreferences,
+          feedPreferences:
+              profile.feedPreferences ?? existingProfile.feedPreferences,
           themeMode: profile.themeMode ?? existingProfile.themeMode,
-          additionalPreferences:
-              profile.additionalPreferences ?? existingProfile.additionalPreferences,
+          additionalPreferences: profile.additionalPreferences ??
+              existingProfile.additionalPreferences,
           isActive: profile.isActive || existingProfile.isActive,
         );
         _log.fine('Updated existing profile for DID: ${profile.did}');
-        _ref.read(messageServiceProvider).showText('Welcome back! Your profile has been updated');
+        _ref
+            .read(messageServiceProvider)
+            .showText('Welcome back! Your profile has been updated');
       } else {
         // If this is the first profile, make it active
         if (profiles.isEmpty) {
@@ -94,7 +100,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         }
         profiles.add(profile);
         _log.fine('Added new profile for DID: ${profile.did}');
-        _ref.read(messageServiceProvider).showText('Welcome to Harpy! Your profile has been added');
+        _ref
+            .read(messageServiceProvider)
+            .showText('Welcome to Harpy! Your profile has been added');
       }
 
       state = state.copyWith(profiles: profiles);
@@ -125,10 +133,13 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       }
 
       // Check if profile exists before removal
-      final profileToRemove = profiles.firstWhereOrNull((profile) => profile.did == did);
+      final profileToRemove =
+          profiles.firstWhereOrNull((profile) => profile.did == did);
       if (profileToRemove == null) {
         _log.warning('Attempted to remove non-existent profile');
-        _ref.read(messageServiceProvider).showText('This profile no longer exists');
+        _ref
+            .read(messageServiceProvider)
+            .showText('This profile no longer exists');
         return;
       }
 
@@ -146,7 +157,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       state = state.copyWith(profiles: profiles);
       await _saveProfiles();
 
-      _ref.read(messageServiceProvider).showText('Profile removed successfully');
+      _ref
+          .read(messageServiceProvider)
+          .showText('Profile removed successfully');
     } catch (e) {
       _log.severe('Failed to remove profile', e);
       _ref.read(messageServiceProvider).showText(
@@ -164,8 +177,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
     state = state.copyWith(isProfileSwitching: true);
     try {
       // Find the active profile or the last used profile
-      final activeProfile =
-          getActiveProfile() ?? (state.profiles.isNotEmpty ? state.profiles.last : null);
+      final activeProfile = getActiveProfile() ??
+          (state.profiles.isNotEmpty ? state.profiles.last : null);
 
       if (activeProfile == null) {
         _log.fine('No stored profiles found for auto-login');
@@ -200,7 +213,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         );
 
         // Update the Bluesky client provider
-        await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedClient);
+        await _ref
+            .read(blueskyApiProvider.notifier)
+            .setBlueskySession(updatedClient);
 
         // Now switch to the profile
         await switchToProfile(activeProfile.did, suppressMessages: true);
@@ -241,11 +256,14 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
             session.data,
             service: service,
           );
-          await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedClient);
+          await _ref
+              .read(blueskyApiProvider.notifier)
+              .setBlueskySession(updatedClient);
 
           // Now try switching to the profile again
           await switchToProfile(activeProfile.did, suppressMessages: true);
-          _log.fine('Auto re-authentication successful for profile: ${activeProfile.handle}');
+          _log.fine(
+              'Auto re-authentication successful for profile: ${activeProfile.handle}');
 
           // Navigate based on setup status
           if (_ref.read(setupPreferencesProvider).performedSetup) {
@@ -321,7 +339,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
             );
 
             // Update the Bluesky client provider
-            await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedClient);
+            await _ref
+                .read(blueskyApiProvider.notifier)
+                .setBlueskySession(updatedClient);
 
             _log.fine('Session refreshed successfully');
             state = state.copyWith(profiles: profiles);
@@ -354,7 +374,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
           );
 
           // Update the Bluesky client provider
-          await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedClient);
+          await _ref
+              .read(blueskyApiProvider.notifier)
+              .setBlueskySession(updatedClient);
 
           _log.fine('Re-authentication successful');
           state = state.copyWith(profiles: profiles);
@@ -395,7 +417,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
             ),
             service: service,
           );
-          await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedClient);
+          await _ref
+              .read(blueskyApiProvider.notifier)
+              .setBlueskySession(updatedClient);
         }
       }
 
@@ -421,7 +445,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       }
 
       // Deactivate current profile
-      final currentActiveIndex = profiles.indexWhere((profile) => profile.isActive);
+      final currentActiveIndex =
+          profiles.indexWhere((profile) => profile.isActive);
       if (currentActiveIndex >= 0) {
         // Store current preferences before switching
         final currentProfile = profiles[currentActiveIndex];
@@ -446,7 +471,8 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       // Refresh the session before switching
       try {
         await _refreshProfileSession(newProfile);
-        profiles[index] = state.profiles[index]; // Get the updated profile with new tokens
+        profiles[index] =
+            state.profiles[index]; // Get the updated profile with new tokens
       } catch (e) {
         if (e is SessionExpiredException) {
           if (!suppressMessages) {
@@ -519,11 +545,14 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
       );
 
       // Update the Bluesky client provider
-      await _ref.read(blueskyApiProvider.notifier).setBlueskySession(updatedClient);
+      await _ref
+          .read(blueskyApiProvider.notifier)
+          .setBlueskySession(updatedClient);
 
       // Fetch latest profile data to update UI and set authentication state
       try {
-        final profile = await updatedClient.actor.getProfile(actor: newProfile.handle);
+        final profile =
+            await updatedClient.actor.getProfile(actor: newProfile.handle);
 
         // Update authentication state with fresh profile data
         final userData = UserData.fromBlueskyActorProfile(profile.data);
@@ -548,7 +577,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         );
 
         // Reload the home timeline with the active feed
-        await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+        await _ref
+            .read(homeTimelineProvider.notifier)
+            .load(clearPrevious: true);
       } catch (e) {
         _log.warning('Failed to fetch latest profile data', e);
         // Still update auth state with stored data
@@ -556,8 +587,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
           id: newProfile.did,
           name: newProfile.displayName,
           handle: newProfile.handle,
-          profileImage:
-              newProfile.avatar != null ? UserProfileImage.fromUrl(newProfile.avatar!) : null,
+          profileImage: newProfile.avatar != null
+              ? UserProfileImage.fromUrl(newProfile.avatar!)
+              : null,
         );
         _ref.read(authenticationStateProvider.notifier).state =
             AuthenticationState.authenticated(user: userData);
@@ -575,7 +607,9 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
         );
 
         // Reload the home timeline with the active feed
-        await _ref.read(homeTimelineProvider.notifier).load(clearPrevious: true);
+        await _ref
+            .read(homeTimelineProvider.notifier)
+            .load(clearPrevious: true);
       }
 
       // Show success message at the end
@@ -606,5 +640,6 @@ class ProfilesNotifier extends StateNotifier<StoredProfiles> {
 /// Exception thrown when a session has expired and needs re-authentication
 class SessionExpiredException implements Exception {
   SessionExpiredException(this.profile);
+
   final StoredProfileData profile;
 }
